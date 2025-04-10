@@ -1,0 +1,50 @@
+.profile {
+    .profileUser {
+        .user{
+            display: flex;
+            flex-direction: column;
+        }
+    }
+}
+
+.orderDetail {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.status {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.unpaid {
+  color: red;
+}
+
+.info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.table th, .table td {
+  border: 1px solid #ccc;
+  padding: 10px;
+  text-align: left;
+}
+
+.summary {
+  text-align: right;
+}
+
+.total {
+  color: red;
+  font-weight: bold;
+}

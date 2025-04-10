@@ -1,0 +1,106 @@
+.loginContainer {
+  width: 400px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  background: #f2f2f2fa;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+h1 {
+  color: #006699;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.loginForm,
+.forgotPasswordForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+input {
+  padding: 10px;
+  border: 1px solid #ccc !important;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-size: 15px;
+}
+
+input:focus {
+  border-color: #006699;
+  outline: none;
+}
+
+button {
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: white;
+  font-weight: bold;
+}
+
+.loginButton,
+.resetPasswordButton {
+  background-color: #006699;
+}
+
+.loginButton:hover,
+.resetPasswordButton:hover {
+  background-color: #005580;
+}
+
+.forgotPasswordRegister {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.forgotPasswordRegister a {
+  color: #006699;
+  text-decoration: none;
+}
+
+.forgotPasswordRegister a:hover {
+  text-decoration: underline;
+}
+
+.socialLogin {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.socialButtons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.facebookButton,
+.googleButton {
+  flex: 1;
+  padding: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.facebookButton {
+  background-color: #3b5998;
+  margin-right: 5px;
+}
+
+.googleButton {
+  background-color: #db4437;
+  margin-left: 5px;
+}
+
+.forgotPasswordForm {
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

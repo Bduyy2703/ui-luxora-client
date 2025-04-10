@@ -1,0 +1,9 @@
+.profile {
+    .profileUser {
+        line-height: 42px;
+        .user{
+            display: flex;
+            flex-direction: column;
+        }
+    }
+}

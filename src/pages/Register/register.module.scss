@@ -1,0 +1,86 @@
+.register-container {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    background: #f2f2f2fa;
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
+  
+  h1 {
+    color: #006699;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  
+  .login-link {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 14px;
+  
+    a {
+      color: #006699;
+      text-decoration: none;
+    }
+  }
+  
+  .register-form {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  input {
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  .register-button {
+    background-color: #006699;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 10px;
+  }
+  
+  .social-login {
+    margin-top: 20px;
+    text-align: center;
+  
+    p {
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+  }
+  
+  .social-buttons {
+    display: flex;
+    justify-content: space-between;
+  
+    .facebook-button, .google-button {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      color: white;
+      font-weight: bold;
+      font-size: 14px;
+    }
+  
+    .facebook-button {
+      background-color: #3b5998;
+      margin-right: 5px;
+    }
+  
+    .google-button {
+      background-color: #db4437;
+      margin-left: 5px;
+    }
+  }
+  

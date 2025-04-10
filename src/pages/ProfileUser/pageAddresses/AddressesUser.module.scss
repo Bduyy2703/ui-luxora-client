@@ -1,0 +1,112 @@
+.profile {
+  .profileUser {
+    width: 1000px;
+    .user {
+      display: flex;
+      flex-direction: column;
+    }
+    .resetPassword {
+      padding: 0 15px;
+      border-radius: 6px !important;
+      height: 40px;
+      line-height: 40px;
+      background: #01567f;
+      position: relative;
+      margin-left: 0px;
+      color: #fff;
+      border: solid 1px transparent;
+      font-weight: bold;
+      margin-top: 10px;
+      font-size: 14px;
+
+      &:hover {
+        background: #01567f !important;
+        border-color: #01567f !important;
+        opacity: 0.6;
+        cursor: pointer;
+      }
+    }
+
+    .addressContent {
+      margin-top: 5px;
+      line-height: 30px;
+      font-size: 15px;
+    }
+    .addressHeader {
+      display: flex;
+      justify-content: space-between;
+    }
+    .editButton {
+      color: white;
+      font-weight: 600;
+      background: green;
+      border-radius: 15px;
+      width: 80px;
+
+      &:hover {
+        border: 1px solid green;
+        background: transparent;
+        color: green;
+      }
+    }
+    .deleteButton {
+      color: white;
+      margin-left: 10px;
+      font-weight: 600;
+      background: red;
+      border-radius: 15px;
+      width: 80px;
+      &:hover {
+        border: 1px solid red;
+        background: transparent;
+        color: red;
+      }
+    }
+  }
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+.table th {
+  background-color: #01567f;
+  color: white;
+  text-align: left;
+}
+
+.button {
+  margin: 0 5px;
+  padding: 5px 10px;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+.searchAndAdd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  .search {
+    padding: 0 15px;
+    border-radius: 6px !important;
+    height: 40px;
+    line-height: 40px;
+    background: #01567f;
+    position: relative;
+    margin-left: 0px;
+    color: #fff;
+    border: solid 1px transparent;
+    font-weight: bold;
+    margin-top: 10px;
+    font-size: 14px;
+    margin-left: 10px;
+  }
+}

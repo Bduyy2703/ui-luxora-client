@@ -1,0 +1,15 @@
+.admin-layout .btn-sort-order {
+    background-color: var(--color-btn-primary);
+    color: var(--color-text-tertiary);
+    cursor: pointer;
+    padding: 0px 10px;
+    margin: 0 5px;
+    border-radius: 5px;
+    border: none;
+    font-size: 14px;
+    height: 41px;
+}
+
+.admin-layout .btn-sort-order:hover {
+    background-color: var(--color-btn-primary-hover);
+}

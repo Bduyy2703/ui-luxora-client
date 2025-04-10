@@ -1,0 +1,132 @@
+// @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap");
+
+// .otp {
+//   min-height: 100vh;
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+//   background: #f2f3f7;
+
+//   * {
+//     margin: 0;
+//     padding: 0;
+//     box-sizing: border-box;
+//     font-family: "Poppins", sans-serif;
+//   }
+
+//   .otp-container {
+//     background: red;
+//     padding: 30px 65px;
+//     border-radius: 12px;
+//     row-gap: 20px;
+//     box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+//     display: flex;
+//     flex-direction: column;
+//     align-items: center;
+
+//     header {
+//       height: 65px;
+//       width: 65px;
+//       background: #4070f4;
+//       color: #fff;
+//       font-size: 2.5rem;
+//       display: flex;
+//       align-items: center;
+//       justify-content: center;
+//       border-radius: 50%;
+//     }
+
+//     h4 {
+//       font-size: 1.25rem;
+//       color: #333;
+//       font-weight: 500;
+//       margin-bottom: 20px;
+//     }
+
+//     .otp-form {
+//       display: flex;
+//       flex-direction: column;
+//       align-items: center;
+
+//       .input-field {
+//         display: flex;
+//         gap: 10px;
+
+//         input {
+//           height: 45px;
+//           width: 42px;
+//           border-radius: 6px;
+//           outline: none;
+//           font-size: 1.125rem;
+//           text-align: center;
+//           border: 1px solid #ddd;
+//         }
+
+//         input:focus {
+//           box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
+//         }
+//       }
+
+//       button {
+//         margin-top: 25px;
+//         width: 100%;
+//         color: #fff;
+//         font-size: 1rem;
+//         border: none;
+//         padding: 9px 0;
+//         cursor: pointer;
+//         border-radius: 6px;
+//         background: #6e93f7;
+//         transition: all 0.2s ease;
+
+//         &.active {
+//           background: #4070f4;
+//         }
+
+//         &:hover {
+//           background: #0e4bf1;
+//         }
+//       }
+//     }
+//   }
+// }
+
+.otp {
+  background: #f2f3f7;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 0px;
+  .otpContainer {
+    width: 500px;
+    height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: #ffffff;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  }
+
+  .active {
+    background: #01567f;
+    width: 100px;
+    height: 35px;
+    border-radius: 5px;
+    color: #ffffff;
+    margin-left: 145px;
+    &:hover {
+      cursor: pointer;
+      background: initial;
+      border: 1px solid #01567f;
+      color: #01567f;
+    }
+  }
+}
+
+.inputField {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

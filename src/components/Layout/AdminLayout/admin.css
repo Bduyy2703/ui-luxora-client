@@ -1,0 +1,216 @@
+:root {
+    --color-bg-primary: #0d0e12; /* Màu chính */
+    --color-bg-secondary: #1b84ff; /* Màu phụ */
+    --color-bg-tertiary: #387478; /* Màu thứ ba */
+    --color-bg-quaternary: #0d0e12; /* Màu thứ tư */
+    --color-bg-quinary: #f2f7f4; /* Màu nhạt hơn, dùng làm background cho content */
+
+    --color-bg-hover-primary: #4a8b8d;
+    --color-bg-hover-secondary: #c9e1d4;
+
+    --color-text-primary: #b6b9c8;
+    --color-text-secondary: #071437;
+    --color-text-tertiary: #1b84ff;
+
+    --color-dropdown-selected: #f9f9f9;
+    --color-dropdown-focus: #f1f1f4;
+
+    --color-input: #f9f9f9;
+    --color-input-focus: #f1f1f4;
+
+    --color-btn-primary: #f9f9f9;
+    --color-btn-primary-hover: #f1f1f4;
+    --color-btn-secondary: #1b84ff;
+    --color-btn-secondary-hover: #056ee9;
+    --color-btn-delete: #ff4c4c;
+    --color-btn-delete-hover: #e63939;
+    --color-btn-reset: #ffa500;
+    --color-btn-reset-hover: #e59400;
+
+    --color-border-primary: #f1f1f4;
+
+    --color-text-error: #ff4c4c;
+
+    --box-shadow: 0px 3px 4px 0px rgba(0, 0, 0, 0.1);
+}
+
+/* General */
+.wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.container {
+    width: 1200px;
+    margin: 0 auto;
+    display: flex;
+}
+/* Container hàng (row) */
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -15px; /* Khoảng cách giữa các cột */
+}
+
+/* Cột (column) */
+.col {
+    flex: 1;
+    padding: 0 15px; /* Khoảng cách bên trong cột */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Chia kích thước các cột theo tỷ lệ 12 */
+.col-1 {
+    flex: 0 0 8.33%;
+    max-width: 8.33%;
+}
+.col-2 {
+    flex: 0 0 16.66%;
+    max-width: 16.66%;
+}
+.col-3 {
+    flex: 0 0 25%;
+    max-width: 25%;
+}
+.col-4 {
+    flex: 0 0 33.33%;
+    max-width: 33.33%;
+}
+.col-5 {
+    flex: 0 0 41.66%;
+    max-width: 41.66%;
+}
+.col-6 {
+    flex: 0 0 50%;
+    max-width: 50%;
+}
+.col-7 {
+    flex: 0 0 58.33%;
+    max-width: 58.33%;
+}
+.col-8 {
+    flex: 0 0 66.66%;
+    max-width: 66.66%;
+}
+.col-9 {
+    flex: 0 0 75%;
+    max-width: 75%;
+}
+.col-10 {
+    flex: 0 0 83.33%;
+    max-width: 83.33%;
+}
+.col-11 {
+    flex: 0 0 91.66%;
+    max-width: 91.66%;
+}
+.col-12 {
+    flex: 0 0 100%;
+    max-width: 100%;
+}
+
+/* Đảm bảo row không có khoảng trống dư */
+.row::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+/* ADMIN HEADER */
+.admin-layout .admin-header {
+    z-index: 2;
+    background-color: #fff;
+    box-shadow: var(--box-shadow);
+    height: 70px;
+    color: var(--color-text-secondary);
+    display: flex;
+    align-items: center;
+}
+#root {
+    height: 100vh;
+    width: 100vw;
+    color: var(--color-text-secondary);
+    font-size: 14px;
+}
+/* ADMIN LAYOUT */
+.admin-layout {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: row;
+    position: relative;
+}
+
+.admin-layout .wrapper {
+    flex: 1;
+}
+
+/* ADMIN MAIN CONTENT */
+.admin-layout .main {
+    flex: 1;
+}
+/* ADMIN CARD */
+.admin-layout .card {
+    background-color: #fff;
+    margin: 30px 10px;
+    padding: 20px;
+    border: 1px solid var(--color-border-primary);
+    border-radius: 15px;
+    width: 100%;
+    height: 100%;
+    box-shadow: var(--box-shadow);
+}
+
+.admin-layout .card-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.admin-layout .card-tools {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    flex: 1;
+}
+
+.admin-layout .card-filters {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+/* ADMIN BUTTON */
+.admin-btn {
+    position: relative;
+    background-color: var(--color-btn-secondary);
+    cursor: pointer;
+    padding: 10px 15px;
+    border-radius: 5px;
+    outline: none;
+    border: none;
+    font-size: 14px;
+    transition: all 0.25s ease;
+    color: white;
+    margin: 0 5px;
+}
+
+.admin-btn:hover {
+    background-color: var(--color-btn-secondary-hover);
+}
+
+.admin-layout .del-btn {
+    background-color: var(--color-btn-delete);
+}
+
+.admin-layout .del-btn:hover {
+    background-color: var(--color-btn-delete-hover);
+}
+
+.admin-layout .res-btn {
+    background-color: var(--color-btn-reset);
+}
+
+.admin-layout .res-btn:hover {
+    background-color: var(--color-btn-reset-hover);
+}
