@@ -5,6 +5,26 @@ import publicAxios from "./publicAxios";
 const API_URL = "http://35.247.185.8/api";
 
 
+export const addUser = async (userData) => {
+  try {
+    const response = await privateAxios.post("/v1/users/create", userData);
+    return response.data || {};
+  } catch (error) {
+    console.error("Error creating user:", error);
+    throw error;
+  }
+};
+
+export const deleteUser = async (id) => {
+  try {
+    const response = await privateAxios.delete(`/v1/users/${id}`);
+    return response.data || {};
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    throw error;
+  }
+};
+
 export const getAllUser = async () => {
   try {
     const response = await privateAxios.get("/v1/users/all");
