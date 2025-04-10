@@ -7,11 +7,14 @@ import {
   Upload,
   Pagination,
   Select as AntSelect,
+  Image,
+  Tooltip,
+  Table as AntTable, // Add this import
 } from "antd";
 import Swal from "sweetalert2";
 import Filter from "../../../components/admin/filter/Filter";
 import config from "../../../config";
-import { PlusOutlined } from "@ant-design/icons";
+import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import {
   addProduct,
   deleteProduct,
@@ -19,10 +22,17 @@ import {
   updateProduct,
 } from "../../../services/api/productService";
 import { getAllCategories } from "../../../services/api/categoryService";
-import styles from "./index.module.scss";
-import { addProductDetails } from "../../../services/api/productDetailService";
+import {
+  addProductDetails,
+  getProductDetails,
+  updateProductDetails,
+  deleteProductDetails,
+  getAllProductDetails,
+} from "../../../services/api/productDetailService";
 import { getInventoryList } from "../../../services/api/inventoryService";
 import TableProduct from "../../../components/admin/table/TableProduct";
+import styles from "./index.module.scss";
+
 const { Option, OptGroup } = AntSelect;
 
 const ProductSize = {
@@ -62,13 +72,19 @@ const AdminProductList = () => {
   const [checkedRow, setCheckedRow] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
-  const [detailsModalVisible, setDetailsModalVisible] = useState(false);
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [addDetailModalVisible, setAddDetailModalVisible] = useState(false);
+  const [editDetailModalVisible, setEditDetailModalVisible] = useState(false);
   const [currentProduct, setCurrentProduct] = useState(null);
+  const [currentProductDetails, setCurrentProductDetails] = useState([]);
+  const [currentDetail, setCurrentDetail] = useState(null);
   const [form] = Form.useForm();
   const [editForm] = Form.useForm();
-  const [detailsForm] = Form.useForm();
+  const [addDetailForm] = Form.useForm();
+  const [editDetailForm] = Form.useForm();
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
   const limit = config.LIMIT || 10;
   const [categories, setCategories] = useState([]);
   const [inventory, setInventory] = useState([]);
@@ -91,7 +107,7 @@ const AdminProductList = () => {
         const result = await getInventoryList();
         setInventory(result);
       } catch (error) {
-        console.error("Lỗi khi lấy danh sách danh mục:", error);
+        console.error("Lỗi khi lấy danh sách kho hàng:", error);
       }
     };
     fetchInventory();
@@ -100,6 +116,7 @@ const AdminProductList = () => {
   const standardSort = ["name", "originalPrice"];
 
   const fetchData = useCallback(async () => {
+    setLoading(true);
     try {
       const res = await getProductList(currentPage, limit);
       const items = res?.data || [];
@@ -114,6 +131,13 @@ const AdminProductList = () => {
       console.error("Error fetching products:", error);
       setData([]);
       setValidData([]);
+      Swal.fire({
+        title: "Lỗi!",
+        text: "Không thể tải danh sách sản phẩm.",
+        icon: "error",
+      });
+    } finally {
+      setLoading(false);
     }
   }, [currentPage, limit]);
 
@@ -128,6 +152,7 @@ const AdminProductList = () => {
         images && Array.isArray(images) ? images.map((file) => file.name) : [],
     };
 
+    setLoading(true);
     try {
       const res = await addProduct(productData);
       if (res) {
@@ -147,6 +172,8 @@ const AdminProductList = () => {
         text: error.message,
         icon: "error",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -162,6 +189,7 @@ const AdminProductList = () => {
       });
     }
 
+    setLoading(true);
     try {
       const res = await updateProduct(currentProduct.id, formData);
       if (res) {
@@ -183,6 +211,8 @@ const AdminProductList = () => {
         icon: "error",
         showConfirmButton: true,
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -205,15 +235,15 @@ const AdminProductList = () => {
       inventoryId: values.inventoryId,
     };
 
+    setLoading(true);
     try {
-      const res = await addProductDetails(
-        currentProduct.id,
-        productDetailsData,
-      );
+      const res = await addProductDetails(currentProduct.id, productDetailsData);
       if (res) {
-        setDetailsModalVisible(false);
-        detailsForm.resetFields();
-        fetchData();
+        setAddDetailModalVisible(false);
+        addDetailForm.resetFields();
+        // Làm mới danh sách productDetails
+        const detailsRes = await getAllProductDetails(currentProduct.id);
+        setCurrentProductDetails(detailsRes?.data || []);
         Swal.fire({
           title: "Thêm chi tiết sản phẩm thành công!",
           icon: "success",
@@ -227,6 +257,92 @@ const AdminProductList = () => {
         text: error.message,
         icon: "error",
       });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateProductDetails = async (values) => {
+    const productDetailsData = {
+      size: values.size,
+      color: values.color,
+      stock: Number(values.stock),
+      sold: Number(values.sold) || 0,
+      material: values.material,
+      length: Number(values.length),
+      width: Number(values.width),
+      height: Number(values.height),
+      weight: Number(values.weight),
+      care_instructions: values.care_instructions,
+      stone_size: values.stone_size,
+      stone_type: values.stone_type,
+      design_style: values.design_style,
+      description: values.description,
+      inventoryId: values.inventoryId,
+    };
+
+    setLoading(true);
+    try {
+      const res = await updateProductDetails(currentDetail.id, productDetailsData);
+      if (res) {
+        setEditDetailModalVisible(false);
+        editDetailForm.resetFields();
+        setCurrentDetail(null);
+        // Làm mới danh sách productDetails
+        const detailsRes = await getAllProductDetails(currentProduct.id);
+        setCurrentProductDetails(detailsRes?.data || []);
+        Swal.fire({
+          title: "Cập nhật chi tiết sản phẩm thành công!",
+          icon: "success",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        title: "Lỗi!",
+        text: error.message,
+        icon: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteProductDetails = async (detailId) => {
+    const confirm = await Swal.fire({
+      title: "Bạn có chắc chắn muốn xóa chi tiết này?",
+      text: "Hành động này không thể hoàn tác!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Xóa",
+      cancelButtonText: "Hủy",
+    });
+
+    if (confirm.isConfirmed) {
+      setLoading(true);
+      try {
+        await deleteProductDetails(detailId);
+        // Làm mới danh sách productDetails
+        const detailsRes = await getAllProductDetails(currentProduct.id);
+        setCurrentProductDetails(detailsRes?.data || []);
+        Swal.fire({
+          title: "Đã xóa!",
+          text: "Chi tiết sản phẩm đã được xóa thành công.",
+          icon: "success",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      } catch (error) {
+        Swal.fire({
+          title: "Lỗi!",
+          text: "Đã xảy ra lỗi khi xóa chi tiết sản phẩm.",
+          icon: "error",
+          confirmButtonText: "OK",
+        });
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -251,6 +367,7 @@ const AdminProductList = () => {
     });
 
     if (confirm.isConfirmed) {
+      setLoading(true);
       try {
         await Promise.all(checkedRow.map((id) => deleteProduct(id)));
         Swal.fire({
@@ -269,6 +386,8 @@ const AdminProductList = () => {
           icon: "error",
           confirmButtonText: "OK",
         });
+      } finally {
+        setLoading(false);
       }
     }
   };
@@ -278,8 +397,8 @@ const AdminProductList = () => {
     editForm.setFieldsValue({
       name: product.name,
       originalPrice: product.originalPrice,
-      categoryId: product?.category?.name,
-      images: product.images.map((url, index) => ({
+      categoryId: product?.category?.id,
+      images: product.images?.map((url, index) => ({
         uid: index,
         name: `image-${index}`,
         status: "done",
@@ -289,14 +408,128 @@ const AdminProductList = () => {
     setEditModalVisible(true);
   };
 
-  const handleAddDetails = (product) => {
+  const handleViewDetails = async (product) => {
     setCurrentProduct(product);
-    setDetailsModalVisible(true);
+    setLoading(true);
+    try {
+      const res = await getAllProductDetails(product.id);
+      setCurrentProductDetails(res?.data || []);
+      setDetailModalVisible(true);
+    } catch (error) {
+      console.error("Error fetching product details:", error);
+      Swal.fire({
+        title: "Lỗi!",
+        text: "Không thể tải chi tiết sản phẩm.",
+        icon: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOpenAddDetailModal = () => {
+    setAddDetailModalVisible(true);
+  };
+
+  const handleOpenEditDetailModal = (detail) => {
+    setCurrentDetail(detail);
+    editDetailForm.setFieldsValue({
+      size: detail.size,
+      color: detail.color,
+      stock: detail.stock,
+      sold: detail.sold,
+      material: detail.material,
+      length: detail.length,
+      width: detail.width,
+      height: detail.height,
+      weight: detail.weight,
+      care_instructions: detail.care_instructions,
+      stone_size: detail.stone_size,
+      stone_type: detail.stone_type,
+      design_style: detail.design_style,
+      description: detail.description,
+      inventoryId: detail.inventoryId,
+    });
+    setEditDetailModalVisible(true);
   };
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useEffect(() => {
+    setFilters([
+      { key: "name", header: "Tên sản phẩm", options: ["Tất cả", ...new Set(data.map((item) => item.name))] },
+      { key: "originalPrice", header: "Giá sản phẩm", options: ["Tất cả", ...new Set(data.map((item) => item.originalPrice?.toString()))] },
+    ]);
+  }, [data]);
+
+  const productDetailColumns = [
+    {
+      title: "Hình ảnh",
+      key: "image",
+      render: (record) => {
+        const productId = record.product?.id;
+        const image = currentProduct?.images?.[0]; // Lấy hình ảnh đầu tiên của sản phẩm
+        return image ? (
+          <Image src={image} alt="Product" width={50} height={50} style={{ objectFit: "cover" }} />
+        ) : (
+          <span>Không có hình ảnh</span>
+        );
+      },
+    },
+    {
+      title: "Tên sản phẩm",
+      key: "name",
+      render: (record) => {
+        const name = record.product?.name || "N/A";
+        const size = record.size || "N/A";
+        const color = record.color || "N/A";
+        const material = record.material || "N/A";
+        return `${name} (Size: ${size}, Color: ${color}, Material: ${material})`;
+      },
+    },
+    {
+      title: "Giá",
+      dataIndex: ["product", "finalPrice"],
+      key: "finalPrice",
+      render: (finalPrice) => (finalPrice ? `${parseFloat(finalPrice).toLocaleString()} VNĐ` : "N/A"),
+    },
+    {
+      title: "Số lượng còn",
+      dataIndex: "stock",
+      key: "stock",
+      render: (text) => text || "0",
+    },
+    {
+      title: "Số lượng đã bán",
+      dataIndex: "sold",
+      key: "sold",
+      render: (text) => text || "0",
+    },
+    {
+      title: "Hành động",
+      key: "actions",
+      render: (record) => (
+        <div style={{ display: "flex", gap: 8 }}>
+          <Tooltip title="Chỉnh sửa chi tiết">
+            <Button
+              icon={<EditOutlined />}
+              onClick={() => handleOpenEditDetailModal(record)}
+              style={{ border: "none", color: "#1890ff" }}
+            />
+          </Tooltip>
+          <Tooltip title="Xóa chi tiết">
+            <Button
+              icon={<DeleteOutlined />}
+              onClick={() => handleDeleteProductDetails(record.id)}
+              style={{ border: "none", color: "#ff4d4f" }}
+            />
+          </Tooltip>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="wrapper">
@@ -318,25 +551,24 @@ const AdminProductList = () => {
                   standardSort={standardSort}
                   searchFields={[
                     { key: "name", placeholder: "Tìm kiếm theo tên sản phẩm" },
-                    {
-                      key: "originalPrice",
-                      placeholder: "Tìm kiếm theo giá gốc",
-                    },
+                    { key: "originalPrice", placeholder: "Tìm kiếm theo giá gốc" },
                   ]}
                 />
               </div>
               <div className="card-btns">
                 <Button
-                  className="admin-btn"
+                  type="primary"
                   onClick={() => setModalVisible(true)}
                 >
                   Thêm
                 </Button>
                 <Button
-                  className="admin-btn del-btn"
+                  danger
                   onClick={handleDeleteData}
+                  disabled={!checkedRow.length}
+                  style={{ marginLeft: 8 }}
                 >
-                  Xóa
+                  Xóa ({checkedRow.length})
                 </Button>
               </div>
             </div>
@@ -352,12 +584,12 @@ const AdminProductList = () => {
                   {
                     key: "finalPrice",
                     header: "Giá sản phẩm",
-                    render: (row) => row.finalPrice,
+                    render: (row) => `${parseFloat(row.finalPrice).toLocaleString()} đ`,
                   },
                 ]}
                 setChecked={setCheckedRow}
                 onEdit={handleEdit}
-                onAddDetails={handleAddDetails}
+                onViewDetails={handleViewDetails}
               />
             </div>
             <div className={styles.pagination}>
@@ -376,6 +608,8 @@ const AdminProductList = () => {
             visible={modalVisible}
             onCancel={() => setModalVisible(false)}
             footer={null}
+            className={styles.productModal}
+            width={600}
           >
             <Form form={form} layout="vertical" onFinish={handleAddProduct}>
               <Form.Item
@@ -403,9 +637,7 @@ const AdminProductList = () => {
               <Form.Item
                 label="Tên sản phẩm"
                 name="name"
-                rules={[
-                  { required: true, message: "Vui lòng nhập tên sản phẩm!" },
-                ]}
+                rules={[{ required: true, message: "Vui lòng nhập tên sản phẩm!" }]}
               >
                 <Input />
               </Form.Item>
@@ -424,27 +656,32 @@ const AdminProductList = () => {
                           </Option>
                         ))}
                       </OptGroup>
-                    ) : null,
+                    ) : null
                   )}
                 </AntSelect>
               </Form.Item>
               <Form.Item
                 label="Giá sản phẩm"
                 name="originalPrice"
-                rules={[
-                  { required: true, message: "Vui lòng nhập giá sản phẩm!" },
-                ]}
+                rules={[{ required: true, message: "Vui lòng nhập giá sản phẩm!" }]}
               >
                 <Input type="number" />
               </Form.Item>
-              <Form.Item>
-                <Button type="primary" htmlType="submit">
+              <Form.Item className={styles.formActions}>
+                <Button type="primary" htmlType="submit" loading={loading}>
                   Thêm sản phẩm
+                </Button>
+                <Button
+                  className={styles.cancelButton}
+                  onClick={() => setModalVisible(false)}
+                >
+                  Hủy
                 </Button>
               </Form.Item>
             </Form>
           </Modal>
 
+          {/* Modal Chỉnh sửa sản phẩm */}
           <Modal
             title="Chỉnh sửa sản phẩm"
             visible={editModalVisible}
@@ -454,12 +691,10 @@ const AdminProductList = () => {
               editForm.resetFields();
             }}
             footer={null}
+            className={styles.productModal}
+            width={600}
           >
-            <Form
-              form={editForm}
-              layout="vertical"
-              onFinish={handleUpdateProduct}
-            >
+            <Form form={editForm} layout="vertical" onFinish={handleUpdateProduct}>
               <Form.Item
                 label="Hình ảnh"
                 name="images"
@@ -476,9 +711,7 @@ const AdminProductList = () => {
               <Form.Item
                 label="Tên sản phẩm"
                 name="name"
-                rules={[
-                  { required: true, message: "Vui lòng nhập tên sản phẩm!" },
-                ]}
+                rules={[{ required: true, message: "Vui lòng nhập tên sản phẩm!" }]}
               >
                 <Input />
               </Form.Item>
@@ -498,41 +731,86 @@ const AdminProductList = () => {
               <Form.Item
                 label="Giá sản phẩm"
                 name="originalPrice"
-                rules={[
-                  { required: true, message: "Vui lòng nhập giá sản phẩm!" },
-                ]}
+                rules={[{ required: true, message: "Vui lòng nhập giá sản phẩm!" }]}
               >
                 <Input type="number" />
               </Form.Item>
-              <Form.Item>
-                <Button type="primary" htmlType="submit">
+              <Form.Item className={styles.formActions}>
+                <Button type="primary" htmlType="submit" loading={loading}>
                   Cập nhật sản phẩm
+                </Button>
+                <Button
+                  className={styles.cancelButton}
+                  onClick={() => {
+                    setEditModalVisible(false);
+                    setCurrentProduct(null);
+                    editForm.resetFields();
+                  }}
+                >
+                  Hủy
                 </Button>
               </Form.Item>
             </Form>
           </Modal>
 
-          {/* Modal Thêm chi tiết sản phẩm */}
+          {/* Modal Xem chi tiết sản phẩm */}
           <Modal
-            title="Thêm chi tiết sản phẩm"
-            visible={detailsModalVisible}
+            title="Chi tiết sản phẩm"
+            visible={detailModalVisible}
             onCancel={() => {
-              setDetailsModalVisible(false);
-              detailsForm.resetFields();
+              setDetailModalVisible(false);
+              setCurrentProduct(null);
+              setCurrentProductDetails([]);
             }}
             footer={null}
+            className={styles.productModal}
+            width={800}
           >
-            <Form
-              form={detailsForm}
-              layout="vertical"
-              onFinish={handleAddProductDetails}
-            >
+            {currentProduct && (
+              <div>
+                <div className={styles.productInfo}>
+                  <h3>Thông tin sản phẩm</h3>
+                  <p><strong>Tên sản phẩm:</strong> {currentProduct.name}</p>
+                  <p><strong>Giá:</strong> {parseFloat(currentProduct.finalPrice).toLocaleString()} VNĐ</p>
+                </div>
+                <div className={styles.productDetailList}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
+                    <h3>Danh sách chi tiết</h3>
+                    <div>
+                      <Button type="primary" onClick={handleOpenAddDetailModal} style={{ marginRight: 8 }}>
+                        Thêm chi tiết
+                      </Button>
+                    </div>
+                  </div>
+                  <AntTable
+                    dataSource={currentProductDetails}
+                    columns={productDetailColumns}
+                    rowKey={(record) => record.id}
+                    pagination={false}
+                    className={styles.productDetailTable}
+                  />
+                </div>
+              </div>
+            )}
+          </Modal>
+
+          {/* Modal Thêm chi tiết sản phẩm (bên phải) */}
+          <Modal
+            title="Thêm chi tiết sản phẩm"
+            visible={addDetailModalVisible}
+            onCancel={() => {
+              setAddDetailModalVisible(false);
+              addDetailForm.resetFields();
+            }}
+            footer={null}
+            className={`${styles.productModal} ${styles.sideModal}`}
+            width={400}
+          >
+            <Form form={addDetailForm} layout="vertical" onFinish={handleAddProductDetails}>
               <Form.Item
                 label="Kích thước"
                 name="size"
-                rules={[
-                  { required: true, message: "Vui lòng chọn kích thước!" },
-                ]}
+                rules={[{ required: true, message: "Vui lòng chọn kích thước!" }]}
               >
                 <AntSelect placeholder="Chọn kích thước">
                   {Object.values(ProductSize).map((size) => (
@@ -558,9 +836,7 @@ const AdminProductList = () => {
               <Form.Item
                 label="Chất liệu"
                 name="material"
-                rules={[
-                  { required: true, message: "Vui lòng chọn chất liệu!" },
-                ]}
+                rules={[{ required: true, message: "Vui lòng chọn chất liệu!" }]}
               >
                 <AntSelect placeholder="Chọn chất liệu">
                   {Object.values(ProductMaterial).map((material) => (
@@ -573,12 +849,7 @@ const AdminProductList = () => {
               <Form.Item
                 label="Số lượng tồn kho"
                 name="stock"
-                rules={[
-                  {
-                    required: true,
-                    message: "Vui lòng nhập số lượng tồn kho!",
-                  },
-                ]}
+                rules={[{ required: true, message: "Vui lòng nhập số lượng tồn kho!" }]}
               >
                 <Input type="number" />
               </Form.Item>
@@ -625,9 +896,139 @@ const AdminProductList = () => {
                   ))}
                 </AntSelect>
               </Form.Item>
-              <Form.Item>
-                <Button type="primary" htmlType="submit">
-                  Thêm chi tiết sản phẩm
+              <Form.Item className={styles.formActions}>
+                <Button type="primary" htmlType="submit" loading={loading}>
+                  Thêm chi tiết
+                </Button>
+                <Button
+                  className={styles.cancelButton}
+                  onClick={() => {
+                    setAddDetailModalVisible(false);
+                    addDetailForm.resetFields();
+                  }}
+                >
+                  Hủy
+                </Button>
+              </Form.Item>
+            </Form>
+          </Modal>
+
+          {/* Modal Sửa chi tiết sản phẩm (bên phải) */}
+          <Modal
+            title="Sửa chi tiết sản phẩm"
+            visible={editDetailModalVisible}
+            onCancel={() => {
+              setEditDetailModalVisible(false);
+              setCurrentDetail(null);
+              editDetailForm.resetFields();
+            }}
+            footer={null}
+            className={`${styles.productModal} ${styles.sideModal}`}
+            width={400}
+          >
+            <Form form={editDetailForm} layout="vertical" onFinish={handleUpdateProductDetails}>
+              <Form.Item
+                label="Kích thước"
+                name="size"
+                rules={[{ required: true, message: "Vui lòng chọn kích thước!" }]}
+              >
+                <AntSelect placeholder="Chọn kích thước">
+                  {Object.values(ProductSize).map((size) => (
+                    <AntSelect.Option key={size} value={size}>
+                      {size}
+                    </AntSelect.Option>
+                  ))}
+                </AntSelect>
+              </Form.Item>
+              <Form.Item
+                label="Màu sắc"
+                name="color"
+                rules={[{ required: true, message: "Vui lòng chọn màu sắc!" }]}
+              >
+                <AntSelect placeholder="Chọn màu sắc">
+                  {Object.values(ProductColor).map((color) => (
+                    <AntSelect.Option key={color} value={color}>
+                      {color}
+                    </AntSelect.Option>
+                  ))}
+                </AntSelect>
+              </Form.Item>
+              <Form.Item
+                label="Chất liệu"
+                name="material"
+                rules={[{ required: true, message: "Vui lòng chọn chất liệu!" }]}
+              >
+                <AntSelect placeholder="Chọn chất liệu">
+                  {Object.values(ProductMaterial).map((material) => (
+                    <AntSelect.Option key={material} value={material}>
+                      {material}
+                    </AntSelect.Option>
+                  ))}
+                </AntSelect>
+              </Form.Item>
+              <Form.Item
+                label="Số lượng tồn kho"
+                name="stock"
+                rules={[{ required: true, message: "Vui lòng nhập số lượng tồn kho!" }]}
+              >
+                <Input type="number" />
+              </Form.Item>
+              <Form.Item label="Số lượng đã bán" name="sold">
+                <Input type="number" />
+              </Form.Item>
+              <Form.Item label="Chiều dài (cm)" name="length">
+                <Input type="number" />
+              </Form.Item>
+              <Form.Item label="Chiều rộng (cm)" name="width">
+                <Input type="number" />
+              </Form.Item>
+              <Form.Item label="Chiều cao (cm)" name="height">
+                <Input type="number" />
+              </Form.Item>
+              <Form.Item label="Trọng lượng (g)" name="weight">
+                <Input type="number" />
+              </Form.Item>
+              <Form.Item label="Hướng dẫn bảo quản" name="care_instructions">
+                <Input />
+              </Form.Item>
+              <Form.Item label="Kích thước đá" name="stone_size">
+                <Input />
+              </Form.Item>
+              <Form.Item label="Loại đá" name="stone_type">
+                <Input />
+              </Form.Item>
+              <Form.Item label="Phong cách thiết kế" name="design_style">
+                <Input />
+              </Form.Item>
+              <Form.Item label="Mô tả" name="description">
+                <Input.TextArea />
+              </Form.Item>
+              <Form.Item
+                label="Kho hàng"
+                name="inventoryId"
+                rules={[{ required: true, message: "Vui lòng chọn kho hàng!" }]}
+              >
+                <AntSelect placeholder="Chọn kho hàng">
+                  {inventory?.data?.map((item) => (
+                    <AntSelect.Option key={item.id} value={item.id}>
+                      {item.location}
+                    </AntSelect.Option>
+                  ))}
+                </AntSelect>
+              </Form.Item>
+              <Form.Item className={styles.formActions}>
+                <Button type="primary" htmlType="submit" loading={loading}>
+                  Cập nhật chi tiết
+                </Button>
+                <Button
+                  className={styles.cancelButton}
+                  onClick={() => {
+                    setEditDetailModalVisible(false);
+                    setCurrentDetail(null);
+                    editDetailForm.resetFields();
+                  }}
+                >
+                  Hủy
                 </Button>
               </Form.Item>
             </Form>

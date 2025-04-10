@@ -1,13 +1,23 @@
-import { Select as AntSelect, Button, Form, Input, Modal } from "antd";
-import { format } from "date-fns";
 import React, { memo, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  Select as AntSelect,
+  Button,
+  Form,
+  Input,
+  Modal,
+  Table as AntTable,
+  Image,
+  Tooltip,
+} from "antd";
+import { format } from "date-fns";
 import Swal from "sweetalert2";
 import {
   deleteProductDetails,
   updateProductDetails,
 } from "../../../services/api/productDetailService";
 import { getByIdProduct } from "../../../services/api/productService";
+import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import "./table.css";
 import styles from "./table.module.scss";
 
@@ -46,148 +56,24 @@ const ProductMaterial = {
 const Table = ({
   rows,
   columns,
-  rowLink,
   setChecked,
-  isUser,
   onEdit,
   onAddDetails,
+  inventory, // Added inventory prop to populate "Kho hàng"
 }) => {
   const nav = useNavigate();
   const [formattedRows, setFormattedRow] = useState([]);
   const [checkedState, setCheckedState] = useState([]);
-  const [expandedRows, setExpandedRows] = useState({});
-  const [productDetails, setProductDetails] = useState({});
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [addDetailModalVisible, setAddDetailModalVisible] = useState(false);
   const [editDetailModalVisible, setEditDetailModalVisible] = useState(false);
+  const [currentProduct, setCurrentProduct] = useState(null);
+  const [productDetails, setProductDetails] = useState([]);
   const [currentDetail, setCurrentDetail] = useState(null);
   const [editDetailForm] = Form.useForm();
+  const [addDetailForm] = Form.useForm();
 
-  const handleExpandRow = async (id) => {
-    setExpandedRows((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
-
-    if (!expandedRows[id] && !productDetails[id]) {
-      try {
-        const details = await getByIdProduct(id);
-        setProductDetails((prev) => ({
-          ...prev,
-          [id]: details.productDetails || [],
-        }));
-      } catch (error) {
-        console.error("Failed to fetch product details:", error);
-      }
-    }
-  };
-
-  const handleEditDetail = (detail) => {
-    setCurrentDetail(detail);
-    editDetailForm.setFieldsValue({
-      size: detail.size,
-      color: detail.color,
-      material: detail.material,
-      stock: detail.stock,
-      sold: detail.sold,
-      length: detail.length,
-      width: detail.width,
-      height: detail.height,
-      weight: detail.weight,
-      care_instructions: detail.care_instructions,
-      stone_size: detail.stone_size,
-      stone_type: detail.stone_type,
-      design_style: detail.design_style,
-      description: detail.description,
-    });
-    setEditDetailModalVisible(true);
-  };
-
-  const handleUpdateProductDetails = async (values) => {
-    const productDetailsData = {
-      size: values.size,
-      color: values.color,
-      stock: Number(values.stock),
-      sold: Number(values.sold) || 0,
-      material: values.material,
-      length: Number(values.length),
-      width: Number(values.width),
-      height: Number(values.height),
-      weight: Number(values.weight),
-      care_instructions: values.care_instructions,
-      stone_size: values.stone_size,
-      stone_type: values.stone_type,
-      design_style: values.design_style,
-      description: values.description,
-    };
-
-    try {
-      const res = await updateProductDetails(
-        currentDetail.id,
-        productDetailsData,
-      );
-      if (res) {
-        setEditDetailModalVisible(false);
-        editDetailForm.resetFields();
-        setCurrentDetail(null);
-        setProductDetails((prev) => ({
-          ...prev,
-          [currentDetail.id]: prev[currentDetail.id]?.map((detail) =>
-            detail.id === currentDetail.id
-              ? { ...detail, ...productDetailsData }
-              : detail,
-          ),
-        }));
-        Swal.fire({
-          title: "Cập nhật chi tiết sản phẩm thành công!",
-          icon: "success",
-          timer: 1500,
-          showConfirmButton: false,
-        });
-      }
-    } catch (error) {
-      Swal.fire({
-        title: "Lỗi!",
-        text: error.message,
-        icon: "error",
-      });
-    }
-  };
-
-  const handleDeleteDetail = async (detail, productId) => {
-    const confirm = await Swal.fire({
-      title: "Bạn có chắc chắn muốn xóa chi tiết này?",
-      text: "Hành động này không thể hoàn tác!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Xóa",
-      cancelButtonText: "Hủy",
-    });
-
-    if (confirm.isConfirmed) {
-      try {
-        await deleteProductDetails(detail.id);
-        // Cập nhật lại danh sách productDetails sau khi xóa
-        setProductDetails((prev) => ({
-          ...prev,
-          [productId]: prev[productId].filter((item) => item.id !== detail.id),
-        }));
-        Swal.fire({
-          title: "Đã xóa!",
-          text: "Chi tiết sản phẩm đã được xóa thành công.",
-          icon: "success",
-          timer: 1500,
-          showConfirmButton: false,
-        });
-      } catch (error) {
-        Swal.fire({
-          title: "Lỗi!",
-          text: "Đã xảy ra lỗi khi xóa chi tiết sản phẩm.",
-          icon: "error",
-          confirmButtonText: "OK",
-        });
-      }
-    }
-  };
-
+  // Format rows and handle checkbox state
   useEffect(() => {
     if (!Array.isArray(rows)) {
       console.error("rows is not an array:", rows);
@@ -253,8 +139,223 @@ const Table = ({
     }
   };
 
+  // Handle viewing product details in a modal
+  const handleViewDetails = async (row) => {
+    setCurrentProduct(row);
+    try {
+      const details = await getByIdProduct(row.id);
+      setProductDetails(details.productDetails || []);
+      setDetailModalVisible(true);
+    } catch (error) {
+      console.error("Failed to fetch product details:", error);
+      Swal.fire({
+        title: "Lỗi!",
+        text: "Không thể tải chi tiết sản phẩm.",
+        icon: "error",
+      });
+    }
+  };
+
+  // Handle opening the "Thêm chi tiết" modal
+  const handleOpenAddDetailModal = () => {
+    setAddDetailModalVisible(true);
+  };
+
+  // Handle adding product details
+  const handleAddProductDetails = async (values) => {
+    try {
+      await onAddDetails(currentProduct, values); // Gọi hàm onAddDetails từ props
+      // Làm mới danh sách productDetails
+      const details = await getByIdProduct(currentProduct.id);
+      setProductDetails(details.productDetails || []);
+      setAddDetailModalVisible(false);
+      addDetailForm.resetFields();
+      Swal.fire({
+        title: "Thêm chi tiết sản phẩm thành công!",
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      Swal.fire({
+        title: "Lỗi!",
+        text: error.message,
+        icon: "error",
+      });
+    }
+  };
+
+  // Handle editing product details
+  const handleEditDetail = (detail) => {
+    setCurrentDetail(detail);
+    editDetailForm.setFieldsValue({
+      size: detail.size,
+      color: detail.color,
+      material: detail.material,
+      stock: detail.stock,
+      sold: detail.sold,
+      length: detail.length,
+      width: detail.width,
+      height: detail.height,
+      weight: detail.weight,
+      care_instructions: detail.care_instructions,
+      stone_size: detail.stone_size,
+      stone_type: detail.stone_type,
+      design_style: detail.design_style,
+      description: detail.description,
+    });
+    setEditDetailModalVisible(true);
+  };
+
+  // Handle updating product details
+  const handleUpdateProductDetails = async (values) => {
+    const productDetailsData = {
+      size: values.size,
+      color: values.color,
+      stock: Number(values.stock),
+      sold: Number(values.sold) || 0,
+      material: values.material,
+      length: Number(values.length),
+      width: Number(values.width),
+      height: Number(values.height),
+      weight: Number(values.weight),
+      care_instructions: values.care_instructions,
+      stone_size: values.stone_size,
+      stone_type: values.stone_type,
+      design_style: values.design_style,
+      description: values.description,
+    };
+
+    try {
+      const res = await updateProductDetails(currentDetail.id, productDetailsData);
+      if (res) {
+        setEditDetailModalVisible(false);
+        editDetailForm.resetFields();
+        setCurrentDetail(null);
+        // Làm mới danh sách productDetails
+        const details = await getByIdProduct(currentProduct.id);
+        setProductDetails(details.productDetails || []);
+        Swal.fire({
+          title: "Cập nhật chi tiết sản phẩm thành công!",
+          icon: "success",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        title: "Lỗi!",
+        text: error.message,
+        icon: "error",
+      });
+    }
+  };
+
+  // Handle deleting product details
+  const handleDeleteDetail = async (detail) => {
+    const confirm = await Swal.fire({
+      title: "Bạn có chắc chắn muốn xóa chi tiết này?",
+      text: "Hành động này không thể hoàn tác!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Xóa",
+      cancelButtonText: "Hủy",
+    });
+
+    if (confirm.isConfirmed) {
+      try {
+        await deleteProductDetails(detail.id);
+        // Làm mới danh sách productDetails
+        const details = await getByIdProduct(currentProduct.id);
+        setProductDetails(details.productDetails || []);
+        Swal.fire({
+          title: "Đã xóa!",
+          text: "Chi tiết sản phẩm đã được xóa thành công.",
+          icon: "success",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      } catch (error) {
+        Swal.fire({
+          title: "Lỗi!",
+          text: "Đã xảy ra lỗi khi xóa chi tiết sản phẩm.",
+          icon: "error",
+          confirmButtonText: "OK",
+        });
+      }
+    }
+  };
+
+  // Columns for the product details table in the "Chi tiết sản phẩm" modal
+  const productDetailColumns = [
+    {
+      title: "Hình ảnh",
+      key: "image",
+      render: (record) => {
+        const image = currentProduct?.images?.[0]; // Lấy hình ảnh đầu tiên của sản phẩm
+        return image ? (
+          <Image src={image} alt="Product" width={50} height={50} style={{ objectFit: "cover" }} />
+        ) : (
+          <span>Không có hình ảnh</span>
+        );
+      },
+    },
+    {
+      title: "Tên sản phẩm",
+      key: "name",
+      render: (record) => {
+        const name = record.product?.name || "N/A";
+        const size = record.size || "N/A";
+        const color = record.color || "N/A";
+        const material = record.material || "N/A";
+        return `${name} (Size: ${size}, Color: ${color}, Material: ${material})`;
+      },
+    },
+    {
+      title: "Giá",
+      dataIndex: ["product", "finalPrice"],
+      key: "finalPrice",
+      render: (finalPrice) => (finalPrice ? formatPrice(finalPrice) : "N/A"),
+    },
+    {
+      title: "Số lượng còn",
+      dataIndex: "stock",
+      key: "stock",
+      render: (text) => text || "0",
+    },
+    {
+      title: "Số lượng đã bán",
+      dataIndex: "sold",
+      key: "sold",
+      render: (text) => text || "0",
+    },
+    {
+      title: "Hành động",
+      key: "actions",
+      render: (record) => (
+        <div style={{ display: "flex", gap: 8 }}>
+          <Tooltip title="Chỉnh sửa chi tiết">
+            <Button
+              icon={<EditOutlined />}
+              onClick={() => handleEditDetail(record)}
+              style={{ border: "none", color: "#1890ff" }}
+            />
+          </Tooltip>
+          <Tooltip title="Xóa chi tiết">
+            <Button
+              icon={<DeleteOutlined />}
+              onClick={() => handleDeleteDetail(record)}
+              style={{ border: "none", color: "#ff4d4f" }}
+            />
+          </Tooltip>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div>
+      {/* Main Table for Products */}
       <table className="card-table">
         <thead>
           <tr>
@@ -266,125 +367,76 @@ const Table = ({
             {columns.map((col) => (
               <th key={col.key}>{col.header}</th>
             ))}
+            <th>Hành động</th>
           </tr>
         </thead>
         <tbody>
           {formattedRows.length > 0 ? (
             formattedRows.map((row, index) => (
-              <React.Fragment key={row.id}>
-                <tr
-                  className="table-row"
-                  onClick={() => onEdit(row)}
-                  style={{ cursor: "pointer" }}
-                >
-                  {setChecked && (
-                    <td
-                      className="col-checkbox"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <input
-                        type="checkbox"
-                        name="ckb-data"
-                        value={row.id}
-                        checked={checkedState[index] || false}
-                        onChange={(e) => handleCheck(e, index)}
-                      />
-                    </td>
-                  )}
-                  {columns.map((col) => (
-                    <td key={col.key}>
-                      {(() => {
-                        const key = col.key;
-                        const value = row[key];
-                        if (key.includes("finalPrice")) {
-                          return formatPrice(value);
-                        }
-                        return value;
-                      })()}
-                    </td>
-                  ))}
+              <tr
+                key={row.id}
+                className="table-row"
+                onClick={() => onEdit(row)}
+                style={{ cursor: "pointer" }}
+              >
+                {setChecked && (
                   <td
+                    className="col-checkbox"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <input
+                      type="checkbox"
+                      name="ckb-data"
+                      value={row.id}
+                      checked={checkedState[index] || false}
+                      onChange={(e) => handleCheck(e, index)}
+                    />
+                  </td>
+                )}
+                {columns.map((col) => (
+                  <td key={col.key}>
+                    {(() => {
+                      const key = col.key;
+                      const value = row[key];
+                      if (key.includes("finalPrice")) {
+                        return formatPrice(value);
+                      }
+                      return value;
+                    })()}
+                  </td>
+                ))}
+                <td
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "flex-end",
+                    gap: 8,
+                  }}
+                >
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAddDetails(row);
+                    }}
+                    type="primary"
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "flex-end",
+                      cursor: "pointer",
+                      width: "100px",
                     }}
                   >
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onAddDetails(row);
-                      }}
-                      type="primary"
-                      style={{
-                        marginLeft: "10px",
-                        cursor: "pointer",
-                        width: "100px",
-                      }}
-                    >
-                      Thêm chi tiết
-                    </Button>
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleExpandRow(row.id);
-                      }}
-                      style={{ cursor: "pointer", marginLeft: "10px" }}
-                    >
-                      Xem chi tiết sản phẩm
-                    </Button>
-                  </td>
-                </tr>
-                {expandedRows[row.id] && (
-                  <tr>
-                    <td
-                      colSpan={columns.length + (setChecked ? 2 : 1)}
-                      style={{ padding: "10px", backgroundColor: "#f9f9f9" }}
-                    >
-                      {productDetails[row.id] ? (
-                        productDetails[row.id].length > 0 ? (
-                          <div>
-                            {productDetails[row.id].map((detail, index) => (
-                              <div>
-                                <div
-                                  key={index}
-                                  className={styles.detail}
-                                  onClick={() => handleEditDetail(detail)}
-                                  style={{
-                                    cursor: "pointer",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                  }}
-                                >
-                                  <div>
-                                    {detail.description ||
-                                      "Detail not available"}
-                                  </div>
-                                  <Button
-                                    type="primary"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeleteDetail(detail, row.id);
-                                    }}
-                                    style={{ marginLeft: "10px" }}
-                                  >
-                                    Xóa
-                                  </Button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <p>Không có chi tiết sản phẩm.</p>
-                        )
-                      ) : (
-                        <p>Đang lấy chi tiết sản phẩm...</p>
-                      )}
-                    </td>
-                  </tr>
-                )}
-              </React.Fragment>
+                    Thêm chi tiết
+                  </Button>
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleViewDetails(row);
+                    }}
+                    style={{ cursor: "pointer" }}
+                  >
+                    Xem chi tiết
+                  </Button>
+                </td>
+              </tr>
             ))
           ) : (
             <tr>
@@ -396,21 +448,76 @@ const Table = ({
         </tbody>
       </table>
 
-      {/* Modal chỉnh sửa chi tiết sản phẩm */}
+      {/* Modal Xem chi tiết sản phẩm */}
       <Modal
-        title="Chỉnh sửa chi tiết sản phẩm"
-        visible={editDetailModalVisible}
+        title="Chi tiết sản phẩm"
+        visible={detailModalVisible}
         onCancel={() => {
-          setEditDetailModalVisible(false);
-          editDetailForm.resetFields();
-          setCurrentDetail(null);
+          setDetailModalVisible(false);
+          setCurrentProduct(null);
+          setProductDetails([]);
         }}
         footer={null}
+        className={styles.productModal}
+        width={800}
+      >
+        {currentProduct && (
+          <div>
+            <div className={styles.productInfo}>
+              <h3>Thông tin sản phẩm</h3>
+              <p>
+                <strong>Tên sản phẩm:</strong> {currentProduct.name}
+              </p>
+              <p>
+                <strong>Giá:</strong> {formatPrice(currentProduct.finalPrice)}
+              </p>
+            </div>
+            <div className={styles.productDetailList}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginBottom: 16,
+                }}
+              >
+                <h3>Danh sách chi tiết</h3>
+                <div>
+                  <Button
+                    type="primary"
+                    onClick={handleOpenAddDetailModal}
+                  >
+                    Thêm chi tiết
+                  </Button>
+                </div>
+              </div>
+              <AntTable
+                dataSource={productDetails}
+                columns={productDetailColumns}
+                rowKey={(record) => record.id}
+                pagination={false}
+                className={styles.productDetailTable}
+              />
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Modal Thêm chi tiết sản phẩm (bên phải) */}
+      <Modal
+        title="Thêm chi tiết sản phẩm"
+        visible={addDetailModalVisible}
+        onCancel={() => {
+          setAddDetailModalVisible(false);
+          addDetailForm.resetFields();
+        }}
+        footer={null}
+        className={`${styles.productModal} ${styles.sideModal}`}
+        width={400}
       >
         <Form
-          form={editDetailForm}
+          form={addDetailForm}
           layout="vertical"
-          onFinish={handleUpdateProductDetails}
+          onFinish={handleAddProductDetails}
         >
           <Form.Item
             label="Kích thước"
@@ -490,9 +597,145 @@ const Table = ({
           <Form.Item label="Mô tả" name="description">
             <Input.TextArea />
           </Form.Item>
-          <Form.Item>
+          <Form.Item
+            label="Kho hàng"
+            name="inventoryId"
+            rules={[{ required: true, message: "Vui lòng chọn kho hàng!" }]}
+          >
+            <AntSelect placeholder="Chọn kho hàng">
+              {inventory?.data?.map((item) => (
+                <AntSelect.Option key={item.id} value={item.id}>
+                  {item.location}
+                </AntSelect.Option>
+              ))}
+            </AntSelect>
+          </Form.Item>
+          <Form.Item className={styles.formActions}>
             <Button type="primary" htmlType="submit">
-              Cập nhật chi tiết sản phẩm
+              Thêm chi tiết
+            </Button>
+            <Button
+              className={styles.cancelButton}
+              onClick={() => {
+                setAddDetailModalVisible(false);
+                addDetailForm.resetFields();
+              }}
+            >
+              Hủy
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Modal Sửa chi tiết sản phẩm (bên phải) */}
+      <Modal
+        title="Chỉnh sửa chi tiết sản phẩm"
+        visible={editDetailModalVisible}
+        onCancel={() => {
+          setEditDetailModalVisible(false);
+          editDetailForm.resetFields();
+          setCurrentDetail(null);
+        }}
+        footer={null}
+        className={`${styles.productModal} ${styles.sideModal}`}
+        width={400}
+      >
+        <Form
+          form={editDetailForm}
+          layout="vertical"
+          onFinish={handleUpdateProductDetails}
+        >
+          <Form.Item
+            label="Kích thước"
+            name="size"
+            rules={[{ required: true, message: "Vui lòng chọn kích thước!" }]}
+          >
+            <AntSelect placeholder="Chọn kích thước">
+              {Object.values(ProductSize).map((size) => (
+                <AntSelect.Option key={size} value={size}>
+                  {size}
+                </AntSelect.Option>
+              ))}
+            </AntSelect>
+          </Form.Item>
+          <Form.Item
+            label="Màu sắc"
+            name="color"
+            rules={[{ required: true, message: "Vui lòng chọn màu sắc!" }]}
+          >
+            <AntSelect placeholder="Chọn màu sắc">
+              {Object.values(ProductColor).map((color) => (
+                <AntSelect.Option key={color} value={color}>
+                  {color}
+                </AntSelect.Option>
+              ))}
+            </AntSelect>
+          </Form.Item>
+          <Form.Item
+            label="Chất liệu"
+            name="material"
+            rules={[{ required: true, message: "Vui lòng chọn chất liệu!" }]}
+          >
+            <AntSelect placeholder="Chọn chất liệu">
+              {Object.values(ProductMaterial).map((material) => (
+                <AntSelect.Option key={material} value={material}>
+                  {material}
+                </AntSelect.Option>
+              ))}
+            </AntSelect>
+          </Form.Item>
+          <Form.Item
+            label="Số lượng tồn kho"
+            name="stock"
+            rules={[
+              { required: true, message: "Vui lòng nhập số lượng tồn kho!" },
+            ]}
+          >
+            <Input type="number" />
+          </Form.Item>
+          <Form.Item label="Số lượng đã bán" name="sold">
+            <Input type="number" />
+          </Form.Item>
+          <Form.Item label="Chiều dài (cm)" name="length">
+            <Input type="number" />
+          </Form.Item>
+          <Form.Item label="Chiều rộng (cm)" name="width">
+            <Input type="number" />
+          </Form.Item>
+          <Form.Item label="Chiều cao (cm)" name="height">
+            <Input type="number" />
+          </Form.Item>
+          <Form.Item label="Trọng lượng (g)" name="weight">
+            <Input type="number" />
+          </Form.Item>
+          <Form.Item label="Hướng dẫn bảo quản" name="care_instructions">
+            <Input />
+          </Form.Item>
+          <Form.Item label="Kích thước đá" name="stone_size">
+            <Input />
+          </Form.Item>
+          <Form.Item label="Loại đá" name="stone_type">
+            <Input />
+          </Form.Item>
+          <Form.Item label="Phong cách thiết kế" name="design_style">
+            <Input />
+          </Form.Item>
+          <Form.Item label="Mô tả" name="description">
+            <Input.TextArea />
+          </Form.Item>
+          <Form.Item className={styles.formActions}>
+            <Button type="primary" htmlType="submit">
+              Cập nhật chi tiết
+            </Button>
+            <Button
+              className={styles.cancelButton}
+              onClick={() => {
+                setEditDetailModalVisible(false);
+                editDetailForm.resetFields();
+                setCurrentDetail(null);
+              }}
+            >
+              Hủy
             </Button>
           </Form.Item>
         </Form>
