@@ -16,7 +16,7 @@ import { useCallback, useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import Filter from "../../../components/admin/filter/Filter";
 import config from "../../../config";
-import { InfoCircleOutlined } from "@ant-design/icons";
+import { EditOutlined } from "@ant-design/icons";
 import {
   addDiscount,
   deleteDiscount,
@@ -307,7 +307,7 @@ const AdminDiscountList = () => {
       render: (row) => (
         <Tooltip title="Xem chi tiết">
           <Button
-            icon={<InfoCircleOutlined />}
+            icon={<EditOutlined />}
             onClick={() => handleViewDetail(row)}
             style={{ border: "none", color: "#1890ff" }}
           />

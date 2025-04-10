@@ -10,6 +10,11 @@ export const addInventory = async (inventoryData) => {
   }
 };
 
+export const getInventoryById = async (id) => {
+  const response = await privateAxios.get(`/v1/inventory/${id}`);
+  return response.data;
+};
+
 export const deleteInventory = async (id) => {
   try {
     const response = await privateAxios.delete(`/v1/inventory/${id}`);
@@ -41,4 +46,12 @@ export const updateInventory = async (id, inventoryData) => {
     console.error("Error updating inventory:", error);
     throw error;
   }
+
+};
+export const updateStock = async (inventoryId, idDetails, quantity) => {
+  const response = await privateAxios.patch(
+    `/v1/inventory/${inventoryId}/update-stock`,
+    { idDetails, quantity }
+  );
+  return response.data;
 };
