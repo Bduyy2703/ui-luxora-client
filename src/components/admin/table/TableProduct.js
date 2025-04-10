@@ -59,8 +59,10 @@ const Table = ({
   setChecked,
   onEdit,
   onAddDetails,
-  inventory, // Added inventory prop to populate "Kho hàng"
+  inventory,
 }) => {
+  console.log("inventory", inventory);
+
   const nav = useNavigate();
   const [formattedRows, setFormattedRow] = useState([]);
   const [checkedState, setCheckedState] = useState([]);
@@ -73,7 +75,6 @@ const Table = ({
   const [editDetailForm] = Form.useForm();
   const [addDetailForm] = Form.useForm();
 
-  // Format rows and handle checkbox state
   useEffect(() => {
     if (!Array.isArray(rows)) {
       console.error("rows is not an array:", rows);
@@ -207,7 +208,6 @@ const Table = ({
     setEditDetailModalVisible(true);
   };
 
-  // Handle updating product details
   const handleUpdateProductDetails = async (values) => {
     const productDetailsData = {
       size: values.size,
@@ -227,7 +227,10 @@ const Table = ({
     };
 
     try {
-      const res = await updateProductDetails(currentDetail.id, productDetailsData);
+      const res = await updateProductDetails(
+        currentDetail.id,
+        productDetailsData,
+      );
       if (res) {
         setEditDetailModalVisible(false);
         editDetailForm.resetFields();
@@ -265,7 +268,6 @@ const Table = ({
     if (confirm.isConfirmed) {
       try {
         await deleteProductDetails(detail.id);
-        // Làm mới danh sách productDetails
         const details = await getByIdProduct(currentProduct.id);
         setProductDetails(details.productDetails || []);
         Swal.fire({
@@ -286,15 +288,20 @@ const Table = ({
     }
   };
 
-  // Columns for the product details table in the "Chi tiết sản phẩm" modal
   const productDetailColumns = [
     {
       title: "Hình ảnh",
       key: "image",
       render: (record) => {
-        const image = currentProduct?.images?.[0]; // Lấy hình ảnh đầu tiên của sản phẩm
+        const image = currentProduct?.images?.[0];
         return image ? (
-          <Image src={image} alt="Product" width={50} height={50} style={{ objectFit: "cover" }} />
+          <Image
+            src={image}
+            alt="Product"
+            width={50}
+            height={50}
+            style={{ objectFit: "cover" }}
+          />
         ) : (
           <span>Không có hình ảnh</span>
         );
@@ -459,7 +466,7 @@ const Table = ({
         }}
         footer={null}
         className={styles.productModal}
-        width={800}
+        width={900}
       >
         {currentProduct && (
           <div>
@@ -482,10 +489,7 @@ const Table = ({
               >
                 <h3>Danh sách chi tiết</h3>
                 <div>
-                  <Button
-                    type="primary"
-                    onClick={handleOpenAddDetailModal}
-                  >
+                  <Button type="primary" onClick={handleOpenAddDetailModal}>
                     Thêm chi tiết
                   </Button>
                 </div>
@@ -603,7 +607,7 @@ const Table = ({
             rules={[{ required: true, message: "Vui lòng chọn kho hàng!" }]}
           >
             <AntSelect placeholder="Chọn kho hàng">
-              {inventory?.data?.map((item) => (
+              {inventory?.map((item) => (
                 <AntSelect.Option key={item.id} value={item.id}>
                   {item.location}
                 </AntSelect.Option>
