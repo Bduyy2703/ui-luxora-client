@@ -8,14 +8,15 @@ import {
   Pagination,
   Select,
   Switch,
+  Table as AntTable,
+  Tooltip,
 } from "antd";
 import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import Filter from "../../../components/admin/filter/Filter";
-import Table from "../../../components/admin/table/Table";
 import config from "../../../config";
-
+import { InfoCircleOutlined } from "@ant-design/icons";
 import {
   addDiscount,
   deleteDiscount,
@@ -23,7 +24,9 @@ import {
   updateDiscount,
 } from "../../../services/api/discountService";
 import styles from "./index.module.scss";
+
 const { Option } = Select;
+
 const AdminDiscountList = () => {
   const [data, setData] = useState([]);
   const [validData, setValidData] = useState([]);
@@ -31,20 +34,20 @@ const AdminDiscountList = () => {
   const [checkedRow, setCheckedRow] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
-  const [currentProduct, setCurrentProduct] = useState(null);
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [currentDiscount, setCurrentDiscount] = useState(null);
   const [form] = Form.useForm();
   const [editForm] = Form.useForm();
+  const [detailForm] = Form.useForm();
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
   const limit = config.LIMIT || 10;
 
-  const standardSort = ["name", "originalPrice"];
-
   const fetchData = useCallback(async () => {
+    setLoading(true);
     try {
       const res = await getDiscountList();
-      console.log("res", res);
-
       const items = res || [];
       setData(items);
       setValidData(items);
@@ -53,8 +56,15 @@ const AdminDiscountList = () => {
       console.error("Error fetching discounts:", error);
       setData([]);
       setValidData([]);
+      Swal.fire({
+        title: "Lỗi!",
+        text: "Không thể tải danh sách mã giảm giá.",
+        icon: "error",
+      });
+    } finally {
+      setLoading(false);
     }
-  }, [currentPage, limit]);
+  }, []);
 
   const handleAddDiscount = async (values) => {
     const payload = {
@@ -68,6 +78,7 @@ const AdminDiscountList = () => {
       isActive: values.isActive,
     };
 
+    setLoading(true);
     try {
       const res = await addDiscount(payload);
       if (res) {
@@ -88,10 +99,12 @@ const AdminDiscountList = () => {
         icon: "error",
         showConfirmButton: true,
       });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleUpdateDiscount = async (values) => {
+  const handleUpdateDiscount = async (values, formType = "edit") => {
     const payload = {
       name: values.name,
       condition: values.condition,
@@ -103,12 +116,18 @@ const AdminDiscountList = () => {
       isActive: values.isActive,
     };
 
+    setLoading(true);
     try {
-      const res = await updateDiscount(currentProduct.id, payload);
+      const res = await updateDiscount(currentDiscount.id, payload);
       if (res) {
-        setEditModalVisible(false);
-        editForm.resetFields();
-        setCurrentProduct(null);
+        if (formType === "edit") {
+          setEditModalVisible(false);
+          editForm.resetFields();
+        } else {
+          setDetailModalVisible(false);
+          detailForm.resetFields();
+        }
+        setCurrentDiscount(null);
         fetchData();
         Swal.fire({
           title: "Cập nhật mã giảm giá thành công!",
@@ -124,6 +143,8 @@ const AdminDiscountList = () => {
         icon: "error",
         showConfirmButton: true,
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -148,6 +169,7 @@ const AdminDiscountList = () => {
     });
 
     if (confirm.isConfirmed) {
+      setLoading(true);
       try {
         await Promise.all(checkedRow.map((id) => deleteDiscount(id)));
         Swal.fire({
@@ -166,12 +188,14 @@ const AdminDiscountList = () => {
           icon: "error",
           confirmButtonText: "OK",
         });
+      } finally {
+        setLoading(false);
       }
     }
   };
 
   const handleEdit = (discount) => {
-    setCurrentProduct(discount);
+    setCurrentDiscount(discount);
     editForm.setFieldsValue({
       name: discount.name,
       condition: discount.condition,
@@ -185,19 +209,111 @@ const AdminDiscountList = () => {
     setEditModalVisible(true);
   };
 
+  const handleViewDetail = (discount) => {
+    setCurrentDiscount(discount);
+    detailForm.setFieldsValue({
+      name: discount.name,
+      condition: discount.condition,
+      discountValue: Number(discount.discountValue),
+      discountType: discount.discountType,
+      quantity: discount.quantity,
+      startDate: moment(discount.startDate),
+      endDate: moment(discount.endDate),
+      isActive: discount.isActive,
+    });
+    setDetailModalVisible(true);
+  };
+
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
+  useEffect(() => {
+    setFilters([
+      { key: "condition", header: "Điều kiện", options: ["Tất cả", "SHIPPING", "TOTAL"] },
+      { key: "discountType", header: "Loại giảm giá", options: ["Tất cả", "PERCENTAGE", "FIXED"] },
+      { key: "isActive", header: "Trạng thái", options: ["Tất cả", "Kích hoạt", "Không kích hoạt"] },
+    ]);
+  }, []);
+
+  const standardSort = [
+    { name: "Tên mã giảm giá", type: "name" },
+    { name: "Số tiền giảm", type: "discountValue" },
+    { name: "Ngày tạo", type: "createdAt" },
+    { name: "Ngày kết thúc", type: "endDate" },
+    { name: "Số lượng", type: "quantity" },
+    { name: "Trạng thái", type: "isActive" },
+  ];
+
   const discountTypeOptions = [
     { label: "Phần trăm", value: "PERCENTAGE" },
-    { label: "Số tiền cố định", value: "FLAT" },
-    { label: "Giảm giá vận chuyển", value: "SHIPPING_DISCOUNT" },
+    { label: "Số tiền cố định", value: "FIXED" },
   ];
 
   const conditionOptions = [
     { label: "Vận chuyển", value: "SHIPPING" },
     { label: "Tổng đơn hàng", value: "TOTAL" },
+  ];
+
+  const columns = [
+    {
+      title: "Tên mã giảm giá",
+      dataIndex: "name",
+      key: "name",
+      render: (text) => text || "N/A",
+    },
+    {
+      title: "Loại giảm giá",
+      dataIndex: "discountType",
+      key: "discountType",
+      render: (discountType) => {
+        const option = discountTypeOptions.find((opt) => opt.value === discountType);
+        return option ? option.label : "N/A";
+      },
+    },
+    {
+      title: "Điều kiện",
+      dataIndex: "condition",
+      key: "condition",
+      render: (condition) => {
+        const option = conditionOptions.find((opt) => opt.value === condition);
+        return option ? option.label : "N/A";
+      },
+    },
+    {
+      title: "Số tiền giảm",
+      dataIndex: "discountValue",
+      key: "discountValue",
+      render: (discountValue, record) => {
+        if (record.discountType === "PERCENTAGE") {
+          return `${discountValue}%`;
+        }
+        return `${discountValue.toLocaleString()} VNĐ`;
+      },
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "isActive",
+      key: "isActive",
+      render: (isActive) => (
+        <span className={isActive ? styles.active : styles.inactive}>
+          {isActive ? "Kích hoạt" : "Không kích hoạt"}
+        </span>
+      ),
+    },
+    {
+      title: "Chi tiết",
+      key: "details",
+      render: (row) => (
+        <Tooltip title="Xem chi tiết">
+          <Button
+            icon={<InfoCircleOutlined />}
+            onClick={() => handleViewDetail(row)}
+            style={{ border: "none", color: "#1890ff" }}
+          />
+        </Tooltip>
+      ),
+    },
   ];
 
   return (
@@ -220,72 +336,56 @@ const AdminDiscountList = () => {
                   standardSort={standardSort}
                   searchFields={[
                     {
-                      key: "condition",
-                      placeholder: "Tìm theo điều kiện",
+                      key: "name",
+                      placeholder: "Tìm theo tên mã giảm giá",
                     },
                   ]}
                 />
               </div>
               <div className="card-btns">
                 <Button
-                  className="admin-btn"
+                  type="primary"
                   onClick={() => setModalVisible(true)}
                 >
                   Thêm
                 </Button>
                 <Button
-                  className="admin-btn del-btn"
+                  danger
                   onClick={handleDeleteData}
+                  disabled={!checkedRow.length}
+                  style={{ marginLeft: 8 }}
                 >
-                  Xóa
+                  Xóa ({checkedRow.length})
                 </Button>
               </div>
             </div>
             <div className="card-body">
-              <Table
-                rows={validData}
-                columns={[
-                  {
-                    key: "condition",
-                    header: "Điều kiện",
-                    render: (row) => row.condition,
-                  },
-                  {
-                    key: "discountValue",
-                    header: "Số tiền giảm",
-                    render: (row) => row.discountValue,
-                  },
-                  {
-                    key: "createdAt",
-                    header: "Ngày tạo",
-                    render: (row) => row.createdAt,
-                  },
-                  {
-                    key: "endDate",
-                    header: "Ngày kết thúc",
-                    render: (row) => row.endDate,
-                  },
-                  {
-                    key: "quantity",
-                    header: "Số lượng",
-                    render: (row) => row.quantity,
-                  },
-                  {
-                    key: "isActive",
-                    header: "Trạng thái",
-                    render: (row) => row.isActive,
-                  },
-                ]}
-                setChecked={setCheckedRow}
-                onEdit={handleEdit}
+              <AntTable
+                dataSource={validData}
+                columns={columns}
+                rowKey="id"
+                pagination={false}
+                rowSelection={{
+                  type: "checkbox",
+                  onChange: (selectedRowKeys) => setCheckedRow(selectedRowKeys),
+                }}
+                rowClassName={(record) => (!record.isActive ? styles.inactiveRow : "")}
               />
             </div>
             <div className={styles.pagination}>
+              <div className={styles.paginationInfo}>
+                <span>Trang {currentPage} / {Math.ceil(total / limit)}</span>
+                <span>
+                  Hiển thị {(currentPage - 1) * limit + 1} -{" "}
+                  {Math.min(currentPage * limit, total)} trên tổng số {total} mã giảm giá
+                </span>
+              </div>
               <Pagination
                 current={currentPage}
                 pageSize={limit}
                 total={total}
                 onChange={(page) => setCurrentPage(page)}
+                showQuickJumper
               />
             </div>
           </div>
@@ -296,23 +396,21 @@ const AdminDiscountList = () => {
             visible={modalVisible}
             onCancel={() => setModalVisible(false)}
             footer={null}
+            className={styles.addDiscountModal}
+            width={600}
           >
             <Form form={form} layout="vertical" onFinish={handleAddDiscount}>
               <Form.Item
                 label="Tên mã giảm giá"
                 name="name"
-                rules={[
-                  { required: true, message: "Vui lòng nhập tên mã giảm giá!" },
-                ]}
+                rules={[{ required: true, message: "Vui lòng nhập tên mã giảm giá!" }]}
               >
-                <Input />
+                <Input placeholder="Nhập tên mã giảm giá" />
               </Form.Item>
               <Form.Item
                 label="Điều kiện"
                 name="condition"
-                rules={[
-                  { required: true, message: "Vui lòng chọn điều kiện!" },
-                ]}
+                rules={[{ required: true, message: "Vui lòng chọn điều kiện!" }]}
               >
                 <Select placeholder="Chọn điều kiện">
                   {conditionOptions.map((option) => (
@@ -325,18 +423,14 @@ const AdminDiscountList = () => {
               <Form.Item
                 label="Số tiền giảm"
                 name="discountValue"
-                rules={[
-                  { required: true, message: "Vui lòng nhập số tiền giảm!" },
-                ]}
+                rules={[{ required: true, message: "Vui lòng nhập số tiền giảm!" }]}
               >
-                <InputNumber min={0} style={{ width: "100%" }} />
+                <InputNumber min={0} style={{ width: "100%" }} placeholder="Nhập số tiền giảm" />
               </Form.Item>
               <Form.Item
                 label="Loại giảm giá"
                 name="discountType"
-                rules={[
-                  { required: true, message: "Vui lòng chọn loại giảm giá!" },
-                ]}
+                rules={[{ required: true, message: "Vui lòng chọn loại giảm giá!" }]}
               >
                 <Select placeholder="Chọn loại giảm giá">
                   {discountTypeOptions.map((option) => (
@@ -351,23 +445,19 @@ const AdminDiscountList = () => {
                 name="quantity"
                 rules={[{ required: true, message: "Vui lòng nhập số lượng!" }]}
               >
-                <InputNumber min={0} style={{ width: "100%" }} />
+                <InputNumber min={0} style={{ width: "100%" }} placeholder="Nhập số lượng" />
               </Form.Item>
               <Form.Item
                 label="Ngày bắt đầu"
                 name="startDate"
-                rules={[
-                  { required: true, message: "Vui lòng chọn ngày bắt đầu!" },
-                ]}
+                rules={[{ required: true, message: "Vui lòng chọn ngày bắt đầu!" }]}
               >
                 <DatePicker showTime style={{ width: "100%" }} />
               </Form.Item>
               <Form.Item
                 label="Ngày kết thúc"
                 name="endDate"
-                rules={[
-                  { required: true, message: "Vui lòng chọn ngày kết thúc!" },
-                ]}
+                rules={[{ required: true, message: "Vui lòng chọn ngày kết thúc!" }]}
               >
                 <DatePicker showTime style={{ width: "100%" }} />
               </Form.Item>
@@ -379,9 +469,15 @@ const AdminDiscountList = () => {
               >
                 <Switch />
               </Form.Item>
-              <Form.Item>
-                <Button type="primary" htmlType="submit">
+              <Form.Item className={styles.formActions}>
+                <Button type="primary" htmlType="submit" loading={loading}>
                   Thêm mã giảm giá
+                </Button>
+                <Button
+                  className={styles.cancelButton}
+                  onClick={() => setModalVisible(false)}
+                >
+                  Hủy
                 </Button>
               </Form.Item>
             </Form>
@@ -393,31 +489,25 @@ const AdminDiscountList = () => {
             visible={editModalVisible}
             onCancel={() => {
               setEditModalVisible(false);
-              setCurrentProduct(null);
+              setCurrentDiscount(null);
               editForm.resetFields();
             }}
             footer={null}
+            className={styles.addDiscountModal}
+            width={600}
           >
-            <Form
-              form={editForm}
-              layout="vertical"
-              onFinish={handleUpdateDiscount}
-            >
+            <Form form={editForm} layout="vertical" onFinish={handleUpdateDiscount}>
               <Form.Item
                 label="Tên mã giảm giá"
                 name="name"
-                rules={[
-                  { required: true, message: "Vui lòng nhập tên mã giảm giá!" },
-                ]}
+                rules={[{ required: true, message: "Vui lòng nhập tên mã giảm giá!" }]}
               >
-                <Input />
+                <Input placeholder="Nhập tên mã giảm giá" />
               </Form.Item>
               <Form.Item
                 label="Điều kiện"
                 name="condition"
-                rules={[
-                  { required: true, message: "Vui lòng chọn điều kiện!" },
-                ]}
+                rules={[{ required: true, message: "Vui lòng chọn điều kiện!" }]}
               >
                 <Select placeholder="Chọn điều kiện">
                   {conditionOptions.map((option) => (
@@ -430,18 +520,14 @@ const AdminDiscountList = () => {
               <Form.Item
                 label="Số tiền giảm"
                 name="discountValue"
-                rules={[
-                  { required: true, message: "Vui lòng nhập số tiền giảm!" },
-                ]}
+                rules={[{ required: true, message: "Vui lòng nhập số tiền giảm!" }]}
               >
-                <InputNumber min={0} style={{ width: "100%" }} />
+                <InputNumber min={0} style={{ width: "100%" }} placeholder="Nhập số tiền giảm" />
               </Form.Item>
               <Form.Item
                 label="Loại giảm giá"
                 name="discountType"
-                rules={[
-                  { required: true, message: "Vui lòng chọn loại giảm giá!" },
-                ]}
+                rules={[{ required: true, message: "Vui lòng chọn loại giảm giá!" }]}
               >
                 <Select placeholder="Chọn loại giảm giá">
                   {discountTypeOptions.map((option) => (
@@ -456,23 +542,19 @@ const AdminDiscountList = () => {
                 name="quantity"
                 rules={[{ required: true, message: "Vui lòng nhập số lượng!" }]}
               >
-                <InputNumber min={0} style={{ width: "100%" }} />
+                <InputNumber min={0} style={{ width: "100%" }} placeholder="Nhập số lượng" />
               </Form.Item>
               <Form.Item
                 label="Ngày bắt đầu"
                 name="startDate"
-                rules={[
-                  { required: true, message: "Vui lòng chọn ngày bắt đầu!" },
-                ]}
+                rules={[{ required: true, message: "Vui lòng chọn ngày bắt đầu!" }]}
               >
                 <DatePicker showTime style={{ width: "100%" }} />
               </Form.Item>
               <Form.Item
                 label="Ngày kết thúc"
                 name="endDate"
-                rules={[
-                  { required: true, message: "Vui lòng chọn ngày kết thúc!" },
-                ]}
+                rules={[{ required: true, message: "Vui lòng chọn ngày kết thúc!" }]}
               >
                 <DatePicker showTime style={{ width: "100%" }} />
               </Form.Item>
@@ -483,9 +565,123 @@ const AdminDiscountList = () => {
               >
                 <Switch />
               </Form.Item>
-              <Form.Item>
-                <Button type="primary" htmlType="submit">
+              <Form.Item className={styles.formActions}>
+                <Button type="primary" htmlType="submit" loading={loading}>
                   Cập nhật mã giảm giá
+                </Button>
+                <Button
+                  className={styles.cancelButton}
+                  onClick={() => {
+                    setEditModalVisible(false);
+                    setCurrentDiscount(null);
+                    editForm.resetFields();
+                  }}
+                >
+                  Hủy
+                </Button>
+              </Form.Item>
+            </Form>
+          </Modal>
+
+          {/* Detail Discount Modal */}
+          <Modal
+            title="Chi tiết mã giảm giá"
+            visible={detailModalVisible}
+            onCancel={() => {
+              setDetailModalVisible(false);
+              setCurrentDiscount(null);
+              detailForm.resetFields();
+            }}
+            footer={null}
+            className={styles.addDiscountModal}
+            width={600}
+          >
+            <Form
+              form={detailForm}
+              layout="vertical"
+              onFinish={(values) => handleUpdateDiscount(values, "detail")}
+            >
+              <Form.Item
+                label="Tên mã giảm giá"
+                name="name"
+                rules={[{ required: true, message: "Vui lòng nhập tên mã giảm giá!" }]}
+              >
+                <Input placeholder="Nhập tên mã giảm giá" />
+              </Form.Item>
+              <Form.Item
+                label="Điều kiện"
+                name="condition"
+                rules={[{ required: true, message: "Vui lòng chọn điều kiện!" }]}
+              >
+                <Select placeholder="Chọn điều kiện">
+                  {conditionOptions.map((option) => (
+                    <Option key={option.value} value={option.value}>
+                      {option.label}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+              <Form.Item
+                label="Số tiền giảm"
+                name="discountValue"
+                rules={[{ required: true, message: "Vui lòng nhập số tiền giảm!" }]}
+              >
+                <InputNumber min={0} style={{ width: "100%" }} placeholder="Nhập số tiền giảm" />
+              </Form.Item>
+              <Form.Item
+                label="Loại giảm giá"
+                name="discountType"
+                rules={[{ required: true, message: "Vui lòng chọn loại giảm giá!" }]}
+              >
+                <Select placeholder="Chọn loại giảm giá">
+                  {discountTypeOptions.map((option) => (
+                    <Option key={option.value} value={option.value}>
+                      {option.label}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+              <Form.Item
+                label="Số lượng"
+                name="quantity"
+                rules={[{ required: true, message: "Vui lòng nhập số lượng!" }]}
+              >
+                <InputNumber min={0} style={{ width: "100%" }} placeholder="Nhập số lượng" />
+              </Form.Item>
+              <Form.Item
+                label="Ngày bắt đầu"
+                name="startDate"
+                rules={[{ required: true, message: "Vui lòng chọn ngày bắt đầu!" }]}
+              >
+                <DatePicker showTime style={{ width: "100%" }} />
+              </Form.Item>
+              <Form.Item
+                label="Ngày kết thúc"
+                name="endDate"
+                rules={[{ required: true, message: "Vui lòng chọn ngày kết thúc!" }]}
+              >
+                <DatePicker showTime style={{ width: "100%" }} />
+              </Form.Item>
+              <Form.Item
+                label="Trạng thái"
+                name="isActive"
+                valuePropName="checked"
+              >
+                <Switch />
+              </Form.Item>
+              <Form.Item className={styles.formActions}>
+                <Button type="primary" htmlType="submit" loading={loading}>
+                  Cập nhật
+                </Button>
+                <Button
+                  className={styles.cancelButton}
+                  onClick={() => {
+                    setDetailModalVisible(false);
+                    setCurrentDiscount(null);
+                    detailForm.resetFields();
+                  }}
+                >
+                  Thoát
                 </Button>
               </Form.Item>
             </Form>
