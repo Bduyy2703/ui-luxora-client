@@ -1,3 +1,4 @@
+// pages/admin/users/AdminUserList.js
 import React, { useState, useEffect, useCallback } from "react";
 import { Modal, Form, Input, Button, Pagination, Spin, Tooltip, Select, Table as AntTable } from "antd";
 import Swal from "sweetalert2";
@@ -55,7 +56,7 @@ const AdminUserList = () => {
         email: values.email,
         password: values.password,
         role: values.role,
-        phoneNumber: values.phoneNumber, // Thêm số điện thoại vào dữ liệu gửi lên API
+        phoneNumber: values.phoneNumber,
       });
 
       setModalVisible(false);
@@ -168,6 +169,14 @@ const AdminUserList = () => {
     ]);
   }, []);
 
+  const standardSort = [
+    { name: "Tên người dùng", type: "username" },
+    { name: "Email", type: "email" },
+    { name: "Vai trò", type: "role" },
+    { name: "Số điện thoại", type: "phoneNumber" },
+    { name: "Trạng thái xác thực", type: "isVerified" },
+  ];
+
   const columns = [
     {
       title: "Tên người dùng",
@@ -235,7 +244,7 @@ const AdminUserList = () => {
                   data={data}
                   validData={validData}
                   setValidData={setValidData}
-                  standardSort={["username", "email"]}
+                  standardSort={standardSort}
                   searchFields={[
                     {
                       key: "username",
@@ -281,14 +290,18 @@ const AdminUserList = () => {
               </Spin>
             </div>
             <div className={styles.pagination}>
+              <div className={styles.paginationInfo}>
+                <span>Trang {currentPage} / {Math.ceil(total / limit)}</span>
+                <span>
+                  Hiển thị {(currentPage - 1) * limit + 1} -{" "}
+                  {Math.min(currentPage * limit, total)} trên tổng số {total} người dùng
+                </span>
+              </div>
               <Pagination
                 current={currentPage}
                 pageSize={limit}
                 total={total}
                 onChange={(page) => setCurrentPage(page)}
-                showTotal={(total, range) =>
-                  `Hiển thị ${range[0]}-${range[1]} trên tổng số ${total} người dùng`
-                }
                 showQuickJumper
               />
             </div>
@@ -299,8 +312,8 @@ const AdminUserList = () => {
             visible={modalVisible}
             onCancel={() => setModalVisible(false)}
             footer={null}
-            className={styles.addUserModal} // Thêm class để tùy chỉnh CSS
-            width={600} // Tăng chiều rộng modal
+            className={styles.addUserModal}
+            width={600}
           >
             <Form form={form} layout="vertical" onFinish={handleAddUser}>
               <Form.Item

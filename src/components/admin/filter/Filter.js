@@ -1,3 +1,4 @@
+// components/admin/filter/Filter.js
 import React, { useState, useEffect } from "react";
 import Search from "../../../components/admin/search/Search";
 import Sort from "../../../components/admin/sort/Sort";
@@ -6,11 +7,11 @@ import "./filter.css";
 const Filter = ({ filters, data, validData, setValidData, standardSort, searchFields }) => {
   const [formattedFilters, setFormattedFilters] = useState(
     filters.map((f) => ({
-      name: f.name,
-      type: f.type,
+      name: f.header,
+      type: f.key,
       isOpen: false,
-      standards: f.standards,
-      selected: f.name,
+      standards: f.options,
+      selected: f.header,
     })),
   );
 
@@ -19,43 +20,56 @@ const Filter = ({ filters, data, validData, setValidData, standardSort, searchFi
   useEffect(() => {
     setFormattedFilters(
       filters.map((f) => ({
-        name: f.name,
-        type: f.type,
+        name: f.header,
+        type: f.key,
         isOpen: false,
-        standards: f.standards,
-        selected: f.name,
+        standards: f.options,
+        selected: f.header,
       })),
     );
   }, [filters]);
 
   useEffect(() => {
-    formattedFilters.forEach((f) => {
-      handleFilter(f.type, f.selected);
-    });
-  }, [data]);
+    handleFilter();
+  }, [data, formattedFilters]);
 
   const wrappedSetValidData = (data) => {
     setValidData(data);
     setFormattedFilters(formattedFilters.map((f) => ({ ...f, isOpen: false })));
   };
 
-  const handleFilter = (filterType, standard) => {
+  const handleFilter = () => {
+    const filtered = data.filter((d) =>
+      formattedFilters.every((f) => {
+        if (f.selected === f.name || f.selected === "Tất cả") return true;
+
+        if (f.type === "role") {
+          const roleName = d.role?.name || "";
+          return roleName === f.selected;
+        }
+
+        if (f.type === "status") {
+          const isVerified = d.isVerified;
+          if (f.selected === "Active") return isVerified === true;
+          if (f.selected === "Inactive") return isVerified === false;
+          return true;
+        }
+
+        return d[f.type] === f.selected;
+      }),
+    );
+
+    setFilteredData(filtered);
+    setValidData(filtered);
+  };
+
+  const handleFilterChange = (filterType, standard) => {
     const tempFilter = formattedFilters.map((f) =>
       f.type === filterType
         ? { ...f, isOpen: false, selected: standard }
         : { ...f, isOpen: false },
     );
     setFormattedFilters(tempFilter);
-    setFilteredData(
-      data.filter((d) =>
-        tempFilter.every(
-          (f) =>
-            f.selected === f.name ||
-            f.selected === "Tất cả" ||
-            d[f.type] === f.selected,
-        ),
-      ),
-    );
   };
 
   return (
@@ -88,7 +102,7 @@ const Filter = ({ filters, data, validData, setValidData, standardSort, searchFi
                   <div
                     key={index}
                     className={standard === f.selected ? "active" : ""}
-                    onClick={() => handleFilter(f.type, standard)}
+                    onClick={() => handleFilterChange(f.type, standard)}
                   >
                     {standard}
                   </div>
