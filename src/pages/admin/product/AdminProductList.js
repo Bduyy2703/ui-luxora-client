@@ -9,7 +9,7 @@ import {
   Select as AntSelect,
   Image,
   Tooltip,
-  Table as AntTable, // Add this import
+  Table as AntTable,
 } from "antd";
 import Swal from "sweetalert2";
 import Filter from "../../../components/admin/filter/Filter";
@@ -105,13 +105,17 @@ const AdminProductList = () => {
     const fetchInventory = async () => {
       try {
         const result = await getInventoryList();
-        setInventory(result);
+        console.log("result", result?.data);
+
+        setInventory(result?.data || []);
       } catch (error) {
         console.error("Lỗi khi lấy danh sách kho hàng:", error);
       }
     };
     fetchInventory();
   }, []);
+
+  console.log("inventory", inventory);
 
   const standardSort = ["name", "originalPrice"];
 
@@ -237,7 +241,10 @@ const AdminProductList = () => {
 
     setLoading(true);
     try {
-      const res = await addProductDetails(currentProduct.id, productDetailsData);
+      const res = await addProductDetails(
+        currentProduct.id,
+        productDetailsData,
+      );
       if (res) {
         setAddDetailModalVisible(false);
         addDetailForm.resetFields();
@@ -283,7 +290,10 @@ const AdminProductList = () => {
 
     setLoading(true);
     try {
-      const res = await updateProductDetails(currentDetail.id, productDetailsData);
+      const res = await updateProductDetails(
+        currentDetail.id,
+        productDetailsData,
+      );
       if (res) {
         setEditDetailModalVisible(false);
         editDetailForm.resetFields();
@@ -459,8 +469,19 @@ const AdminProductList = () => {
 
   useEffect(() => {
     setFilters([
-      { key: "name", header: "Tên sản phẩm", options: ["Tất cả", ...new Set(data.map((item) => item.name))] },
-      { key: "originalPrice", header: "Giá sản phẩm", options: ["Tất cả", ...new Set(data.map((item) => item.originalPrice?.toString()))] },
+      {
+        key: "name",
+        header: "Tên sản phẩm",
+        options: ["Tất cả", ...new Set(data.map((item) => item.name))],
+      },
+      {
+        key: "originalPrice",
+        header: "Giá sản phẩm",
+        options: [
+          "Tất cả",
+          ...new Set(data.map((item) => item.originalPrice?.toString())),
+        ],
+      },
     ]);
   }, [data]);
 
@@ -472,7 +493,13 @@ const AdminProductList = () => {
         const productId = record.product?.id;
         const image = currentProduct?.images?.[0]; // Lấy hình ảnh đầu tiên của sản phẩm
         return image ? (
-          <Image src={image} alt="Product" width={50} height={50} style={{ objectFit: "cover" }} />
+          <Image
+            src={image}
+            alt="Product"
+            width={50}
+            height={50}
+            style={{ objectFit: "cover" }}
+          />
         ) : (
           <span>Không có hình ảnh</span>
         );
@@ -493,7 +520,8 @@ const AdminProductList = () => {
       title: "Giá",
       dataIndex: ["product", "finalPrice"],
       key: "finalPrice",
-      render: (finalPrice) => (finalPrice ? `${parseFloat(finalPrice).toLocaleString()} VNĐ` : "N/A"),
+      render: (finalPrice) =>
+        finalPrice ? `${parseFloat(finalPrice).toLocaleString()} VNĐ` : "N/A",
     },
     {
       title: "Số lượng còn",
@@ -551,15 +579,15 @@ const AdminProductList = () => {
                   standardSort={standardSort}
                   searchFields={[
                     { key: "name", placeholder: "Tìm kiếm theo tên sản phẩm" },
-                    { key: "originalPrice", placeholder: "Tìm kiếm theo giá gốc" },
+                    {
+                      key: "originalPrice",
+                      placeholder: "Tìm kiếm theo giá gốc",
+                    },
                   ]}
                 />
               </div>
               <div className="card-btns">
-                <Button
-                  type="primary"
-                  onClick={() => setModalVisible(true)}
-                >
+                <Button type="primary" onClick={() => setModalVisible(true)}>
                   Thêm
                 </Button>
                 <Button
@@ -575,6 +603,7 @@ const AdminProductList = () => {
             <div className="card-body">
               <TableProduct
                 rows={validData}
+                inventory={inventory}
                 columns={[
                   {
                     key: "name",
@@ -584,7 +613,8 @@ const AdminProductList = () => {
                   {
                     key: "finalPrice",
                     header: "Giá sản phẩm",
-                    render: (row) => `${parseFloat(row.finalPrice).toLocaleString()} đ`,
+                    render: (row) =>
+                      `${parseFloat(row.finalPrice).toLocaleString()} đ`,
                   },
                 ]}
                 setChecked={setCheckedRow}
@@ -602,7 +632,6 @@ const AdminProductList = () => {
             </div>
           </div>
 
-          {/* Modal Thêm sản phẩm */}
           <Modal
             title="Thêm sản phẩm"
             visible={modalVisible}
@@ -637,7 +666,9 @@ const AdminProductList = () => {
               <Form.Item
                 label="Tên sản phẩm"
                 name="name"
-                rules={[{ required: true, message: "Vui lòng nhập tên sản phẩm!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng nhập tên sản phẩm!" },
+                ]}
               >
                 <Input />
               </Form.Item>
@@ -656,14 +687,16 @@ const AdminProductList = () => {
                           </Option>
                         ))}
                       </OptGroup>
-                    ) : null
+                    ) : null,
                   )}
                 </AntSelect>
               </Form.Item>
               <Form.Item
                 label="Giá sản phẩm"
                 name="originalPrice"
-                rules={[{ required: true, message: "Vui lòng nhập giá sản phẩm!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng nhập giá sản phẩm!" },
+                ]}
               >
                 <Input type="number" />
               </Form.Item>
@@ -694,7 +727,11 @@ const AdminProductList = () => {
             className={styles.productModal}
             width={600}
           >
-            <Form form={editForm} layout="vertical" onFinish={handleUpdateProduct}>
+            <Form
+              form={editForm}
+              layout="vertical"
+              onFinish={handleUpdateProduct}
+            >
               <Form.Item
                 label="Hình ảnh"
                 name="images"
@@ -711,7 +748,9 @@ const AdminProductList = () => {
               <Form.Item
                 label="Tên sản phẩm"
                 name="name"
-                rules={[{ required: true, message: "Vui lòng nhập tên sản phẩm!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng nhập tên sản phẩm!" },
+                ]}
               >
                 <Input />
               </Form.Item>
@@ -731,7 +770,9 @@ const AdminProductList = () => {
               <Form.Item
                 label="Giá sản phẩm"
                 name="originalPrice"
-                rules={[{ required: true, message: "Vui lòng nhập giá sản phẩm!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng nhập giá sản phẩm!" },
+                ]}
               >
                 <Input type="number" />
               </Form.Item>
@@ -770,14 +811,29 @@ const AdminProductList = () => {
               <div>
                 <div className={styles.productInfo}>
                   <h3>Thông tin sản phẩm</h3>
-                  <p><strong>Tên sản phẩm:</strong> {currentProduct.name}</p>
-                  <p><strong>Giá:</strong> {parseFloat(currentProduct.finalPrice).toLocaleString()} VNĐ</p>
+                  <p>
+                    <strong>Tên sản phẩm:</strong> {currentProduct.name}
+                  </p>
+                  <p>
+                    <strong>Giá:</strong>{" "}
+                    {parseFloat(currentProduct.finalPrice).toLocaleString()} VNĐ
+                  </p>
                 </div>
                 <div className={styles.productDetailList}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      marginBottom: 16,
+                    }}
+                  >
                     <h3>Danh sách chi tiết</h3>
                     <div>
-                      <Button type="primary" onClick={handleOpenAddDetailModal} style={{ marginRight: 8 }}>
+                      <Button
+                        type="primary"
+                        onClick={handleOpenAddDetailModal}
+                        style={{ marginRight: 8 }}
+                      >
                         Thêm chi tiết
                       </Button>
                     </div>
@@ -806,11 +862,17 @@ const AdminProductList = () => {
             className={`${styles.productModal} ${styles.sideModal}`}
             width={400}
           >
-            <Form form={addDetailForm} layout="vertical" onFinish={handleAddProductDetails}>
+            <Form
+              form={addDetailForm}
+              layout="vertical"
+              onFinish={handleAddProductDetails}
+            >
               <Form.Item
                 label="Kích thước"
                 name="size"
-                rules={[{ required: true, message: "Vui lòng chọn kích thước!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng chọn kích thước!" },
+                ]}
               >
                 <AntSelect placeholder="Chọn kích thước">
                   {Object.values(ProductSize).map((size) => (
@@ -836,7 +898,9 @@ const AdminProductList = () => {
               <Form.Item
                 label="Chất liệu"
                 name="material"
-                rules={[{ required: true, message: "Vui lòng chọn chất liệu!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng chọn chất liệu!" },
+                ]}
               >
                 <AntSelect placeholder="Chọn chất liệu">
                   {Object.values(ProductMaterial).map((material) => (
@@ -849,7 +913,12 @@ const AdminProductList = () => {
               <Form.Item
                 label="Số lượng tồn kho"
                 name="stock"
-                rules={[{ required: true, message: "Vui lòng nhập số lượng tồn kho!" }]}
+                rules={[
+                  {
+                    required: true,
+                    message: "Vui lòng nhập số lượng tồn kho!",
+                  },
+                ]}
               >
                 <Input type="number" />
               </Form.Item>
@@ -889,7 +958,7 @@ const AdminProductList = () => {
                 rules={[{ required: true, message: "Vui lòng chọn kho hàng!" }]}
               >
                 <AntSelect placeholder="Chọn kho hàng">
-                  {inventory?.data?.map((item) => (
+                  {inventory?.map((item) => (
                     <AntSelect.Option key={item.id} value={item.id}>
                       {item.location}
                     </AntSelect.Option>
@@ -926,11 +995,17 @@ const AdminProductList = () => {
             className={`${styles.productModal} ${styles.sideModal}`}
             width={400}
           >
-            <Form form={editDetailForm} layout="vertical" onFinish={handleUpdateProductDetails}>
+            <Form
+              form={editDetailForm}
+              layout="vertical"
+              onFinish={handleUpdateProductDetails}
+            >
               <Form.Item
                 label="Kích thước"
                 name="size"
-                rules={[{ required: true, message: "Vui lòng chọn kích thước!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng chọn kích thước!" },
+                ]}
               >
                 <AntSelect placeholder="Chọn kích thước">
                   {Object.values(ProductSize).map((size) => (
@@ -956,7 +1031,9 @@ const AdminProductList = () => {
               <Form.Item
                 label="Chất liệu"
                 name="material"
-                rules={[{ required: true, message: "Vui lòng chọn chất liệu!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng chọn chất liệu!" },
+                ]}
               >
                 <AntSelect placeholder="Chọn chất liệu">
                   {Object.values(ProductMaterial).map((material) => (
@@ -969,7 +1046,12 @@ const AdminProductList = () => {
               <Form.Item
                 label="Số lượng tồn kho"
                 name="stock"
-                rules={[{ required: true, message: "Vui lòng nhập số lượng tồn kho!" }]}
+                rules={[
+                  {
+                    required: true,
+                    message: "Vui lòng nhập số lượng tồn kho!",
+                  },
+                ]}
               >
                 <Input type="number" />
               </Form.Item>
@@ -1009,7 +1091,7 @@ const AdminProductList = () => {
                 rules={[{ required: true, message: "Vui lòng chọn kho hàng!" }]}
               >
                 <AntSelect placeholder="Chọn kho hàng">
-                  {inventory?.data?.map((item) => (
+                  {inventory?.map((item) => (
                     <AntSelect.Option key={item.id} value={item.id}>
                       {item.location}
                     </AntSelect.Option>

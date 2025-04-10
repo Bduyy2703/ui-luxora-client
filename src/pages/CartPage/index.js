@@ -45,25 +45,6 @@ const CartPage = () => {
     });
   };
 
-  const updateLocalStorage = () => {
-    localStorage.setItem("cartItems", JSON.stringify(cartItems));
-  };
-
-  // const handleRemoveItem = (itemId) => {
-  //   // Xóa item khỏi state và localStorage
-  //   const confirmDelete = window.confirm("Bạn có chắc chắn muốn xóa không?");
-  //   if (confirmDelete) {
-  //     setCartItems((prevItems) => {
-  //       const updatedItems = prevItems.filter((item) => item.id !== itemId);
-  //       localStorage.setItem("cartItems", JSON.stringify(updatedItems));
-  //       alert("Xóa sản phẩm thành công"); // Thông báo thành công
-  //       return updatedItems;
-  //     });
-  //   } else {
-  //     alert("Xóa sản phẩm thất bại"); // Thông báo thất bại
-  //   }
-  // };
-
   const showDeleteConfirm = (itemId) => {
     setCurrentItemId(itemId);
     setIsModalVisible(true);
@@ -91,13 +72,11 @@ const CartPage = () => {
   const totalAmount = cartItems.reduce((total, item) => {
     return (
       total +
-      (item.product.product_sale_price || item.product.product_price) *
-        item.quantity
+      (item.product.finalPrice || item.product.originalPrice) * item.quantity
     );
   }, 0);
 
   const [paymentData, setPaymentData] = useState([]);
-  // const email = localStorage.getItem("userEmail");
 
   const [discount_id, setDiscount_id] = useState(null);
 
@@ -163,27 +142,20 @@ const CartPage = () => {
                       <img
                         className={styles.image}
                         src={
-                          item.product.product_details.product_images[0]
-                            .secure_url
+                          item.product.images?.[0] ||
+                          "https://via.placeholder.com/100" // Truy cập images trực tiếp
                         }
-                        alt={item.product.product_name}
+                        alt={item.product.name}
                       />
                     </div>
                     <div className={styles.content}>
                       <div className={styles.contentLeft}>
                         <div className={styles.name}>
-                          {item.product.product_name}
+                          {item.product.name || "Tên sản phẩm"}
                         </div>
                         <span className={styles.material}>
-                          {item.product.product_details.color}
+                          {item.product.productDetails?.[0]?.color || "N/A"}
                         </span>
-                        {/* <a
-                          title="Xóa"
-                          className={styles.btn}
-                          onClick={() => handleRemoveItem(item.id)}
-                        >
-                          Xóa
-                        </a> */}
                         <a
                           title="Xóa"
                           className={styles.btn}
@@ -196,8 +168,8 @@ const CartPage = () => {
                         <div>
                           <h4 className={styles.price}>
                             {new Intl.NumberFormat("vi-VN").format(
-                              item.product.product_sale_price ||
-                                item.product.product_price,
+                              item.product.finalPrice ||
+                                item.product.originalPrice,
                             )}
                             <span className={styles.dong}>đ</span>
                           </h4>
@@ -222,8 +194,8 @@ const CartPage = () => {
                         <div>
                           <h4 className={styles.price}>
                             {new Intl.NumberFormat("vi-VN").format(
-                              (item.product.product_sale_price ||
-                                item.product.product_price) * item.quantity,
+                              (item.product.finalPrice ||
+                                item.product.originalPrice) * item.quantity,
                             )}
                             <span className={styles.dong}>đ</span>
                           </h4>

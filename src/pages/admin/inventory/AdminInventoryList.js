@@ -13,7 +13,11 @@ import {
 import Swal from "sweetalert2";
 import Filter from "../../../components/admin/filter/Filter";
 import config from "../../../config";
-import { EditOutlined, InfoCircleOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+  EditOutlined,
+  InfoCircleOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
 import {
   addInventory,
   getInventoryList,
@@ -259,8 +263,14 @@ const AdminInventoryList = () => {
   }, [fetchData]);
 
   useEffect(() => {
-    const warehouseNames = ["Tất cả", ...new Set(data.map((item) => item.warehouseName))];
-    const locations = ["Tất cả", ...new Set(data.map((item) => item.location?.split(",")[0]?.trim()))];
+    const warehouseNames = [
+      "Tất cả",
+      ...new Set(data.map((item) => item.warehouseName)),
+    ];
+    const locations = [
+      "Tất cả",
+      ...new Set(data.map((item) => item.location?.split(",")[0]?.trim())),
+    ];
     setFilters([
       { key: "warehouseName", header: "Tên kho", options: warehouseNames },
       { key: "location", header: "Địa chỉ", options: locations },
@@ -315,9 +325,16 @@ const AdminInventoryList = () => {
       key: "image",
       render: (record) => {
         const productId = record.product?.id;
-        const image = currentInventory?.productImagesMap?.[productId]?.[0]?.fileUrl;
+        const image =
+          currentInventory?.productImagesMap?.[productId]?.[0]?.fileUrl;
         return image ? (
-          <Image src={image} alt="Product" width={50} height={50} style={{ objectFit: "cover" }} />
+          <Image
+            src={image}
+            alt="Product"
+            width={50}
+            height={50}
+            style={{ objectFit: "cover" }}
+          />
         ) : (
           <span>Không có hình ảnh</span>
         );
@@ -338,7 +355,8 @@ const AdminInventoryList = () => {
       title: "Giá",
       dataIndex: ["product", "finalPrice"],
       key: "finalPrice",
-      render: (finalPrice) => (finalPrice ? `${parseFloat(finalPrice).toLocaleString()} VNĐ` : "N/A"),
+      render: (finalPrice) =>
+        finalPrice ? `${parseFloat(finalPrice).toLocaleString()} VNĐ` : "N/A",
     },
     {
       title: "Số lượng còn",
@@ -392,10 +410,7 @@ const AdminInventoryList = () => {
                 />
               </div>
               <div className="card-btns">
-                <Button
-                  type="primary"
-                  onClick={() => setModalVisible(true)}
-                >
+                <Button type="primary" onClick={() => setModalVisible(true)}>
                   Thêm
                 </Button>
                 <Button
@@ -420,14 +435,16 @@ const AdminInventoryList = () => {
                 }}
               />
             </div>
-            <div className={styles.pagination}>
-              <Pagination
-                current={currentPage}
-                pageSize={limit}
-                total={total}
-                onChange={(page) => setCurrentPage(page)}
-              />
-            </div>
+            {total > limit && (
+              <div className={styles.pagination}>
+                <Pagination
+                  current={currentPage}
+                  pageSize={limit}
+                  total={total}
+                  onChange={(page) => setCurrentPage(page)}
+                />
+              </div>
+            )}
           </div>
 
           {/* Add Inventory Modal */}
@@ -443,14 +460,21 @@ const AdminInventoryList = () => {
               <Form.Item
                 label="Tên kho hàng"
                 name="warehouseName"
-                rules={[{ required: true, message: "Vui lòng nhập tên kho hàng!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng nhập tên kho hàng!" },
+                ]}
               >
                 <Input placeholder="Nhập tên kho hàng" />
               </Form.Item>
               <Form.Item
                 label="Địa chỉ kho hàng"
                 name="location"
-                rules={[{ required: true, message: "Vui lòng nhập địa chỉ kho hàng!" }]}
+                rules={[
+                  {
+                    required: true,
+                    message: "Vui lòng nhập địa chỉ kho hàng!",
+                  },
+                ]}
               >
                 <Input placeholder="Nhập địa chỉ kho hàng" />
               </Form.Item>
@@ -481,18 +505,29 @@ const AdminInventoryList = () => {
             className={styles.inventoryModal}
             width={600}
           >
-            <Form form={editForm} layout="vertical" onFinish={handleUpdateInventory}>
+            <Form
+              form={editForm}
+              layout="vertical"
+              onFinish={handleUpdateInventory}
+            >
               <Form.Item
                 label="Tên kho hàng"
                 name="warehouseName"
-                rules={[{ required: true, message: "Vui lòng nhập tên kho hàng!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng nhập tên kho hàng!" },
+                ]}
               >
                 <Input placeholder="Nhập tên kho hàng" />
               </Form.Item>
               <Form.Item
                 label="Địa chỉ kho hàng"
                 name="location"
-                rules={[{ required: true, message: "Vui lòng nhập địa chỉ kho hàng!" }]}
+                rules={[
+                  {
+                    required: true,
+                    message: "Vui lòng nhập địa chỉ kho hàng!",
+                  },
+                ]}
               >
                 <Input placeholder="Nhập địa chỉ kho hàng" />
               </Form.Item>
@@ -530,8 +565,12 @@ const AdminInventoryList = () => {
               <div>
                 <div className={styles.inventoryInfo}>
                   <h3>Thông tin kho hàng</h3>
-                  <p><strong>Tên kho:</strong> {currentInventory.warehouseName}</p>
-                  <p><strong>Địa chỉ:</strong> {currentInventory.location}</p>
+                  <p>
+                    <strong>Tên kho:</strong> {currentInventory.warehouseName}
+                  </p>
+                  <p>
+                    <strong>Địa chỉ:</strong> {currentInventory.location}
+                  </p>
                 </div>
                 <div className={styles.productList}>
                   <h3>Danh sách sản phẩm</h3>
@@ -560,13 +599,20 @@ const AdminInventoryList = () => {
             className={styles.inventoryModal}
             width={400}
           >
-            <Form form={stockForm} layout="vertical" onFinish={handleUpdateStock}>
+            <Form
+              form={stockForm}
+              layout="vertical"
+              onFinish={handleUpdateStock}
+            >
               <Form.Item
                 label="Số lượng (dương để nhập, âm để xuất)"
                 name="quantity"
                 rules={[{ required: true, message: "Vui lòng nhập số lượng!" }]}
               >
-                <InputNumber style={{ width: "100%" }} placeholder="Nhập số lượng" />
+                <InputNumber
+                  style={{ width: "100%" }}
+                  placeholder="Nhập số lượng"
+                />
               </Form.Item>
               <Form.Item className={styles.formActions}>
                 <Button type="primary" htmlType="submit" loading={loading}>

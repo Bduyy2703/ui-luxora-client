@@ -1,11 +1,30 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Modal, Form, Input, Button, Pagination, Spin, Tooltip, Select, Table as AntTable } from "antd";
+import {
+  Modal,
+  Form,
+  Input,
+  Button,
+  Pagination,
+  Spin,
+  Tooltip,
+  Select,
+  Table as AntTable,
+  Tag,
+} from "antd";
 import Swal from "sweetalert2";
 import Filter from "../../../components/admin/filter/Filter";
 import config from "../../../config";
-import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
+import {
+  PlusOutlined,
+  EyeOutlined,
+  EyeInvisibleOutlined,
+} from "@ant-design/icons";
 import styles from "./index.module.scss";
-import { getAllUser, addUser, deleteUser } from "../../../services/api/userService";
+import {
+  getAllUser,
+  addUser,
+  deleteUser,
+} from "../../../services/api/userService";
 
 const { Option } = Select;
 
@@ -164,7 +183,11 @@ const AdminUserList = () => {
   useEffect(() => {
     setFilters([
       { key: "role", header: "Vai trò", options: ["Tất cả", "Admin", "User"] },
-      { key: "status", header: "Trạng thái", options: ["Tất cả", "Active", "Inactive"] },
+      {
+        key: "status",
+        header: "Trạng thái",
+        options: ["Tất cả", "Active", "Inactive"],
+      },
     ]);
   }, []);
 
@@ -186,36 +209,68 @@ const AdminUserList = () => {
       dataIndex: "role",
       key: "role",
       render: (role) => (role && role.name ? role.name : "N/A"),
+      align: "center",
     },
     {
       title: "Số điện thoại",
       dataIndex: "profile",
       key: "phoneNumber",
-      render: (profile) => (profile && profile.phoneNumber ? profile.phoneNumber : "N/A"),
+      render: (profile) =>
+        profile && profile.phoneNumber ? profile.phoneNumber : "N/A",
+      align: "center",
     },
     {
-      title: "Trạng thái xác thực",
+      title: "Tình trạng",
       dataIndex: "isVerified",
       key: "isVerified",
-      render: (isVerified) =>
-        typeof isVerified === "boolean" ? (isVerified ? "Đã xác thực" : "Chưa xác thực") : "N/A",
+      render: (isVerified) => {
+        if (isVerified === true) {
+          return (
+            <Tag
+              style={{
+                width: "100px",
+                textAlign: "center",
+              }}
+              color="green"
+            >
+              Đã xác thực
+            </Tag>
+          );
+        } else if (isVerified === false) {
+          return (
+            <Tag
+              style={{
+                width: "100px",
+                textAlign: "center",
+              }}
+              color="red"
+            >
+              Chưa xác thực
+            </Tag>
+          );
+        } else {
+          return <Tag color="gray">N/A</Tag>;
+        }
+      },
+      align: "center",
     },
-    {
-      title: "Hành động",
-      key: "actions",
-      render: (row) => (
-        <div>
-          <Tooltip title="Xóa">
-            <Button
-              icon={<DeleteOutlined />}
-              onClick={() => handleDeleteUser(row?.id)}
-              danger
-              disabled={!row || !row.id}
-            />
-          </Tooltip>
-        </div>
-      ),
-    },
+    // {
+    //   title: "Hành động",
+    //   key: "actions",
+    //   render: (row) => (
+    //     <div>
+    //       <Tooltip title="Xóa">
+    //         <Button
+    //           icon={<DeleteOutlined />}
+    //           onClick={() => handleDeleteUser(row?.id)}
+    //           danger
+    //           disabled={!row || !row.id}
+    //         />
+    //       </Tooltip>
+    //     </div>
+    //   ),
+    //   align: "center",
+    // },
   ];
 
   return (
@@ -275,23 +330,23 @@ const AdminUserList = () => {
                   pagination={false}
                   rowSelection={{
                     type: "checkbox",
-                    onChange: (selectedRowKeys) => setCheckedRow(selectedRowKeys),
+                    onChange: (selectedRowKeys) =>
+                      setCheckedRow(selectedRowKeys),
                   }}
                 />
               </Spin>
             </div>
-            <div className={styles.pagination}>
-              <Pagination
-                current={currentPage}
-                pageSize={limit}
-                total={total}
-                onChange={(page) => setCurrentPage(page)}
-                showTotal={(total, range) =>
-                  `Hiển thị ${range[0]}-${range[1]} trên tổng số ${total} người dùng`
-                }
-                showQuickJumper
-              />
-            </div>
+            {total > limit && (
+              <div className={styles.pagination}>
+                <Pagination
+                  current={currentPage}
+                  pageSize={limit}
+                  total={total}
+                  onChange={(page) => setCurrentPage(page)}
+                  showQuickJumper
+                />
+              </div>
+            )}
           </div>
 
           <Modal
@@ -306,7 +361,9 @@ const AdminUserList = () => {
               <Form.Item
                 label="Tên người dùng"
                 name="username"
-                rules={[{ required: true, message: "Vui lòng nhập tên người dùng!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng nhập tên người dùng!" },
+                ]}
               >
                 <Input placeholder="Nhập tên người dùng" />
               </Form.Item>
@@ -327,7 +384,8 @@ const AdminUserList = () => {
                   { required: true, message: "Vui lòng nhập số điện thoại!" },
                   {
                     pattern: /^[0-9]{10,15}$/,
-                    message: "Số điện thoại không hợp lệ! (Chỉ nhập số, 10-15 chữ số)",
+                    message:
+                      "Số điện thoại không hợp lệ! (Chỉ nhập số, 10-15 chữ số)",
                   },
                 ]}
               >
@@ -352,11 +410,12 @@ const AdminUserList = () => {
               </Form.Item>
               <Form.Item className={styles.formActions}>
                 <Button type="primary" htmlType="submit" loading={loading}>
-                  Thêm người dùng
+                  Thêm
                 </Button>
                 <Button
                   className={styles.cancelButton}
                   onClick={() => setModalVisible(false)}
+                  style={{ marginLeft: 8 }}
                 >
                   Hủy
                 </Button>
