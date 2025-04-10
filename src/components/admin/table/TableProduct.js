@@ -60,6 +60,7 @@ const Table = ({
   onEdit,
   onAddDetails,
   inventory,
+  onViewDetails,
 }) => {
   console.log("inventory", inventory);
 
@@ -362,7 +363,6 @@ const Table = ({
 
   return (
     <div>
-      {/* Main Table for Products */}
       <table className="card-table">
         <thead>
           <tr>
@@ -436,7 +436,7 @@ const Table = ({
                   <Button
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleViewDetails(row);
+                      onViewDetails(row);
                     }}
                     style={{ cursor: "pointer" }}
                   >
