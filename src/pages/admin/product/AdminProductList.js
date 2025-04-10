@@ -105,8 +105,6 @@ const AdminProductList = () => {
     const fetchInventory = async () => {
       try {
         const result = await getInventoryList();
-        console.log("result", result?.data);
-
         setInventory(result?.data || []);
       } catch (error) {
         console.error("Lỗi khi lấy danh sách kho hàng:", error);
@@ -114,8 +112,6 @@ const AdminProductList = () => {
     };
     fetchInventory();
   }, []);
-
-  console.log("inventory", inventory);
 
   const standardSort = ["name", "originalPrice"];
 
@@ -423,7 +419,7 @@ const AdminProductList = () => {
     setLoading(true);
     try {
       const res = await getAllProductDetails(product.id);
-      setCurrentProductDetails(res?.data || []);
+      setCurrentProductDetails(res || []);
       setDetailModalVisible(true);
     } catch (error) {
       console.error("Error fetching product details:", error);
@@ -559,6 +555,11 @@ const AdminProductList = () => {
     },
   ];
 
+  const handleOpenAddDetailFromTable = (product) => {
+    setCurrentProduct(product);
+    setAddDetailModalVisible(true);
+  };
+
   return (
     <div className="wrapper">
       <header className="admin-header">
@@ -620,6 +621,7 @@ const AdminProductList = () => {
                 setChecked={setCheckedRow}
                 onEdit={handleEdit}
                 onViewDetails={handleViewDetails}
+                onAddDetails={handleOpenAddDetailFromTable}
               />
             </div>
             <div className={styles.pagination}>
