@@ -1,0 +1,17 @@
+.filterWrapper {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  
+  .searchFields {
+    display: flex;
+    gap: 16px;
+  }
+  
+  .sortSection {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
