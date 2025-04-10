@@ -6,7 +6,10 @@ import {
   StarFilled,
   StarOutlined,
 } from "@ant-design/icons";
-import { getProductDetail } from "../../services/api/productService";
+import {
+  getProductDetail,
+  getByIdProduct,
+} from "../../services/api/productService";
 import { useNavigate, useParams } from "react-router-dom";
 import { notification } from "antd";
 import Breadcrumb from "../../components/Breadcrumb";
@@ -14,9 +17,10 @@ import Breadcrumb from "../../components/Breadcrumb";
 export const DetailProduct = () => {
   const [rating, setRating] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const [product, setProduct] = useState({});
+  const [product, setProduct] = useState({}); // Dữ liệu sản phẩm giờ là object trực tiếp
   const { id } = useParams();
   const navigate = useNavigate();
+
   const handleStarClick = (index) => {
     setRating(index);
   };
@@ -28,8 +32,17 @@ export const DetailProduct = () => {
 
   useEffect(() => {
     const fetchProductDetail = async () => {
-      const data = await getProductDetail(id);
-      setProduct(data);
+      try {
+        const data = await getByIdProduct(id);
+        setProduct(data); // Dữ liệu trả về trực tiếp là object, không cần data.product
+      } catch (error) {
+        console.error("Error fetching product:", error);
+        notification.error({
+          message: "Thông báo",
+          description: "Không thể tải thông tin sản phẩm",
+          duration: 3,
+        });
+      }
     };
     fetchProductDetail();
   }, [id]);
@@ -59,7 +72,7 @@ export const DetailProduct = () => {
     } else {
       cartItems.push({
         id: id,
-        product: product.data?.product,
+        product: product, // Lưu toàn bộ object product
         quantity: quantity,
       });
     }
@@ -81,16 +94,18 @@ export const DetailProduct = () => {
       <div className={styles.wrapper}>
         <div className={styles.container}>
           <div className={styles.contentLeft}>
-            <Image product={product.data?.product} />
+            <Image product={product} />
             <div className={styles.detail}>
               <div className={styles.title}>
-                {product.data?.product?.product_name}
+                {product.name || "Tên sản phẩm"}{" "}
+                {/* Truy cập trực tiếp product.name */}
               </div>
               <div className={styles.review}>
                 <div>
                   <span className={styles.code}>Mã: </span>
                   <span className={styles.codeId}>
-                    {product.data?.product?.product_code}
+                    {product.id || "N/A"}{" "}
+                    {/* Không có product_code, dùng id thay thế */}
                   </span>
                 </div>
                 <div className={styles.rating}>
@@ -108,27 +123,29 @@ export const DetailProduct = () => {
               <form>
                 <div className={styles.priceProduct}>
                   <h4 className={styles.price}>
-                    {product.data?.product?.product_sale_price <
-                      product.data?.product?.product_price &&
-                    product.data?.product?.product_sale_price
+                    {product.finalPrice < product.originalPrice &&
+                    product.finalPrice
                       ? new Intl.NumberFormat("vi-VN").format(
-                          product.data?.product?.product_sale_price,
+                          product.finalPrice,
                         )
                       : new Intl.NumberFormat("vi-VN").format(
-                          product.data?.product?.product_price,
+                          product.originalPrice,
                         )}
                     <span className={styles.dong}>đ</span>
                   </h4>
                 </div>
                 <div className={styles.notes}>
                   <ul>
-                    <li>{product.data?.product?.product_short_description}</li>
+                    <li>
+                      {product.productDetails?.[0]?.description ||
+                        "Mô tả ngắn gọn về sản phẩm"}
+                    </li>
                   </ul>
                 </div>
                 <div className={styles.btns}>
                   <div className={styles.color}>
                     <div>Màu xi/phủ: </div>
-                    <div>{product.data?.product?.product_details?.color}</div>
+                    <div>{product.productDetails?.[0]?.color || "N/A"}</div>
                   </div>
                   <div className={styles.quantity}>
                     <button
@@ -181,39 +198,9 @@ export const DetailProduct = () => {
             </div>
           </div>
           <div className={styles.desc}>
-            <DescProduct product={product.data?.product} />
+            <DescProduct product={product} />
           </div>
         </div>
-        {/* <div className={styles.right}>
-          <div className={styles.couponBox}>
-            <div className={styles.couponTitle}>
-              <img
-                src="//bizweb.dktcdn.net/100/461/213/themes/870653/assets/code_dis.gif?1729756726879"
-                alt="gift"
-                className={styles.giftIcon}
-              />
-              <span>MÃ GIẢM GIÁ</span>
-            </div>
-            <div className={styles.couponItem}>
-              <div className={styles.couponInfo}>
-                <div className={styles.discount}>GIẢM 10%</div>
-                <div className={styles.condition}>Khi mua 2 sản phẩm</div>
-                <div className={styles.code}>MUA2GIAM10</div>
-              </div>
-              <button className={styles.copyBtn}>Copy</button>
-            </div>
-            <div className={styles.couponItem}>
-              <div className={styles.couponInfo}>
-                <div className={styles.discount}>FREESHIP</div>
-                <div className={styles.condition}>
-                  Miễn Phí Vận Chuyển Đơn {">"} 950k
-                </div>
-                <div className={styles.code}>FREESHIP950K</div>
-              </div>
-              <button className={styles.copyBtn}>Copy</button>
-            </div>
-          </div>
-        </div> */}
       </div>
     </>
   );
@@ -222,8 +209,7 @@ export const DetailProduct = () => {
 export const Image = ({ product }) => {
   const [mainImageIndex, setMainImageIndex] = useState(0);
 
-  const images =
-    product?.product_details?.product_images.map((img) => img.secure_url) || [];
+  const images = product?.images || []; // Truy cập trực tiếp product.images
 
   useEffect(() => {
     setMainImageIndex(0);
@@ -246,7 +232,7 @@ export const Image = ({ product }) => {
       <div className={styles.mainImageContainer}>
         <img
           className={styles.img}
-          src={images[mainImageIndex]}
+          src={images[mainImageIndex] || "https://via.placeholder.com/300"} // Hiển thị ảnh mặc định nếu không có ảnh
           alt="main-product"
         />
       </div>
@@ -283,37 +269,40 @@ export const DescProduct = ({ product }) => {
 
       <div className={styles.specTable}>
         <h3 className={styles.specTitle}>
-          THÔNG SỐ THIẾT KẾ - {product?.product_code}
+          THÔNG SỐ THIẾT KẾ - {product?.id || "N/A"}{" "}
+          {/* Dùng id thay cho product_code */}
         </h3>
         <table>
           <tbody>
             <tr>
               <td>Chất liệu</td>
-              <td>{product?.product_details?.material}</td>
+              <td>{product?.productDetails?.[0]?.material || "N/A"}</td>
             </tr>
             <tr>
               <td>Màu sắc</td>
-              <td>{product?.product_details?.color}</td>
+              <td>{product?.productDetails?.[0]?.color || "N/A"}</td>
             </tr>
             <tr>
               <td>Độ dài dây</td>
-              <td>{product?.product_details?.length}</td>
+              <td>{product?.productDetails?.[0]?.length || "N/A"}</td>
             </tr>
             <tr>
               <td>Cách bảo quản & chăm sóc</td>
-              <td>{product?.product_details?.care_instructions}</td>
+              <td>
+                {product?.productDetails?.[0]?.care_instructions || "N/A"}
+              </td>
             </tr>
             <tr>
               <td>Kích thước của mặt đá</td>
-              <td>{product?.product_details?.stone_size}</td>
+              <td>{product?.productDetails?.[0]?.stone_size || "N/A"}</td>
             </tr>
             <tr>
               <td>Loại đá</td>
-              <td>{product?.product_details?.stone_type}</td>
+              <td>{product?.productDetails?.[0]?.stone_type || "N/A"}</td>
             </tr>
             <tr>
               <td>Phong cách thiết kế</td>
-              <td>{product?.product_details?.design_style}</td>
+              <td>{product?.productDetails?.[0]?.design_style || "N/A"}</td>
             </tr>
           </tbody>
         </table>
