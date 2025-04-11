@@ -254,23 +254,6 @@ const PromotionList = () => {
       },
       align: "center",
     },
-    // {
-    //   title: "Hành động",
-    //   key: "actions",
-    //   render: (row) => (
-    //     <div>
-    //       <Tooltip title="Xóa">
-    //         <Button
-    //           icon={<DeleteOutlined />}
-    //           onClick={() => handleDeleteUser(row?.id)}
-    //           danger
-    //           disabled={!row || !row.id}
-    //         />
-    //       </Tooltip>
-    //     </div>
-    //   ),
-    //   align: "center",
-    // },
   ];
 
   return (
@@ -290,7 +273,11 @@ const PromotionList = () => {
                   data={data}
                   validData={validData}
                   setValidData={setValidData}
-                  standardSort={["username", "email"]}
+                  standardSort={[
+                    { name: "Tên người dùng", type: "username" },
+                    { name: "Email", type: "email" },
+                    { name: "Số điện thoại", type: "phone" },
+                  ]}
                   searchFields={[
                     {
                       key: "username",

@@ -161,10 +161,10 @@ const AdminInvoiceList = () => {
               text === "PAID"
                 ? "green"
                 : text === "CANCELLED"
-                ? "red"
-                : text === "FAILED"
-                ? "purple"
-                : "orange",
+                  ? "red"
+                  : text === "FAILED"
+                    ? "purple"
+                    : "orange",
           }}
         >
           {text}
@@ -195,7 +195,11 @@ const AdminInvoiceList = () => {
   ];
 
   const itemColumns = [
-    { title: "Tên sản phẩm", dataIndex: ["productDetail", "name"], key: "name" },
+    {
+      title: "Tên sản phẩm",
+      dataIndex: ["productDetail", "name"],
+      key: "name",
+    },
     { title: "Số lượng", dataIndex: "quantity", key: "quantity" },
     {
       title: "Giá",
@@ -217,7 +221,8 @@ const AdminInvoiceList = () => {
       title: "Điều kiện",
       dataIndex: ["discount", "condition"],
       key: "condition",
-      render: (text) => (text === "TOTAL" ? "Giảm trên tổng tiền" : "Giảm phí vận chuyển"),
+      render: (text) =>
+        text === "TOTAL" ? "Giảm trên tổng tiền" : "Giảm phí vận chuyển",
     },
     {
       title: "Giá trị giảm",
@@ -232,7 +237,7 @@ const AdminInvoiceList = () => {
       key: "time",
       render: (text, record) =>
         `${new Date(record.discount.startDate).toLocaleDateString("vi-VN")} - ${new Date(
-          record.discount.endDate
+          record.discount.endDate,
         ).toLocaleDateString("vi-VN")}`,
     },
   ];
@@ -258,8 +263,8 @@ const AdminInvoiceList = () => {
                     { name: "Mã đơn", type: "id" },
                     { name: "Người mua", type: "username" },
                     { name: "Ngày tạo", type: "createdAt" },
-                    { name: "Trạng thái", type: "status" }, // Thêm sắp xếp theo trạng thái
-                    { name: "Phương thức", type: "paymentMethod" }, // Thêm sắp xếp theo phương thức
+                    { name: "Trạng thái", type: "status" },
+                    { name: "Phương thức", type: "paymentMethod" },
                   ]}
                   searchFields={[
                     { key: "id", placeholder: "Tìm theo mã đơn" },
@@ -270,7 +275,10 @@ const AdminInvoiceList = () => {
             </div>
             <div className="card-body">
               <AntTable
-                dataSource={validData.slice((currentPage - 1) * limit, currentPage * limit)}
+                dataSource={validData.slice(
+                  (currentPage - 1) * limit,
+                  currentPage * limit,
+                )}
                 columns={columns}
                 rowKey="id"
                 pagination={false}
@@ -313,20 +321,46 @@ const AdminInvoiceList = () => {
                 <Title level={4}>Thông tin hóa đơn</Title>
                 <Row gutter={[16, 16]}>
                   <Col xs={24} md={12}>
-                    <p><strong>Mã đơn:</strong> {currentInvoice.id}</p>
-                    <p><strong>Người mua:</strong> {currentInvoice.user.username}</p>
-                    <p><strong>SĐT:</strong> {currentInvoice.user.phoneNumber}</p>
-                    <p><strong>Địa chỉ:</strong> {`${currentInvoice.address.street}, ${currentInvoice.address.city}, ${currentInvoice.address.country}`}</p>
+                    <p>
+                      <strong>Mã đơn:</strong> {currentInvoice.id}
+                    </p>
+                    <p>
+                      <strong>Người mua:</strong> {currentInvoice.user.username}
+                    </p>
+                    <p>
+                      <strong>SĐT:</strong> {currentInvoice.user.phoneNumber}
+                    </p>
+                    <p>
+                      <strong>Địa chỉ:</strong>{" "}
+                      {`${currentInvoice.address.street}, ${currentInvoice.address.city}, ${currentInvoice.address.country}`}
+                    </p>
                   </Col>
                   <Col xs={24} md={12}>
-                    <p><strong>Phương thức:</strong> {currentInvoice.paymentMethod}</p>
-                    <p><strong>Trạng thái:</strong> {currentInvoice.status}</p>
-                    <p><strong>Ngày tạo:</strong> {new Date(currentInvoice.createdAt).toLocaleString("vi-VN")}</p>
-                    <p><strong>Ngày cập nhật:</strong> {new Date(currentInvoice.updatedAt).toLocaleString("vi-VN")}</p>
+                    <p>
+                      <strong>Phương thức:</strong>{" "}
+                      {currentInvoice.paymentMethod}
+                    </p>
+                    <p>
+                      <strong>Trạng thái:</strong> {currentInvoice.status}
+                    </p>
+                    <p>
+                      <strong>Ngày tạo:</strong>{" "}
+                      {new Date(currentInvoice.createdAt).toLocaleString(
+                        "vi-VN",
+                      )}
+                    </p>
+                    <p>
+                      <strong>Ngày cập nhật:</strong>{" "}
+                      {new Date(currentInvoice.updatedAt).toLocaleString(
+                        "vi-VN",
+                      )}
+                    </p>
                   </Col>
                 </Row>
 
-                <Title level={4} style={{ marginTop: 24 }}>Danh sách sản phẩm</Title>
+                <Title level={4} style={{ marginTop: 24 }}>
+                  Danh sách sản phẩm
+                </Title>
                 <AntTable
                   dataSource={currentInvoice.items}
                   columns={itemColumns}
@@ -334,30 +368,63 @@ const AdminInvoiceList = () => {
                   pagination={false}
                 />
 
-                <Title level={4} style={{ marginTop: 24 }}>Chi tiết tài chính</Title>
+                <Title level={4} style={{ marginTop: 24 }}>
+                  Chi tiết tài chính
+                </Title>
                 <Row gutter={[16, 16]}>
                   <Col xs={24} md={12}>
-                    <p><strong>Tổng tiền sản phẩm:</strong> {parseFloat(currentInvoice.totalProductAmount).toLocaleString()} VNĐ</p>
-                    <p><strong>Phí vận chuyển:</strong> {parseFloat(currentInvoice.shippingFee).toLocaleString()} VNĐ</p>
-                    <p><strong>Giảm giá phí vận chuyển:</strong> {parseFloat(currentInvoice.shippingFeeDiscount).toLocaleString()} VNĐ</p>
+                    <p>
+                      <strong>Tổng tiền sản phẩm:</strong>{" "}
+                      {parseFloat(
+                        currentInvoice.totalProductAmount,
+                      ).toLocaleString()}{" "}
+                      VNĐ
+                    </p>
+                    <p>
+                      <strong>Phí vận chuyển:</strong>{" "}
+                      {parseFloat(currentInvoice.shippingFee).toLocaleString()}{" "}
+                      VNĐ
+                    </p>
+                    <p>
+                      <strong>Giảm giá phí vận chuyển:</strong>{" "}
+                      {parseFloat(
+                        currentInvoice.shippingFeeDiscount,
+                      ).toLocaleString()}{" "}
+                      VNĐ
+                    </p>
                   </Col>
                   <Col xs={24} md={12}>
-                    <p><strong>Giảm giá sản phẩm:</strong> {parseFloat(currentInvoice.productDiscount).toLocaleString()} VNĐ</p>
-                    <p><strong>Tổng tiền cuối cùng:</strong> <span style={{ color: "#1890ff", fontWeight: "bold" }}>{parseFloat(currentInvoice.finalTotal).toLocaleString()} VNĐ</span></p>
+                    <p>
+                      <strong>Giảm giá sản phẩm:</strong>{" "}
+                      {parseFloat(
+                        currentInvoice.productDiscount,
+                      ).toLocaleString()}{" "}
+                      VNĐ
+                    </p>
+                    <p>
+                      <strong>Tổng tiền cuối cùng:</strong>{" "}
+                      <span style={{ color: "#1890ff", fontWeight: "bold" }}>
+                        {parseFloat(currentInvoice.finalTotal).toLocaleString()}{" "}
+                        VNĐ
+                      </span>
+                    </p>
                   </Col>
                 </Row>
 
-                {currentInvoice.discount && currentInvoice.discount.length > 0 && (
-                  <>
-                    <Title level={4} style={{ marginTop: 24 }}>Thông tin giảm giá</Title>
-                    <AntTable
-                      dataSource={currentInvoice.discount}
-                      columns={discountColumns}
-                      rowKey="id"
-                      pagination={false}
-                    />
-                  </>
-                )}
+                {currentInvoice.discount &&
+                  currentInvoice.discount.length > 0 && (
+                    <>
+                      <Title level={4} style={{ marginTop: 24 }}>
+                        Thông tin giảm giá
+                      </Title>
+                      <AntTable
+                        dataSource={currentInvoice.discount}
+                        columns={discountColumns}
+                        rowKey="id"
+                        pagination={false}
+                      />
+                    </>
+                  )}
               </div>
             )}
           </Modal>
@@ -372,27 +439,33 @@ const AdminInvoiceList = () => {
               <Form.Item
                 name="status"
                 label="Trạng thái"
-                rules={[{ required: true, message: "Vui lòng chọn trạng thái!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng chọn trạng thái!" },
+                ]}
               >
                 <Select placeholder="Chọn trạng thái">
                   <Option value="PAID">PAID</Option>
                   <Option value="CANCELLED">CANCELLED</Option>
                 </Select>
               </Form.Item>
-              <Text type="secondary" style={{ display: "block", marginBottom: 16 }}>
-                Lưu ý: Nếu chọn trạng thái "CANCELLED", hệ thống sẽ tự động hủy đơn và hoàn lại số lượng sản phẩm vào kho hàng.
-              </Text>
-              <Form.Item
-                name="note"
-                label="Ghi chú"
+              <Text
+                type="secondary"
+                style={{ display: "block", marginBottom: 16 }}
               >
+                Lưu ý: Nếu chọn trạng thái "CANCELLED", hệ thống sẽ tự động hủy
+                đơn và hoàn lại số lượng sản phẩm vào kho hàng.
+              </Text>
+              <Form.Item name="note" label="Ghi chú">
                 <TextArea rows={4} placeholder="Nhập ghi chú (nếu có)" />
               </Form.Item>
               <Form.Item>
                 <Button type="primary" htmlType="submit" loading={loading}>
                   Cập nhật
                 </Button>
-                <Button style={{ marginLeft: 8 }} onClick={() => setStatusModalVisible(false)}>
+                <Button
+                  style={{ marginLeft: 8 }}
+                  onClick={() => setStatusModalVisible(false)}
+                >
                   Hủy
                 </Button>
               </Form.Item>

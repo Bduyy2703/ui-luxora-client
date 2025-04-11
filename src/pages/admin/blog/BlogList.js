@@ -15,7 +15,12 @@ import {
 import Swal from "sweetalert2";
 import Filter from "../../../components/admin/filter/Filter";
 import config from "../../../config";
-import { PlusOutlined, EditOutlined, DeleteOutlined, InfoOutlined } from "@ant-design/icons";
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  InfoOutlined,
+} from "@ant-design/icons";
 import styles from "./index.module.scss";
 import {
   getAllBlogs,
@@ -29,7 +34,9 @@ import {
 const DetailForm1 = ({ currentBlog, currentBlogImages, styles }) => {
   const splitContentIntoParagraphs = (content) => {
     if (!content) return [];
-    return content.split(/\. |\n/).filter((paragraph) => paragraph.trim() !== "");
+    return content
+      .split(/\. |\n/)
+      .filter((paragraph) => paragraph.trim() !== "");
   };
 
   const groupParagraphs = (paragraphs, groupSize = 5) => {
@@ -60,7 +67,10 @@ const DetailForm1 = ({ currentBlog, currentBlogImages, styles }) => {
         </div>
 
         <div className={styles.blogContent}>
-          {groupParagraphs(splitContentIntoParagraphs(currentBlog.content), 5).map((group, groupIndex) => (
+          {groupParagraphs(
+            splitContentIntoParagraphs(currentBlog.content),
+            5,
+          ).map((group, groupIndex) => (
             <div key={groupIndex} className={styles.contentSection}>
               <div className={styles.textWrapper}>
                 {group.map((paragraph, paraIndex) => (
@@ -118,7 +128,9 @@ const DetailForm1 = ({ currentBlog, currentBlogImages, styles }) => {
 const DetailForm2 = ({ currentBlog, currentBlogImages, styles }) => {
   const splitContentIntoParagraphs = (content) => {
     if (!content) return [];
-    return content.split(/\. |\n/).filter((paragraph) => paragraph.trim() !== "");
+    return content
+      .split(/\. |\n/)
+      .filter((paragraph) => paragraph.trim() !== "");
   };
 
   const groupParagraphs = (paragraphs, groupSize = 5) => {
@@ -171,7 +183,10 @@ const DetailForm2 = ({ currentBlog, currentBlogImages, styles }) => {
         </div>
 
         <div className={styles.blogContent}>
-          {groupParagraphs(splitContentIntoParagraphs(currentBlog.content), 5).map((group, groupIndex) => (
+          {groupParagraphs(
+            splitContentIntoParagraphs(currentBlog.content),
+            5,
+          ).map((group, groupIndex) => (
             <div key={groupIndex} className={styles.contentSection}>
               <div className={styles.textWrapper}>
                 {group.map((paragraph, paraIndex) => (
@@ -206,7 +221,9 @@ const DetailForm2 = ({ currentBlog, currentBlogImages, styles }) => {
 const DetailForm3 = ({ currentBlog, currentBlogImages, styles }) => {
   const splitContentIntoParagraphs = (content) => {
     if (!content) return [];
-    return content.split(/\. |\n/).filter((paragraph) => paragraph.trim() !== "");
+    return content
+      .split(/\. |\n/)
+      .filter((paragraph) => paragraph.trim() !== "");
   };
 
   const groupParagraphs = (paragraphs, groupSize = 5) => {
@@ -239,7 +256,10 @@ const DetailForm3 = ({ currentBlog, currentBlogImages, styles }) => {
 
           <div className={styles.blogContent}>
             <h3>Nội dung chi tiết</h3>
-            {groupParagraphs(splitContentIntoParagraphs(currentBlog.content), 5).map((group, groupIndex) => (
+            {groupParagraphs(
+              splitContentIntoParagraphs(currentBlog.content),
+              5,
+            ).map((group, groupIndex) => (
               <div key={groupIndex} className={styles.contentSection}>
                 <div className={styles.textWrapper}>
                   {group.map((paragraph, paraIndex) => (
@@ -324,7 +344,9 @@ const AdminBlogList = () => {
   const handleAddBlog = async (values) => {
     const { title, excerpt, content, images } = values;
 
-    const files = images?.map((fileObj) => fileObj.originFileObj).filter(Boolean);
+    const files = images
+      ?.map((fileObj) => fileObj.originFileObj)
+      .filter(Boolean);
 
     if (!files || files.length === 0) {
       Swal.fire({
@@ -475,15 +497,16 @@ const AdminBlogList = () => {
       if (blogDetails.error) {
         throw new Error(blogDetails.error);
       }
-      const images = blogDetails.images?.map((img, index) => ({
-        uid: img.fileId || index,
-        name: img.fileName || `image-${index}`,
-        status: "done",
-        url: img.fileUrl,
-        fileId: img.fileId,
-        fileName: img.fileName,
-        bucketName: img.bucketName || "public",
-      })) || [];
+      const images =
+        blogDetails.images?.map((img, index) => ({
+          uid: img.fileId || index,
+          name: img.fileName || `image-${index}`,
+          status: "done",
+          url: img.fileUrl,
+          fileId: img.fileId,
+          fileName: img.fileName,
+          bucketName: img.bucketName || "public",
+        })) || [];
 
       editForm.setFieldsValue({
         title: blog.title,
@@ -551,7 +574,9 @@ const AdminBlogList = () => {
         header: "Ngày tạo",
         options: [
           "Tất cả",
-          ...new Set(data.map((item) => new Date(item.createAt).toLocaleDateString())),
+          ...new Set(
+            data.map((item) => new Date(item.createAt).toLocaleDateString()),
+          ),
         ],
       },
     ]);
@@ -561,7 +586,7 @@ const AdminBlogList = () => {
     {
       title: "Thumbnail",
       key: "thumbnail",
-      render: (record) => (
+      render: (record) =>
         record.thumbnail ? (
           <Image
             src={record.thumbnail}
@@ -572,8 +597,7 @@ const AdminBlogList = () => {
           />
         ) : (
           <span>Không có ảnh</span>
-        )
-      ),
+        ),
     },
     {
       title: "Tiêu đề",
@@ -644,7 +668,12 @@ const AdminBlogList = () => {
                   data={data}
                   validData={validData}
                   setValidData={setValidData}
-                  standardSort={standardSort}
+                  standardSort={[
+                    { name: "Tiêu đề", type: "title" },
+                    { name: "Đoạn trích", type: "excerpt" },
+                    { name: "Ngày tạo", type: "createAt" },
+                    { name: "Nội dung", type: "content" },
+                  ]}
                   searchFields={[
                     { key: "title", placeholder: "Tìm kiếm theo tiêu đề" },
                     { key: "excerpt", placeholder: "Tìm kiếm theo đoạn trích" },
@@ -708,7 +737,10 @@ const AdminBlogList = () => {
                   return e?.fileList || [];
                 }}
                 rules={[
-                  { required: true, message: "Vui lòng chọn ít nhất một hình ảnh!" },
+                  {
+                    required: true,
+                    message: "Vui lòng chọn ít nhất một hình ảnh!",
+                  },
                 ]}
               >
                 <Upload
@@ -730,7 +762,9 @@ const AdminBlogList = () => {
               <Form.Item
                 label="Đoạn trích"
                 name="excerpt"
-                rules={[{ required: true, message: "Vui lòng nhập đoạn trích!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng nhập đoạn trích!" },
+                ]}
               >
                 <Input.TextArea rows={2} />
               </Form.Item>
@@ -768,11 +802,7 @@ const AdminBlogList = () => {
             className={styles.blogModal}
             width={600}
           >
-            <Form
-              form={editForm}
-              layout="vertical"
-              onFinish={handleUpdateBlog}
-            >
+            <Form form={editForm} layout="vertical" onFinish={handleUpdateBlog}>
               <Form.Item
                 label="Hình ảnh"
                 name="images"
@@ -796,7 +826,9 @@ const AdminBlogList = () => {
               <Form.Item
                 label="Đoạn trích"
                 name="excerpt"
-                rules={[{ required: true, message: "Vui lòng nhập đoạn trích!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng nhập đoạn trích!" },
+                ]}
               >
                 <Input.TextArea rows={2} />
               </Form.Item>
