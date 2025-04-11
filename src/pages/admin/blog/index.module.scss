@@ -1,159 +1,242 @@
-.card {
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px;
-    border-bottom: 1px solid #f0f0f0;
+// src/pages/admin/blog/index.module.scss
 
-    .card-tools {
-      flex: 1;
+// Import Google Fonts
+@import url("https://fonts.googleapis.com/css2?family=Cormorant:wght@400;700&family=Lora:wght@400;500&display=swap");
+
+// Style cho modal chi tiết bài viết
+.blogDetailModal {
+  .ant-modal-content {
+    border-radius: 0;
+    overflow: hidden;
+    background-color: #f5f5f5; // Trắng ngọc trai
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  }
+
+  .ant-modal-body {
+    padding: 0;
+  }
+
+  // Ảnh nền mờ với hiệu ứng parallax
+  &::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("https://images.unsplash.com/photo-1617050318658-a9a6826e7cd4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80"); // Ảnh nền đá quý (thạch anh hồng)
+    background-size: cover;
+    background-attachment: fixed;
+    opacity: 0.1;
+    z-index: -1;
+  }
+}
+
+.blogDetailContainer {
+  max-height: 800px;
+  overflow-y: auto;
+  background-color: rgba(245, 245, 245, 0.95); // Trắng ngọc trai mờ
+  position: relative;
+}
+
+.blogDetailHeader {
+  position: relative;
+  height: 350px;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: #fff;
+  padding: 40px;
+  border-bottom: 2px solid #d2b48c; // Nâu nhạt
+
+  // Overlay mờ để làm nổi bật tiêu đề
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.5));
+    z-index: 1;
+  }
+
+  h2 {
+    font-family: "Cormorant", serif;
+    font-size: 4rem;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #fff;
+    z-index: 2;
+    position: relative;
+    background: linear-gradient(45deg, #d2b48c, #fff); // Gradient nâu nhạt - trắng
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+.blogDetailContent {
+  padding: 60px 40px;
+  background: rgba(255, 255, 255, 0.1);
+
+  .blogExcerpt {
+    margin-bottom: 60px;
+    border-left: 3px solid #d2b48c; // Nâu nhạt
+    padding-left: 30px;
+    position: relative;
+
+    h3 {
+      font-family: "Cormorant", serif;
+      font-size: 2.2rem;
+      color: #4a3728; // Nâu đậm
+      margin-bottom: 20px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      position: relative;
+
+      &::after {
+        content: "";
+        position: absolute;
+        bottom: -8px;
+        left: 0;
+        width: 60px;
+        height: 1px;
+        background: #d2b48c; // Nâu nhạt
+      }
     }
 
-    .card-btns {
+    p {
+      font-family: "Lora", serif;
+      font-size: 1.3rem;
+      color: #5c4033; // Nâu trung
+      line-height: 1.9;
+      letter-spacing: 0.5px;
+    }
+  }
+
+  .blogContent {
+    .contentSection {
       display: flex;
-      gap: 8px;
+      align-items: center;
+      margin-bottom: 80px;
+      gap: 40px;
+      flex-direction: row;
+
+      .textWrapper {
+        flex: 2;
+        background: rgba(255, 245, 238, 0.5); // Màu trắng ngà nhạt
+        padding: 30px;
+        border: 1px solid #d2b48c; // Nâu nhạt
+        position: relative;
+
+        p {
+          font-family: "Lora", serif;
+          font-size: 1.2rem;
+          color: #5c4033; // Nâu trung
+          line-height: 2;
+          letter-spacing: 0.5px;
+          margin: 0 0 20px 0;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+        }
+      }
+
+      .imageWrapper {
+        flex: 1;
+        max-width: 400px;
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeInUp 0.8s ease forwards;
+
+        .contentImage {
+          width: 100%;
+          border: 1px solid #d2b48c; // Nâu nhạt
+          transition: transform 0.5s ease, box-shadow 0.5s ease;
+
+          &:hover {
+            transform: scale(1.03);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+          }
+        }
+      }
     }
   }
 
-  .card-body {
-    padding: 16px;
+  .imageCarousel {
+    margin-top: 80px;
 
-    .ant-table {
-      .ant-table-thead > tr > th {
-        background: #fafafa;
-        font-weight: 600;
-        border-right: 1px solid #f0f0f0;
-        text-align: center;
+    h3 {
+      font-family: "Cormorant", serif;
+      font-size: 2.2rem;
+      color: #4a3728; // Nâu đậm
+      margin-bottom: 30px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      position: relative;
+
+      &::after {
+        content: "";
+        position: absolute;
+        bottom: -8px;
+        left: 0;
+        width: 60px;
+        height: 1px;
+        background: #d2b48c; // Nâu nhạt
+      }
+    }
+
+    .carousel {
+      .carouselImage {
+        width: 100%;
+        height: 500px;
+        object-fit: cover;
+        border: 1px solid #d2b48c; // Nâu nhạt
+        transition: opacity 0.5s ease;
       }
 
-      .ant-table-tbody > tr {
-        &:nth-child(odd) {
-          background: #f9f9f9;
-        }
+      .slick-dots li button {
+        background: #d2b48c !important; // Nâu nhạt
+        border-radius: 50%;
+      }
 
-        &.ant-table-row-selected {
-          background: #e6f7ff;
-        }
-
-        td {
-          text-align: center;
-        }
+      .slick-dots li.slick-active button {
+        background: #4a3728 !important; // Nâu đậm
       }
     }
   }
 
-  .pagination {
-    padding: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    .ant-pagination {
-      .ant-pagination-item {
-        border-radius: 4px;
-      }
+  .blogFooter {
+    margin-top: 60px;
+    text-align: center;
+    border-top: 1px solid #d2b48c; // Nâu nhạt
+    padding-top: 30px;
 
-      .ant-pagination-item-active {
-        background: #1890ff;
-        border-color: #1890ff;
-
-        a {
-          color: #fff;
-        }
-      }
+    p {
+      font-family: "Lora", serif;
+      font-size: 1.1rem;
+      color: #5c4033; // Nâu trung
+      font-style: italic;
+      letter-spacing: 0.5px;
     }
   }
 }
 
-// Style cho modal "Thêm người dùng"
-.addUserModal {
-  .ant-modal-content {
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+// Hiệu ứng fade-in cho hình ảnh
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
   }
-
-  .ant-modal-header {
-    background: #1890ff;
-    border-radius: 8px 8px 0 0;
-    padding: 16px 24px;
-
-    .ant-modal-title {
-      color: #fff;
-      font-size: 18px;
-      font-weight: 600;
-    }
-  }
-
-  .ant-modal-body {
-    padding: 24px;
-
-    .ant-form-item {
-      margin-bottom: 20px;
-
-      .ant-form-item-label {
-        label {
-          font-weight: 500;
-          color: #333;
-        }
-      }
-
-      .ant-input,
-      .ant-select-selector,
-      .ant-input-password {
-        border-radius: 4px;
-        border: none !important;
-        transition: all 0.3s;
-
-        &:hover,
-        &:focus {
-          border-color: #1890ff;
-          box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
-        }
-      }
-
-      .ant-select-selector {
-        height: 40px !important;
-        display: flex;
-        align-items: center;
-      }
-    }
-  }
-
-  .formActions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    margin-bottom: 0;
-
-    .ant-btn {
-      height: 40px;
-      font-weight: 500;
-      border-radius: 4px;
-      transition: all 0.3s;
-
-      &.ant-btn-primary {
-        background: #1890ff;
-        border-color: #1890ff;
-
-        &:hover,
-        &:focus {
-          background: #40a9ff;
-          border-color: #40a9ff;
-        }
-      }
-    }
-
-    .cancelButton {
-      background: #f5f5f5;
-      border-color: #d9d9d9;
-      color: #333;
-
-      &:hover,
-      &:focus {
-        background: #e6e6e6;
-        border-color: #bfbfbf;
-        color: #333;
-      }
-    }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
