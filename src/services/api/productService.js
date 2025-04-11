@@ -131,7 +131,11 @@ export const addProduct = async (productData) => {
     const response = await privateAxios.post(
       `/v1/products/create`,
       productData,
-    );
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
     return response.data || [];
   } catch (error) {
     console.error("Error adding product:", error);
@@ -163,7 +167,11 @@ export const getProductList = async (page = 1, limit = 10) => {
 
 export const updateProduct = async (id, productData) => {
   try {
-    const response = await privateAxios.put(`/v1/products/${id}`, productData);
+    const response = await privateAxios.put(`/v1/products/${id}`, productData,{
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
     return response.data || [];
   } catch (error) {
     console.error("Error updating product:", error);
