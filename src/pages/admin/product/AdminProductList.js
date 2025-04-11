@@ -20,6 +20,7 @@ import {
   deleteProduct,
   getProductList,
   updateProduct,
+  getByIdProduct,
 } from "../../../services/api/productService";
 import { getAllCategories } from "../../../services/api/categoryService";
 import {
@@ -144,17 +145,34 @@ const AdminProductList = () => {
   const handleAddProduct = async (values) => {
     const { name, originalPrice, images, categoryId } = values;
 
-    const productData = {
-      name,
-      originalPrice,
-      categoryId,
-      images:
-        images && Array.isArray(images) ? images.map((file) => file.name) : [],
-    };
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("originalPrice", originalPrice);
+    formData.append("categoryId", categoryId);
+
+    // Gửi các file ảnh dưới dạng files[]
+    if (images && Array.isArray(images)) {
+      images.forEach((fileObj) => {
+        if (fileObj.originFileObj) {
+          formData.append("files", fileObj.originFileObj);
+        }
+      });
+    }
+
+    // Kiểm tra xem có ảnh nào được chọn không
+    if (!images || images.length === 0) {
+      Swal.fire({
+        title: "Lỗi!",
+        text: "Vui lòng chọn ít nhất một hình ảnh!",
+        icon: "error",
+      });
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     try {
-      const res = await addProduct(productData);
+      const res = await addProduct(formData);
       if (res) {
         setModalVisible(false);
         form.resetFields();
@@ -169,7 +187,7 @@ const AdminProductList = () => {
     } catch (error) {
       Swal.fire({
         title: "Lỗi!",
-        text: error.message,
+        text: error.message || "Không thể thêm sản phẩm!",
         icon: "error",
       });
     } finally {
@@ -179,14 +197,33 @@ const AdminProductList = () => {
 
   const handleUpdateProduct = async (values) => {
     const { name, originalPrice, images, categoryId } = values;
+
     const formData = new FormData();
     formData.append("name", name);
     formData.append("originalPrice", originalPrice);
     formData.append("categoryId", categoryId);
+
+    // Xử lý ảnh cũ (keepFiles) và ảnh mới (files)
+    const keepFiles = [];
     if (images && Array.isArray(images)) {
       images.forEach((fileObj) => {
-        formData.append("images", fileObj.originFileObj);
+        if (fileObj.status === "done" && fileObj.fileId) {
+          // Ảnh cũ: thêm vào keepFiles
+          keepFiles.push({
+            fileId: fileObj.fileId,
+            fileName: fileObj.fileName,
+            bucketName: fileObj.bucketName || "public",
+          });
+        } else if (fileObj.originFileObj) {
+          // Ảnh mới: thêm vào files
+          formData.append("files", fileObj.originFileObj);
+        }
       });
+    }
+
+    // Gửi keepFiles dưới dạng JSON string
+    if (keepFiles.length > 0) {
+      formData.append("keepFiles", JSON.stringify(keepFiles));
     }
 
     setLoading(true);
@@ -237,16 +274,20 @@ const AdminProductList = () => {
 
     setLoading(true);
     try {
-      const res = await addProductDetails(
-        currentProduct.id,
-        productDetailsData,
-      );
+      const res = await addProductDetails(currentProduct.id, productDetailsData);
       if (res) {
-        setAddDetailModalVisible(false);
-        addDetailForm.resetFields();
         // Làm mới danh sách productDetails
         const detailsRes = await getAllProductDetails(currentProduct.id);
-        setCurrentProductDetails(detailsRes?.data || []);
+        const newDetails = Array.isArray(detailsRes) ? detailsRes : [];
+        setCurrentProductDetails(newDetails);
+        setAddDetailModalVisible(false);
+        addDetailForm.resetFields();
+
+        // Nếu modal chi tiết chưa mở, mở nó
+        if (!detailModalVisible) {
+          setDetailModalVisible(true);
+        }
+
         Swal.fire({
           title: "Thêm chi tiết sản phẩm thành công!",
           icon: "success",
@@ -257,14 +298,13 @@ const AdminProductList = () => {
     } catch (error) {
       Swal.fire({
         title: "Lỗi!",
-        text: error.message,
+        text: error.message || "Không thể thêm chi tiết sản phẩm!",
         icon: "error",
       });
     } finally {
       setLoading(false);
     }
   };
-
   const handleUpdateProductDetails = async (values) => {
     const productDetailsData = {
       size: values.size,
@@ -286,17 +326,15 @@ const AdminProductList = () => {
 
     setLoading(true);
     try {
-      const res = await updateProductDetails(
-        currentDetail.id,
-        productDetailsData,
-      );
+      const res = await updateProductDetails(currentDetail.id, productDetailsData);
       if (res) {
         setEditDetailModalVisible(false);
         editDetailForm.resetFields();
         setCurrentDetail(null);
         // Làm mới danh sách productDetails
         const detailsRes = await getAllProductDetails(currentProduct.id);
-        setCurrentProductDetails(detailsRes?.data || []);
+        const newDetails = Array.isArray(detailsRes) ? detailsRes : [];
+        setCurrentProductDetails(newDetails);
         Swal.fire({
           title: "Cập nhật chi tiết sản phẩm thành công!",
           icon: "success",
@@ -331,7 +369,8 @@ const AdminProductList = () => {
         await deleteProductDetails(detailId);
         // Làm mới danh sách productDetails
         const detailsRes = await getAllProductDetails(currentProduct.id);
-        setCurrentProductDetails(detailsRes?.data || []);
+        const newDetails = Array.isArray(detailsRes) ? detailsRes : [];
+        setCurrentProductDetails(newDetails);
         Swal.fire({
           title: "Đã xóa!",
           text: "Chi tiết sản phẩm đã được xóa thành công.",
@@ -398,19 +437,38 @@ const AdminProductList = () => {
     }
   };
 
-  const handleEdit = (product) => {
+  const handleEdit = async (product) => {
     setCurrentProduct(product);
-    editForm.setFieldsValue({
-      name: product.name,
-      originalPrice: product.originalPrice,
-      categoryId: product?.category?.id,
-      images: product.images?.map((url, index) => ({
-        uid: index,
-        name: `image-${index}`,
+    setLoading(true);
+    try {
+      // Giả sử API getProductById trả về danh sách images với cấu trúc phù hợp
+      const productDetails = await getByIdProduct(product.id); // Cần API chi tiết sản phẩm
+      const images = productDetails.images?.map((img, index) => ({
+        uid: img.fileId || index,
+        name: img.fileName || `image-${index}`,
         status: "done",
-        url,
-      })),
-    });
+        url: img.fileUrl,
+        fileId: img.fileId,
+        fileName: img.fileName,
+        bucketName: img.bucketName || "public",
+      })) || [];
+
+      editForm.setFieldsValue({
+        name: product.name,
+        originalPrice: product.originalPrice,
+        categoryId: product?.category?.id,
+        images,
+      });
+    } catch (error) {
+      console.error("Error fetching product details:", error);
+      Swal.fire({
+        title: "Lỗi!",
+        text: "Không thể tải thông tin sản phẩm.",
+        icon: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
     setEditModalVisible(true);
   };
 
@@ -419,7 +477,8 @@ const AdminProductList = () => {
     setLoading(true);
     try {
       const res = await getAllProductDetails(product.id);
-      setCurrentProductDetails(res || []);
+      const details = Array.isArray(res) ? res : [];
+      setCurrentProductDetails(details);
       setDetailModalVisible(true);
     } catch (error) {
       console.error("Error fetching product details:", error);
@@ -432,7 +491,6 @@ const AdminProductList = () => {
       setLoading(false);
     }
   };
-
   const handleOpenAddDetailModal = () => {
     setAddDetailModalVisible(true);
   };
@@ -650,13 +708,22 @@ const AdminProductList = () => {
                 name="images"
                 valuePropName="fileList"
                 getValueFromEvent={(e) => {
-                  const fileList = Array.isArray(e) ? e : e?.fileList || [];
-                  const files = fileList
-                    .filter((file) => file.originFileObj)
-                    .map((file) => file.originFileObj);
-                  return files;
+                  if (Array.isArray(e)) return e;
+                  return e?.fileList || [];
                 }}
-                rules={[{ required: true, message: "Vui lòng chọn hình ảnh!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng chọn ít nhất một hình ảnh!" },
+                  ({ getFieldValue }) => ({
+                    validator(_, value) {
+                      if (!value || value.length === 0) {
+                        return Promise.reject(
+                          new Error("Vui lòng chọn ít nhất một hình ảnh!")
+                        );
+                      }
+                      return Promise.resolve();
+                    },
+                  }),
+                ]}
               >
                 <Upload
                   listType="picture"
@@ -811,7 +878,7 @@ const AdminProductList = () => {
             className={styles.productModal}
             width={800}
           >
-            {currentProduct && (
+            {currentProduct ? (
               <div>
                 <div className={styles.productInfo}>
                   <h3>Thông tin sản phẩm</h3>
@@ -851,6 +918,8 @@ const AdminProductList = () => {
                   />
                 </div>
               </div>
+            ) : (
+              <p>Không có dữ liệu sản phẩm</p>
             )}
           </Modal>
 
