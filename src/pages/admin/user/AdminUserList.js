@@ -290,7 +290,10 @@ const AdminUserList = () => {
                   data={data}
                   validData={validData}
                   setValidData={setValidData}
-                  standardSort={["username", "email"]}
+                  standardSort={[
+                    { name: "Tên người dùng", type: "username" },
+                    { name: "Email", type: "email" },
+                  ]}
                   searchFields={[
                     {
                       key: "username",

@@ -5,70 +5,75 @@ import styles from "./filter.scss";
 
 const { Option } = Select;
 
-const Filter = ({ filters, data, validData, setValidData, standardSort, searchFields }) => {
+const Filter = ({
+  filters,
+  data,
+  validData,
+  setValidData,
+  standardSort,
+  searchFields,
+}) => {
   const [searchValues, setSearchValues] = useState({});
   const [sortField, setSortField] = useState(null);
   const [sortOrder, setSortOrder] = useState("asc");
 
-  // Xử lý tìm kiếm
+  const getFieldValue = (item, key) => {
+    if (!item) return "";
+    if (key === "username") {
+      return item.user?.username || item.username || "";
+    }
+    if (key === "email") {
+      return item.user?.email || item.email || "";
+    }
+    return item[key] || "";
+  };
+
   const handleSearch = (key, value) => {
     const newSearchValues = { ...searchValues, [key]: value };
     setSearchValues(newSearchValues);
 
     let filteredData = [...data];
 
-    // Lọc theo các trường tìm kiếm
     Object.keys(newSearchValues).forEach((searchKey) => {
       if (newSearchValues[searchKey]) {
         filteredData = filteredData.filter((item) => {
-          if (searchKey === "id") {
-            return item.id.toString().includes(newSearchValues[searchKey]);
-          }
-          if (searchKey === "username") {
-            return item.user.username
-              .toLowerCase()
-              .includes(newSearchValues[searchKey].toLowerCase());
-          }
-          return true;
+          if (!item) return false;
+          const fieldValue = getFieldValue(item, searchKey);
+          return fieldValue
+            .toString()
+            .toLowerCase()
+            .includes(newSearchValues[searchKey].toLowerCase());
         });
       }
     });
 
-    // Lọc theo bộ lọc (status, paymentMethod)
     filters.forEach((filter) => {
       const selectedValue = filter.selectedValue;
       if (selectedValue && selectedValue !== "Tất cả") {
-        filteredData = filteredData.filter(
-          (item) => item[filter.key] === selectedValue
-        );
+        filteredData = filteredData.filter((item) => {
+          if (!item) return false;
+          const fieldValue = getFieldValue(item, filter.key);
+          return fieldValue === selectedValue;
+        });
       }
     });
 
     setValidData(filteredData);
   };
 
-  // Xử lý sắp xếp
   const handleSort = () => {
     if (!sortField) return;
 
     const sortedData = [...validData].sort((a, b) => {
-      let valueA, valueB;
+      let valueA = getFieldValue(a, sortField);
+      let valueB = getFieldValue(b, sortField);
 
-      if (sortField === "id") {
-        valueA = a.id;
-        valueB = b.id;
-      } else if (sortField === "username") {
-        valueA = a.user.username.toLowerCase();
-        valueB = b.user.username.toLowerCase();
-      } else if (sortField === "createdAt") {
-        valueA = new Date(a.createdAt);
-        valueB = new Date(b.createdAt);
-      } else if (sortField === "status") {
-        valueA = a.status.toLowerCase();
-        valueB = b.status.toLowerCase();
-      } else if (sortField === "paymentMethod") {
-        valueA = a.paymentMethod.toLowerCase();
-        valueB = b.paymentMethod.toLowerCase();
+      if (sortField === "createdAt" || sortField === "createAt") {
+        valueA = a?.[sortField] ? new Date(a[sortField]) : new Date(0);
+        valueB = b?.[sortField] ? new Date(b[sortField]) : new Date(0);
+      } else {
+        valueA = valueA?.toString().toLowerCase() || "";
+        valueB = valueB?.toString().toLowerCase() || "";
       }
 
       if (sortOrder === "asc") {
@@ -81,10 +86,9 @@ const Filter = ({ filters, data, validData, setValidData, standardSort, searchFi
     setValidData(sortedData);
   };
 
-  // Xử lý thay đổi bộ lọc (status, paymentMethod)
   const handleFilterChange = (key, value) => {
     const updatedFilters = filters.map((filter) =>
-      filter.key === key ? { ...filter, selectedValue: value } : filter
+      filter.key === key ? { ...filter, selectedValue: value } : filter,
     );
 
     let filteredData = [...data];
@@ -92,25 +96,23 @@ const Filter = ({ filters, data, validData, setValidData, standardSort, searchFi
     updatedFilters.forEach((filter) => {
       const selectedValue = filter.selectedValue;
       if (selectedValue && selectedValue !== "Tất cả") {
-        filteredData = filteredData.filter(
-          (item) => item[filter.key] === selectedValue
-        );
+        filteredData = filteredData.filter((item) => {
+          if (!item) return false;
+          const fieldValue = getFieldValue(item, filter.key);
+          return fieldValue === selectedValue;
+        });
       }
     });
 
-    // Áp dụng lại tìm kiếm sau khi lọc
     Object.keys(searchValues).forEach((searchKey) => {
       if (searchValues[searchKey]) {
         filteredData = filteredData.filter((item) => {
-          if (searchKey === "id") {
-            return item.id.toString().includes(searchValues[searchKey]);
-          }
-          if (searchKey === "username") {
-            return item.user.username
-              .toLowerCase()
-              .includes(searchValues[searchKey].toLowerCase());
-          }
-          return true;
+          if (!item) return false;
+          const fieldValue = getFieldValue(item, searchKey);
+          return fieldValue
+            .toString()
+            .toLowerCase()
+            .includes(searchValues[searchKey].toLowerCase());
         });
       }
     });
