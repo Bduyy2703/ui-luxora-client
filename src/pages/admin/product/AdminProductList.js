@@ -624,14 +624,16 @@ const AdminProductList = () => {
                 onAddDetails={handleOpenAddDetailFromTable}
               />
             </div>
-            <div className={styles.pagination}>
-              <Pagination
-                current={currentPage}
-                pageSize={limit}
-                total={total}
-                onChange={(page) => setCurrentPage(page)}
-              />
-            </div>
+            {total > limit && (
+              <div className={styles.pagination}>
+                <Pagination
+                  current={currentPage}
+                  pageSize={limit}
+                  total={total}
+                  onChange={(page) => setCurrentPage(page)}
+                />
+              </div>
+            )}
           </div>
 
           <Modal

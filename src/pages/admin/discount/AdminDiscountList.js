@@ -230,9 +230,21 @@ const AdminDiscountList = () => {
 
   useEffect(() => {
     setFilters([
-      { key: "condition", header: "Điều kiện", options: ["Tất cả", "SHIPPING", "TOTAL"] },
-      { key: "discountType", header: "Loại giảm giá", options: ["Tất cả", "PERCENTAGE", "FIXED"] },
-      { key: "isActive", header: "Trạng thái", options: ["Tất cả", "Kích hoạt", "Không kích hoạt"] },
+      {
+        key: "condition",
+        header: "Điều kiện",
+        options: ["Tất cả", "SHIPPING", "TOTAL"],
+      },
+      {
+        key: "discountType",
+        header: "Loại giảm giá",
+        options: ["Tất cả", "PERCENTAGE", "FIXED"],
+      },
+      {
+        key: "isActive",
+        header: "Trạng thái",
+        options: ["Tất cả", "Kích hoạt", "Không kích hoạt"],
+      },
     ]);
   }, []);
 
@@ -267,7 +279,9 @@ const AdminDiscountList = () => {
       dataIndex: "discountType",
       key: "discountType",
       render: (discountType) => {
-        const option = discountTypeOptions.find((opt) => opt.value === discountType);
+        const option = discountTypeOptions.find(
+          (opt) => opt.value === discountType,
+        );
         return option ? option.label : "N/A";
       },
     },
@@ -343,10 +357,7 @@ const AdminDiscountList = () => {
                 />
               </div>
               <div className="card-btns">
-                <Button
-                  type="primary"
-                  onClick={() => setModalVisible(true)}
-                >
+                <Button type="primary" onClick={() => setModalVisible(true)}>
                   Thêm
                 </Button>
                 <Button
@@ -369,25 +380,22 @@ const AdminDiscountList = () => {
                   type: "checkbox",
                   onChange: (selectedRowKeys) => setCheckedRow(selectedRowKeys),
                 }}
-                rowClassName={(record) => (!record.isActive ? styles.inactiveRow : "")}
+                rowClassName={(record) =>
+                  !record.isActive ? styles.inactiveRow : ""
+                }
               />
             </div>
-            <div className={styles.pagination}>
-              <div className={styles.paginationInfo}>
-                <span>Trang {currentPage} / {Math.ceil(total / limit)}</span>
-                <span>
-                  Hiển thị {(currentPage - 1) * limit + 1} -{" "}
-                  {Math.min(currentPage * limit, total)} trên tổng số {total} mã giảm giá
-                </span>
+            {total > limit && (
+              <div className={styles.pagination}>
+                <Pagination
+                  current={currentPage}
+                  pageSize={limit}
+                  total={total}
+                  onChange={(page) => setCurrentPage(page)}
+                  showQuickJumper
+                />
               </div>
-              <Pagination
-                current={currentPage}
-                pageSize={limit}
-                total={total}
-                onChange={(page) => setCurrentPage(page)}
-                showQuickJumper
-              />
-            </div>
+            )}
           </div>
 
           {/* Add Discount Modal */}
@@ -403,14 +411,18 @@ const AdminDiscountList = () => {
               <Form.Item
                 label="Tên mã giảm giá"
                 name="name"
-                rules={[{ required: true, message: "Vui lòng nhập tên mã giảm giá!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng nhập tên mã giảm giá!" },
+                ]}
               >
                 <Input placeholder="Nhập tên mã giảm giá" />
               </Form.Item>
               <Form.Item
                 label="Điều kiện"
                 name="condition"
-                rules={[{ required: true, message: "Vui lòng chọn điều kiện!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng chọn điều kiện!" },
+                ]}
               >
                 <Select placeholder="Chọn điều kiện">
                   {conditionOptions.map((option) => (
@@ -423,14 +435,22 @@ const AdminDiscountList = () => {
               <Form.Item
                 label="Số tiền giảm"
                 name="discountValue"
-                rules={[{ required: true, message: "Vui lòng nhập số tiền giảm!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng nhập số tiền giảm!" },
+                ]}
               >
-                <InputNumber min={0} style={{ width: "100%" }} placeholder="Nhập số tiền giảm" />
+                <InputNumber
+                  min={0}
+                  style={{ width: "100%" }}
+                  placeholder="Nhập số tiền giảm"
+                />
               </Form.Item>
               <Form.Item
                 label="Loại giảm giá"
                 name="discountType"
-                rules={[{ required: true, message: "Vui lòng chọn loại giảm giá!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng chọn loại giảm giá!" },
+                ]}
               >
                 <Select placeholder="Chọn loại giảm giá">
                   {discountTypeOptions.map((option) => (
@@ -445,19 +465,27 @@ const AdminDiscountList = () => {
                 name="quantity"
                 rules={[{ required: true, message: "Vui lòng nhập số lượng!" }]}
               >
-                <InputNumber min={0} style={{ width: "100%" }} placeholder="Nhập số lượng" />
+                <InputNumber
+                  min={0}
+                  style={{ width: "100%" }}
+                  placeholder="Nhập số lượng"
+                />
               </Form.Item>
               <Form.Item
                 label="Ngày bắt đầu"
                 name="startDate"
-                rules={[{ required: true, message: "Vui lòng chọn ngày bắt đầu!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng chọn ngày bắt đầu!" },
+                ]}
               >
                 <DatePicker showTime style={{ width: "100%" }} />
               </Form.Item>
               <Form.Item
                 label="Ngày kết thúc"
                 name="endDate"
-                rules={[{ required: true, message: "Vui lòng chọn ngày kết thúc!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng chọn ngày kết thúc!" },
+                ]}
               >
                 <DatePicker showTime style={{ width: "100%" }} />
               </Form.Item>
@@ -496,18 +524,26 @@ const AdminDiscountList = () => {
             className={styles.addDiscountModal}
             width={600}
           >
-            <Form form={editForm} layout="vertical" onFinish={handleUpdateDiscount}>
+            <Form
+              form={editForm}
+              layout="vertical"
+              onFinish={handleUpdateDiscount}
+            >
               <Form.Item
                 label="Tên mã giảm giá"
                 name="name"
-                rules={[{ required: true, message: "Vui lòng nhập tên mã giảm giá!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng nhập tên mã giảm giá!" },
+                ]}
               >
                 <Input placeholder="Nhập tên mã giảm giá" />
               </Form.Item>
               <Form.Item
                 label="Điều kiện"
                 name="condition"
-                rules={[{ required: true, message: "Vui lòng chọn điều kiện!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng chọn điều kiện!" },
+                ]}
               >
                 <Select placeholder="Chọn điều kiện">
                   {conditionOptions.map((option) => (
@@ -520,14 +556,22 @@ const AdminDiscountList = () => {
               <Form.Item
                 label="Số tiền giảm"
                 name="discountValue"
-                rules={[{ required: true, message: "Vui lòng nhập số tiền giảm!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng nhập số tiền giảm!" },
+                ]}
               >
-                <InputNumber min={0} style={{ width: "100%" }} placeholder="Nhập số tiền giảm" />
+                <InputNumber
+                  min={0}
+                  style={{ width: "100%" }}
+                  placeholder="Nhập số tiền giảm"
+                />
               </Form.Item>
               <Form.Item
                 label="Loại giảm giá"
                 name="discountType"
-                rules={[{ required: true, message: "Vui lòng chọn loại giảm giá!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng chọn loại giảm giá!" },
+                ]}
               >
                 <Select placeholder="Chọn loại giảm giá">
                   {discountTypeOptions.map((option) => (
@@ -542,19 +586,27 @@ const AdminDiscountList = () => {
                 name="quantity"
                 rules={[{ required: true, message: "Vui lòng nhập số lượng!" }]}
               >
-                <InputNumber min={0} style={{ width: "100%" }} placeholder="Nhập số lượng" />
+                <InputNumber
+                  min={0}
+                  style={{ width: "100%" }}
+                  placeholder="Nhập số lượng"
+                />
               </Form.Item>
               <Form.Item
                 label="Ngày bắt đầu"
                 name="startDate"
-                rules={[{ required: true, message: "Vui lòng chọn ngày bắt đầu!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng chọn ngày bắt đầu!" },
+                ]}
               >
                 <DatePicker showTime style={{ width: "100%" }} />
               </Form.Item>
               <Form.Item
                 label="Ngày kết thúc"
                 name="endDate"
-                rules={[{ required: true, message: "Vui lòng chọn ngày kết thúc!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng chọn ngày kết thúc!" },
+                ]}
               >
                 <DatePicker showTime style={{ width: "100%" }} />
               </Form.Item>
@@ -604,14 +656,18 @@ const AdminDiscountList = () => {
               <Form.Item
                 label="Tên mã giảm giá"
                 name="name"
-                rules={[{ required: true, message: "Vui lòng nhập tên mã giảm giá!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng nhập tên mã giảm giá!" },
+                ]}
               >
                 <Input placeholder="Nhập tên mã giảm giá" />
               </Form.Item>
               <Form.Item
                 label="Điều kiện"
                 name="condition"
-                rules={[{ required: true, message: "Vui lòng chọn điều kiện!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng chọn điều kiện!" },
+                ]}
               >
                 <Select placeholder="Chọn điều kiện">
                   {conditionOptions.map((option) => (
@@ -624,14 +680,22 @@ const AdminDiscountList = () => {
               <Form.Item
                 label="Số tiền giảm"
                 name="discountValue"
-                rules={[{ required: true, message: "Vui lòng nhập số tiền giảm!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng nhập số tiền giảm!" },
+                ]}
               >
-                <InputNumber min={0} style={{ width: "100%" }} placeholder="Nhập số tiền giảm" />
+                <InputNumber
+                  min={0}
+                  style={{ width: "100%" }}
+                  placeholder="Nhập số tiền giảm"
+                />
               </Form.Item>
               <Form.Item
                 label="Loại giảm giá"
                 name="discountType"
-                rules={[{ required: true, message: "Vui lòng chọn loại giảm giá!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng chọn loại giảm giá!" },
+                ]}
               >
                 <Select placeholder="Chọn loại giảm giá">
                   {discountTypeOptions.map((option) => (
@@ -646,19 +710,27 @@ const AdminDiscountList = () => {
                 name="quantity"
                 rules={[{ required: true, message: "Vui lòng nhập số lượng!" }]}
               >
-                <InputNumber min={0} style={{ width: "100%" }} placeholder="Nhập số lượng" />
+                <InputNumber
+                  min={0}
+                  style={{ width: "100%" }}
+                  placeholder="Nhập số lượng"
+                />
               </Form.Item>
               <Form.Item
                 label="Ngày bắt đầu"
                 name="startDate"
-                rules={[{ required: true, message: "Vui lòng chọn ngày bắt đầu!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng chọn ngày bắt đầu!" },
+                ]}
               >
                 <DatePicker showTime style={{ width: "100%" }} />
               </Form.Item>
               <Form.Item
                 label="Ngày kết thúc"
                 name="endDate"
-                rules={[{ required: true, message: "Vui lòng chọn ngày kết thúc!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng chọn ngày kết thúc!" },
+                ]}
               >
                 <DatePicker showTime style={{ width: "100%" }} />
               </Form.Item>

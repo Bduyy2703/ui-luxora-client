@@ -19,6 +19,9 @@ import AdminInventoryList from "./pages/admin/inventory/AdminInventoryList";
 import AdminInvoiceDetail from "./pages/admin/invoice/AdminInvoiceDetail";
 import AdminDiscountList from "./pages/admin/discount/AdminDiscountList";
 import AdminStatis from "./pages/admin/statis/AdminStatis";
+import BlogList from "./pages/admin/blog/BlogList";
+import PromotionList from "./pages/admin/promotion/PromotionList";
+import ReivewList from "./pages/admin/review/ReviewList";
 
 function requireAuth({ children }) {
   const token = localStorage.getItem("decodedToken");
@@ -90,22 +93,27 @@ function App() {
         })}
         <Route path="/admin/" element={<AdminLayout />}>
           <Route index element={<AdminUserList />} />
-          {/* ADMIN USER */}
           <Route path="/admin/user" element={<AdminUserList />} />
           <Route path="/admin/user/:email" element={<AdminUserDetail />} />
-          {/* ADMIN PRODUCT */}
+
+          <Route path="/admin/blog" element={<BlogList />} />
+
+          <Route path="/admin/promotion" element={<PromotionList />} />
+
+          <Route path="/admin/reviews" element={<ReivewList />} />
+
           <Route path="/admin/product" element={<AdminProductList />} />
           <Route path="/admin/product/:id" element={<AdminProductDetail />} />
-          {/* ADMIN CATEGORY */}
+
           <Route path="/admin/cate" element={<AdminCateList />} />
-          {/* ADMIN INVOICE */}
+
           <Route path="/admin/invoice" element={<AdminInvoiceList />} />
           <Route path="/admin/invoice/:id" element={<AdminInvoiceDetail />} />
-          {/* ADMIN INVENTORY */}
+
           <Route path="/admin/inventory" element={<AdminInventoryList />} />
-          {/* ADMIN DISCOUNT */}
+
           <Route path="/admin/discount" element={<AdminDiscountList />} />
-          {/* ADMIN STATIS */}
+
           <Route path="/admin/statis" element={<AdminStatis />} />
         </Route>
       </Routes>
