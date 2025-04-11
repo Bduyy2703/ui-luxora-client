@@ -73,59 +73,58 @@
       }
     }
   }
+}
+.pagination {
+  padding: 16px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 
-  .pagination {
-    padding: 16px;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
+  .ant-pagination {
+    .ant-pagination-item {
+      border-radius: 4px;
+      margin: 0 4px;
+      transition: all 0.3s;
 
-    .ant-pagination {
-      .ant-pagination-item {
-        border-radius: 4px;
-        margin: 0 4px;
-        transition: all 0.3s;
-
-        a {
-          color: #333;
-        }
-
-        &:hover {
-          border-color: #1890ff;
-          a {
-            color: #1890ff;
-          }
-        }
+      a {
+        color: #333;
       }
 
-      .ant-pagination-item-active {
-        background: #1890ff;
+      &:hover {
+        border-color: #1890ff;
+        a {
+          color: #1890ff;
+        }
+      }
+    }
+
+    .ant-pagination-item-active {
+      background: #1890ff;
+      border-color: #1890ff;
+
+      a {
+        color: #fff;
+      }
+
+      &:hover {
+        background: #40a9ff;
+        border-color: #40a9ff;
+      }
+    }
+
+    .ant-pagination-prev,
+    .ant-pagination-next {
+      border-radius: 4px;
+
+      .ant-pagination-item-link {
+        color: #333;
+      }
+
+      &:hover {
         border-color: #1890ff;
 
-        a {
-          color: #fff;
-        }
-
-        &:hover {
-          background: #40a9ff;
-          border-color: #40a9ff;
-        }
-      }
-
-      .ant-pagination-prev,
-      .ant-pagination-next {
-        border-radius: 4px;
-
         .ant-pagination-item-link {
-          color: #333;
-        }
-
-        &:hover {
-          border-color: #1890ff;
-
-          .ant-pagination-item-link {
-            color: #1890ff;
-          }
+          color: #1890ff;
         }
       }
     }

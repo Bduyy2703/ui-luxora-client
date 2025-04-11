@@ -1,111 +1,165 @@
 import React, { useState, useEffect } from "react";
-import Search from "../../../components/admin/search/Search";
-import Sort from "../../../components/admin/sort/Sort";
-import "./filter.css";
+import { Input, Select, Button } from "antd";
+import { SortAscendingOutlined } from "@ant-design/icons";
+import styles from "./filter.scss";
+
+const { Option } = Select;
 
 const Filter = ({ filters, data, validData, setValidData, standardSort, searchFields }) => {
-  const [formattedFilters, setFormattedFilters] = useState(
-    filters.map((f) => ({
-      name: f.name,
-      type: f.type,
-      isOpen: false,
-      standards: f.standards,
-      selected: f.name,
-    })),
-  );
+  const [searchValues, setSearchValues] = useState({});
+  const [sortField, setSortField] = useState(null);
+  const [sortOrder, setSortOrder] = useState("asc");
 
-  const [filteredData, setFilteredData] = useState([]);
+  // Xử lý tìm kiếm
+  const handleSearch = (key, value) => {
+    const newSearchValues = { ...searchValues, [key]: value };
+    setSearchValues(newSearchValues);
 
-  useEffect(() => {
-    setFormattedFilters(
-      filters.map((f) => ({
-        name: f.name,
-        type: f.type,
-        isOpen: false,
-        standards: f.standards,
-        selected: f.name,
-      })),
-    );
-  }, [filters]);
+    let filteredData = [...data];
 
-  useEffect(() => {
-    formattedFilters.forEach((f) => {
-      handleFilter(f.type, f.selected);
+    // Lọc theo các trường tìm kiếm
+    Object.keys(newSearchValues).forEach((searchKey) => {
+      if (newSearchValues[searchKey]) {
+        filteredData = filteredData.filter((item) => {
+          if (searchKey === "id") {
+            return item.id.toString().includes(newSearchValues[searchKey]);
+          }
+          if (searchKey === "username") {
+            return item.user.username
+              .toLowerCase()
+              .includes(newSearchValues[searchKey].toLowerCase());
+          }
+          return true;
+        });
+      }
     });
-  }, [data]);
 
-  const wrappedSetValidData = (data) => {
-    setValidData(data);
-    setFormattedFilters(formattedFilters.map((f) => ({ ...f, isOpen: false })));
+    // Lọc theo bộ lọc (status, paymentMethod)
+    filters.forEach((filter) => {
+      const selectedValue = filter.selectedValue;
+      if (selectedValue && selectedValue !== "Tất cả") {
+        filteredData = filteredData.filter(
+          (item) => item[filter.key] === selectedValue
+        );
+      }
+    });
+
+    setValidData(filteredData);
   };
 
-  const handleFilter = (filterType, standard) => {
-    const tempFilter = formattedFilters.map((f) =>
-      f.type === filterType
-        ? { ...f, isOpen: false, selected: standard }
-        : { ...f, isOpen: false },
+  // Xử lý sắp xếp
+  const handleSort = () => {
+    if (!sortField) return;
+
+    const sortedData = [...validData].sort((a, b) => {
+      let valueA, valueB;
+
+      if (sortField === "id") {
+        valueA = a.id;
+        valueB = b.id;
+      } else if (sortField === "username") {
+        valueA = a.user.username.toLowerCase();
+        valueB = b.user.username.toLowerCase();
+      } else if (sortField === "createdAt") {
+        valueA = new Date(a.createdAt);
+        valueB = new Date(b.createdAt);
+      } else if (sortField === "status") {
+        valueA = a.status.toLowerCase();
+        valueB = b.status.toLowerCase();
+      } else if (sortField === "paymentMethod") {
+        valueA = a.paymentMethod.toLowerCase();
+        valueB = b.paymentMethod.toLowerCase();
+      }
+
+      if (sortOrder === "asc") {
+        return valueA > valueB ? 1 : -1;
+      } else {
+        return valueA < valueB ? 1 : -1;
+      }
+    });
+
+    setValidData(sortedData);
+  };
+
+  // Xử lý thay đổi bộ lọc (status, paymentMethod)
+  const handleFilterChange = (key, value) => {
+    const updatedFilters = filters.map((filter) =>
+      filter.key === key ? { ...filter, selectedValue: value } : filter
     );
-    setFormattedFilters(tempFilter);
-    setFilteredData(
-      data.filter((d) =>
-        tempFilter.every(
-          (f) =>
-            f.selected === f.name ||
-            f.selected === "Tất cả" ||
-            d[f.type] === f.selected,
-        ),
-      ),
-    );
+
+    let filteredData = [...data];
+
+    updatedFilters.forEach((filter) => {
+      const selectedValue = filter.selectedValue;
+      if (selectedValue && selectedValue !== "Tất cả") {
+        filteredData = filteredData.filter(
+          (item) => item[filter.key] === selectedValue
+        );
+      }
+    });
+
+    // Áp dụng lại tìm kiếm sau khi lọc
+    Object.keys(searchValues).forEach((searchKey) => {
+      if (searchValues[searchKey]) {
+        filteredData = filteredData.filter((item) => {
+          if (searchKey === "id") {
+            return item.id.toString().includes(searchValues[searchKey]);
+          }
+          if (searchKey === "username") {
+            return item.user.username
+              .toLowerCase()
+              .includes(searchValues[searchKey].toLowerCase());
+          }
+          return true;
+        });
+      }
+    });
+
+    setValidData(filteredData);
   };
 
   return (
-    <>
-      <Search
-        data={filteredData.length > 0 ? filteredData : data}
-        setValidData={wrappedSetValidData}
-        searchFields={searchFields}
-      />
-      <div className="card-filters">
-        {formattedFilters.map((f, index) => (
-          <div className="dropdown" key={index}>
-            <div
-              className={`dropdown-selected ${f.isOpen ? "active" : ""}`}
-              onClick={() => {
-                setFormattedFilters(
-                  formattedFilters.map((item) =>
-                    item.type === f.type
-                      ? { ...item, isOpen: !item.isOpen }
-                      : { ...item, isOpen: false },
-                  ),
-                );
-              }}
-            >
-              {f.selected}
-            </div>
-            {f.isOpen ? (
-              <div className="dropdown-options">
-                {f.standards.map((standard, index) => (
-                  <div
-                    key={index}
-                    className={standard === f.selected ? "active" : ""}
-                    onClick={() => handleFilter(f.type, standard)}
-                  >
-                    {standard}
-                  </div>
-                ))}
-              </div>
-            ) : null}
-          </div>
+    <div className={styles.filterWrapper}>
+      <div className={styles.searchFields}>
+        {searchFields.map((field) => (
+          <Input
+            key={field.key}
+            placeholder={field.placeholder}
+            value={searchValues[field.key] || ""}
+            onChange={(e) => handleSearch(field.key, e.target.value)}
+            style={{ width: 200, marginRight: 16 }}
+          />
         ))}
-        <Sort
-          standards={standardSort}
-          data={validData}
-          filters={formattedFilters}
-          setFilters={setFormattedFilters}
-          setValidData={setValidData}
-        />
       </div>
-    </>
+      <div className={styles.sortSection}>
+        <Select
+          placeholder="Sắp xếp"
+          style={{ width: 200, marginRight: 16 }}
+          onChange={(value) => setSortField(value)}
+        >
+          {standardSort.map((sort) => (
+            <Option key={sort.type} value={sort.type}>
+              {sort.name}
+            </Option>
+          ))}
+        </Select>
+        <Select
+          defaultValue="asc"
+          style={{ width: 120, marginRight: 16 }}
+          onChange={(value) => setSortOrder(value)}
+        >
+          <Option value="asc">Tăng dần</Option>
+          <Option value="desc">Giảm dần</Option>
+        </Select>
+        <Button
+          type="primary"
+          icon={<SortAscendingOutlined />}
+          onClick={handleSort}
+        >
+          Sắp xếp
+        </Button>
+      </div>
+    </div>
   );
 };
 
