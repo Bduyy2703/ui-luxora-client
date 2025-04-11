@@ -25,6 +25,257 @@ import {
   deleteBlog,
 } from "../../../services/api/blogService";
 
+// Component cho Form 1 (Thiết kế tối giản, sang trọng)
+const DetailForm1 = ({ currentBlog, currentBlogImages, styles }) => {
+  const splitContentIntoParagraphs = (content) => {
+    if (!content) return [];
+    return content.split(/\. |\n/).filter((paragraph) => paragraph.trim() !== "");
+  };
+
+  const groupParagraphs = (paragraphs, groupSize = 5) => {
+    const grouped = [];
+    for (let i = 0; i < paragraphs.length; i += groupSize) {
+      grouped.push(paragraphs.slice(i, i + groupSize));
+    }
+    return grouped;
+  };
+
+  return (
+    <div className={styles.blogDetailContainer}>
+      <div
+        className={styles.blogDetailHeader}
+        style={{
+          backgroundImage: currentBlog.thumbnail
+            ? `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url(${currentBlog.thumbnail})`
+            : "linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7))",
+        }}
+      >
+        <h2>{currentBlog.title}</h2>
+      </div>
+
+      <div className={styles.blogDetailContent}>
+        <div className={styles.blogExcerpt}>
+          <h3>Nội dung chính</h3>
+          <p>{currentBlog.excerpt}</p>
+        </div>
+
+        <div className={styles.blogContent}>
+          {groupParagraphs(splitContentIntoParagraphs(currentBlog.content), 5).map((group, groupIndex) => (
+            <div key={groupIndex} className={styles.contentSection}>
+              <div className={styles.textWrapper}>
+                {group.map((paragraph, paraIndex) => (
+                  <p key={paraIndex}>{paragraph}.</p>
+                ))}
+              </div>
+              {currentBlogImages[groupIndex] && (
+                <div className={styles.imageWrapper}>
+                  <Image
+                    src={currentBlogImages[groupIndex].fileUrl}
+                    alt={`Blog Image ${groupIndex + 1}`}
+                    className={styles.contentImage}
+                  />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {currentBlogImages.length > 0 && (
+          <div className={styles.imageCarousel}>
+            <h3>Hình ảnh</h3>
+            <Carousel
+              autoplay
+              dots
+              effect="fade"
+              className={styles.carousel}
+              autoplaySpeed={3000}
+            >
+              {currentBlogImages.map((image) => (
+                <div key={image.fileId}>
+                  <Image
+                    src={image.fileUrl}
+                    alt="Blog Image"
+                    className={styles.carouselImage}
+                  />
+                </div>
+              ))}
+            </Carousel>
+          </div>
+        )}
+
+        <div className={styles.blogFooter}>
+          <p>
+            <strong>Ngày tạo:</strong>{" "}
+            {new Date(currentBlog.createAt).toLocaleString()}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Component cho Form 2 (Carousel lớn, hiệu ứng parallax)
+const DetailForm2 = ({ currentBlog, currentBlogImages, styles }) => {
+  const splitContentIntoParagraphs = (content) => {
+    if (!content) return [];
+    return content.split(/\. |\n/).filter((paragraph) => paragraph.trim() !== "");
+  };
+
+  const groupParagraphs = (paragraphs, groupSize = 5) => {
+    const grouped = [];
+    for (let i = 0; i < paragraphs.length; i += groupSize) {
+      grouped.push(paragraphs.slice(i, i + groupSize));
+    }
+    return grouped;
+  };
+
+  return (
+    <div className={styles.blogDetailContainerForm2}>
+      {currentBlogImages.length > 0 && (
+        <div className={styles.imageCarousel}>
+          <Carousel
+            autoplay
+            dots
+            effect="fade"
+            className={styles.carousel}
+            autoplaySpeed={3000}
+          >
+            {currentBlogImages.map((image) => (
+              <div key={image.fileId}>
+                <Image
+                  src={image.fileUrl}
+                  alt="Blog Image"
+                  className={styles.carouselImage}
+                />
+              </div>
+            ))}
+          </Carousel>
+        </div>
+      )}
+
+      <div
+        className={styles.blogDetailHeader}
+        style={{
+          backgroundImage: currentBlog.thumbnail
+            ? `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url(${currentBlog.thumbnail})`
+            : "linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7))",
+        }}
+      >
+        <h2>{currentBlog.title}</h2>
+      </div>
+
+      <div className={styles.blogDetailContent}>
+        <div className={styles.blogExcerpt}>
+          <h3>Nội dung chính</h3>
+          <p>{currentBlog.excerpt}</p>
+        </div>
+
+        <div className={styles.blogContent}>
+          {groupParagraphs(splitContentIntoParagraphs(currentBlog.content), 5).map((group, groupIndex) => (
+            <div key={groupIndex} className={styles.contentSection}>
+              <div className={styles.textWrapper}>
+                {group.map((paragraph, paraIndex) => (
+                  <p key={paraIndex}>{paragraph}.</p>
+                ))}
+              </div>
+              {currentBlogImages[groupIndex] && (
+                <div className={styles.imageWrapper}>
+                  <Image
+                    src={currentBlogImages[groupIndex].fileUrl}
+                    alt={`Blog Image ${groupIndex + 1}`}
+                    className={styles.contentImage}
+                  />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className={styles.blogFooter}>
+          <p>
+            <strong>Ngày tạo:</strong>{" "}
+            {new Date(currentBlog.createAt).toLocaleString()}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Component cho Form 3 (Layout dạng lưới, tông màu vàng ánh kim)
+const DetailForm3 = ({ currentBlog, currentBlogImages, styles }) => {
+  const splitContentIntoParagraphs = (content) => {
+    if (!content) return [];
+    return content.split(/\. |\n/).filter((paragraph) => paragraph.trim() !== "");
+  };
+
+  const groupParagraphs = (paragraphs, groupSize = 5) => {
+    const grouped = [];
+    for (let i = 0; i < paragraphs.length; i += groupSize) {
+      grouped.push(paragraphs.slice(i, i + groupSize));
+    }
+    return grouped;
+  };
+
+  return (
+    <div className={styles.blogDetailContainerForm3}>
+      <div
+        className={styles.blogDetailHeader}
+        style={{
+          backgroundImage: currentBlog.thumbnail
+            ? `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url(${currentBlog.thumbnail})`
+            : "linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7))",
+        }}
+      >
+        <h2>{currentBlog.title}</h2>
+      </div>
+
+      <div className={styles.blogDetailContent}>
+        <div className={styles.blogContentGrid}>
+          <div className={styles.blogExcerpt}>
+            <h3>Nội dung chính</h3>
+            <p>{currentBlog.excerpt}</p>
+          </div>
+
+          <div className={styles.blogContent}>
+            <h3>Nội dung chi tiết</h3>
+            {groupParagraphs(splitContentIntoParagraphs(currentBlog.content), 5).map((group, groupIndex) => (
+              <div key={groupIndex} className={styles.contentSection}>
+                <div className={styles.textWrapper}>
+                  {group.map((paragraph, paraIndex) => (
+                    <p key={paraIndex}>{paragraph}.</p>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {currentBlogImages.length > 0 && (
+            <div className={styles.imageGrid}>
+              {currentBlogImages.map((image) => (
+                <div key={image.fileId} className={styles.imageWrapper}>
+                  <Image
+                    src={image.fileUrl}
+                    alt="Blog Image"
+                    className={styles.contentImage}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className={styles.blogFooter}>
+          <p>
+            <strong>Ngày tạo:</strong>{" "}
+            {new Date(currentBlog.createAt).toLocaleString()}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const AdminBlogList = () => {
   const [data, setData] = useState([]);
   const [validData, setValidData] = useState([]);
@@ -35,6 +286,7 @@ const AdminBlogList = () => {
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [currentBlog, setCurrentBlog] = useState(null);
   const [currentBlogImages, setCurrentBlogImages] = useState([]);
+  const [selectedFormType, setSelectedFormType] = useState(null); // State để random form
   const [form] = Form.useForm();
   const [editForm] = Form.useForm();
   const [currentPage, setCurrentPage] = useState(1);
@@ -252,6 +504,13 @@ const AdminBlogList = () => {
     setEditModalVisible(true);
   };
 
+  // Hàm random chọn formType
+  const getRandomFormType = () => {
+    const formTypes = ["form1", "form2", "form3"];
+    const randomIndex = Math.floor(Math.random() * formTypes.length);
+    return formTypes[randomIndex];
+  };
+
   const handleViewDetails = async (blog) => {
     setCurrentBlog(blog);
     setLoading(true);
@@ -262,6 +521,7 @@ const AdminBlogList = () => {
       }
       setCurrentBlog(res.blog);
       setCurrentBlogImages(res.images || []);
+      setSelectedFormType(getRandomFormType()); // Random chọn form ở đây
       setDetailModalVisible(true);
     } catch (error) {
       console.error("Error fetching blog details:", error);
@@ -366,21 +626,6 @@ const AdminBlogList = () => {
       ),
     },
   ];
-
-  // Hàm chia nội dung thành các đoạn để xen kẽ hình ảnh
-  const splitContentIntoParagraphs = (content) => {
-    if (!content) return [];
-    return content.split(/\. |\n/).filter((paragraph) => paragraph.trim() !== "");
-  };
-
-  // Nhóm các đoạn văn thành các khối lớn hơn (mỗi khối 4-5 đoạn)
-  const groupParagraphs = (paragraphs, groupSize = 5) => {
-    const grouped = [];
-    for (let i = 0; i < paragraphs.length; i += groupSize) {
-      grouped.push(paragraphs.slice(i, i + groupSize));
-    }
-    return grouped;
-  };
 
   return (
     <div className="wrapper">
@@ -588,86 +833,36 @@ const AdminBlogList = () => {
               setDetailModalVisible(false);
               setCurrentBlog(null);
               setCurrentBlogImages([]);
+              setSelectedFormType(null); // Reset form type khi đóng modal
             }}
             footer={null}
             className={styles.blogDetailModal}
             width={1200}
           >
-            {currentBlog ? (
-              <div className={styles.blogDetailContainer}>
-                {/* Header với ảnh thumbnail làm nền */}
-                <div
-                  className={styles.blogDetailHeader}
-                  style={{
-                    backgroundImage: currentBlog.thumbnail
-                      ? `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url(${currentBlog.thumbnail})`
-                      : "linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7))",
-                  }}
-                >
-                  <h2>{currentBlog.title}</h2>
-                </div>
-
-                {/* Nội dung chính */}
-                <div className={styles.blogDetailContent}>
-                  <div className={styles.blogExcerpt}>
-                    <h3>Nội dung chính</h3>
-                    <p>{currentBlog.excerpt}</p>
-                  </div>
-
-                  <div className={styles.blogContent}>
-                    {groupParagraphs(splitContentIntoParagraphs(currentBlog.content), 5).map((group, groupIndex) => (
-                      <div key={groupIndex} className={styles.contentSection}>
-                        <div className={styles.textWrapper}>
-                          {group.map((paragraph, paraIndex) => (
-                            <p key={paraIndex}>{paragraph}.</p>
-                          ))}
-                        </div>
-                        {currentBlogImages[groupIndex] && (
-                          <div className={styles.imageWrapper}>
-                            <Image
-                              src={currentBlogImages[groupIndex].fileUrl}
-                              alt={`Blog Image ${groupIndex + 1}`}
-                              className={styles.contentImage}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Carousel hình ảnh */}
-                  {currentBlogImages.length > 0 && (
-                    <div className={styles.imageCarousel}>
-                      <h3>Hình ảnh</h3>
-                      <Carousel
-                        autoplay
-                        dots
-                        effect="fade"
-                        className={styles.carousel}
-                        autoplaySpeed={3000}
-                      >
-                        {currentBlogImages.map((image) => (
-                          <div key={image.fileId}>
-                            <Image
-                              src={image.fileUrl}
-                              alt="Blog Image"
-                              className={styles.carouselImage}
-                            />
-                          </div>
-                        ))}
-                      </Carousel>
-                    </div>
-                  )}
-
-                  {/* Ngày tháng tạo ở cuối */}
-                  <div className={styles.blogFooter}>
-                    <p>
-                      <strong>Ngày tạo:</strong>{" "}
-                      {new Date(currentBlog.createAt).toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              </div>
+            {currentBlog && selectedFormType ? (
+              <>
+                {selectedFormType === "form1" && (
+                  <DetailForm1
+                    currentBlog={currentBlog}
+                    currentBlogImages={currentBlogImages}
+                    styles={styles}
+                  />
+                )}
+                {selectedFormType === "form2" && (
+                  <DetailForm2
+                    currentBlog={currentBlog}
+                    currentBlogImages={currentBlogImages}
+                    styles={styles}
+                  />
+                )}
+                {selectedFormType === "form3" && (
+                  <DetailForm3
+                    currentBlog={currentBlog}
+                    currentBlogImages={currentBlogImages}
+                    styles={styles}
+                  />
+                )}
+              </>
             ) : (
               <p>Không có dữ liệu bài viết</p>
             )}
