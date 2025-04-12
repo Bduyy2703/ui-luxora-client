@@ -80,7 +80,7 @@ const AdminReviewList = () => {
         limit,
         isHiddenFilter,
         productIdFilter,
-        userIdFilter
+        userIdFilter,
       );
       if (res.error) {
         throw new Error(res.error);
@@ -230,7 +230,8 @@ const AdminReviewList = () => {
     } catch (error) {
       Swal.fire({
         title: "Lỗi!",
-        text: error.message || "Đã xảy ra lỗi khi cập nhật trạng thái đánh giá.",
+        text:
+          error.message || "Đã xảy ra lỗi khi cập nhật trạng thái đánh giá.",
         icon: "error",
         confirmButtonText: "OK",
       });
@@ -272,7 +273,7 @@ const AdminReviewList = () => {
           ...new Set(
             data
               .map((item) => new Date(item.createdAt).toLocaleDateString())
-              .filter(Boolean)
+              .filter(Boolean),
           ),
         ],
       },
@@ -405,7 +406,10 @@ const AdminReviewList = () => {
                           key: "product.name",
                           placeholder: "Tìm kiếm theo bình luận",
                         },
-                        { key: "comment", placeholder: "Tìm kiếm theo bình luận" },
+                        {
+                          key: "comment",
+                          placeholder: "Tìm kiếm theo bình luận",
+                        },
                       ]}
                     />
                     <Select
@@ -435,7 +439,7 @@ const AdminReviewList = () => {
                             {data.find((item) => item.productId === productId)
                               ?.product?.name || productId}
                           </Option>
-                        )
+                        ),
                       )}
                     </Select>
                     <InputNumber
@@ -494,138 +498,148 @@ const AdminReviewList = () => {
             </TabPane>
             <TabPane tab="Thống kê" key="2">
               <div className={styles.statisticsSection}>
-                <Card title="Sản phẩm được đánh giá cao nhất">
-                  {topRatedProduct ? (
-                    <div>
-                      {topRatedProduct.images && topRatedProduct.images.length > 0 ? (
-                        <div className={styles.productImage}>
-                          <Image
-                            src={topRatedProduct.images[0].fileUrl}
-                            alt="Product Image"
+                <div className={styles.gridContainer}>
+                  <Card title="Sản phẩm được đánh giá cao nhất">
+                    {topRatedProduct ? (
+                      <div>
+                        {topRatedProduct.images &&
+                        topRatedProduct.images.length > 0 ? (
+                          <div className={styles.productImage}>
+                            <Image
+                              src={topRatedProduct.images[0].fileUrl}
+                              alt="Product Image"
+                              width={100}
+                              height={100}
+                              style={{ objectFit: "cover", marginBottom: 16 }}
+                            />
+                          </div>
+                        ) : (
+                          <p>Không có hình ảnh</p>
+                        )}
+                        <p>
+                          <strong>Tên sản phẩm:</strong>{" "}
+                          {topRatedProduct.product?.name || "N/A"}
+                        </p>
+                        <div className={styles.ratingCircle}>
+                          <Progress
+                            type="circle"
+                            percent={(topRatedProduct.averageRating / 5) * 100}
+                            format={() =>
+                              `${topRatedProduct.averageRating.toFixed(2)}/5`
+                            }
+                            strokeColor="#fadb14"
                             width={100}
-                            height={100}
-                            style={{ objectFit: "cover", marginBottom: 16 }}
+                            clockwise={false}
                           />
                         </div>
-                      ) : (
-                        <p>Không có hình ảnh</p>
-                      )}
-                      <p>
-                        <strong>Tên sản phẩm:</strong>{" "}
-                        {topRatedProduct.product?.name || "N/A"}
-                      </p>
-                      <div className={styles.ratingCircle}>
-                        <Progress
-                          type="circle"
-                          percent={(topRatedProduct.averageRating / 5) * 100}
-                          format={() =>
-                            `${topRatedProduct.averageRating.toFixed(2)}/5`
-                          }
-                          strokeColor="#fadb14"
-                          width={100} // Tăng kích thước vòng điểm
-                          clockwise={false} // Đảo ngược hướng vòng điểm
-                        />
+                        <p>
+                          <strong>Số lượng đánh giá:</strong>{" "}
+                          {topRatedProduct.totalReviews}
+                        </p>
+                        <p>
+                          <strong>Giá tiền:</strong>{" "}
+                          {formatPrice(topRatedProduct.product?.finalPrice)}
+                        </p>
                       </div>
-                      <p>
-                        <strong>Số lượng đánh giá:</strong>{" "}
-                        {topRatedProduct.totalReviews}
-                      </p>
-                      <p>
-                        <strong>Giá tiền:</strong>{" "}
-                        {formatPrice(topRatedProduct.product?.finalPrice)}
-                      </p>
-                    </div>
-                  ) : (
-                    <p>Không có dữ liệu</p>
-                  )}
-                </Card>
-                <Card title="Sản phẩm được đánh giá thấp nhất">
-                  {lowestRatedProduct ? (
-                    <div>
-                      {lowestRatedProduct.images && lowestRatedProduct.images.length > 0 ? (
-                        <div className={styles.productImage}>
-                          <Image
-                            src={lowestRatedProduct.images[0].fileUrl}
-                            alt="Product Image"
+                    ) : (
+                      <p>Không có dữ liệu</p>
+                    )}
+                  </Card>
+                  <Card title="Sản phẩm được đánh giá thấp nhất">
+                    {lowestRatedProduct ? (
+                      <div>
+                        {lowestRatedProduct.images &&
+                        lowestRatedProduct.images.length > 0 ? (
+                          <div className={styles.productImage}>
+                            <Image
+                              src={lowestRatedProduct.images[0].fileUrl}
+                              alt="Product Image"
+                              width={100}
+                              height={100}
+                              style={{ objectFit: "cover", marginBottom: 16 }}
+                            />
+                          </div>
+                        ) : (
+                          <p>Không có hình ảnh</p>
+                        )}
+                        <p>
+                          <strong>Tên sản phẩm:</strong>{" "}
+                          {lowestRatedProduct.product?.name || "N/A"}
+                        </p>
+                        <div className={styles.ratingCircle}>
+                          <Progress
+                            type="circle"
+                            percent={
+                              (lowestRatedProduct.averageRating / 5) * 100
+                            }
+                            format={() =>
+                              `${lowestRatedProduct.averageRating.toFixed(2)}/5`
+                            }
+                            strokeColor="#fadb14"
                             width={100}
-                            height={100}
-                            style={{ objectFit: "cover", marginBottom: 16 }}
+                            clockwise={false}
                           />
                         </div>
-                      ) : (
-                        <p>Không có hình ảnh</p>
-                      )}
-                      <p>
-                        <strong>Tên sản phẩm:</strong>{" "}
-                        {lowestRatedProduct.product?.name || "N/A"}
-                      </p>
-                      <div className={styles.ratingCircle}>
-                        <Progress
-                          type="circle"
-                          percent={(lowestRatedProduct.averageRating / 5) * 100}
-                          format={() =>
-                            `${lowestRatedProduct.averageRating.toFixed(2)}/5`
-                          }
-                          strokeColor="#fadb14"
-                          width={100} // Tăng kích thước vòng điểm
-                          clockwise={false} // Đảo ngược hướng vòng điểm
-                        />
+                        <p>
+                          <strong>Số lượng đánh giá:</strong>{" "}
+                          {lowestRatedProduct.totalReviews}
+                        </p>
+                        <p>
+                          <strong>Giá tiền:</strong>{" "}
+                          {formatPrice(lowestRatedProduct.product?.finalPrice)}
+                        </p>
                       </div>
-                      <p>
-                        <strong>Số lượng đánh giá:</strong>{" "}
-                        {lowestRatedProduct.totalReviews}
-                      </p>
-                      <p>
-                        <strong>Giá tiền:</strong>{" "}
-                        {formatPrice(lowestRatedProduct.product?.finalPrice)}
-                      </p>
-                    </div>
-                  ) : (
-                    <p>Không có dữ liệu</p>
-                  )}
-                </Card>
-                <Card title="Sản phẩm có nhiều đánh giá nhất">
-                  {mostReviewedProduct ? (
-                    <div>
-                      {mostReviewedProduct.images && mostReviewedProduct.images.length > 0 ? (
-                        <div className={styles.productImage}>
-                          <Image
-                            src={mostReviewedProduct.images[0].fileUrl}
-                            alt="Product Image"
-                            width={100}
-                            height={100}
-                            style={{ objectFit: "cover", marginBottom: 16 }}
-                          />
-                        </div>
-                      ) : (
-                        <p>Không có hình ảnh</p>
-                      )}
-                      <p>
-                        <strong>Tên sản phẩm:</strong>{" "}
-                        {mostReviewedProduct.product?.name || "N/A"}
-                      </p>
-                      <p>
-                        <strong>Số lượng đánh giá:</strong>{" "}
-                        {mostReviewedProduct.totalReviews}
-                      </p>
-                      <p>
-                        <strong>Giá tiền:</strong>{" "}
-                        {formatPrice(mostReviewedProduct.product?.finalPrice)}
-                      </p>
-                    </div>
-                  ) : (
-                    <p>Không có dữ liệu</p>
-                  )}
-                </Card>
-                <Card title="Danh sách sản phẩm theo thứ tự đánh giá">
-                  <AntTable
-                    dataSource={productsByRating}
-                    columns={productsByRatingColumns}
-                    rowKey={(record) => record.product?.id || Math.random()}
-                    pagination={false}
-                    className={styles.table}
-                  />
-                </Card>
+                    ) : (
+                      <p>Không có dữ liệu</p>
+                    )}
+                  </Card>
+                  <Card title="Sản phẩm có nhiều đánh giá nhất">
+                    {mostReviewedProduct ? (
+                      <div>
+                        {mostReviewedProduct.images &&
+                        mostReviewedProduct.images.length > 0 ? (
+                          <div className={styles.productImage}>
+                            <Image
+                              src={mostReviewedProduct.images[0].fileUrl}
+                              alt="Product Image"
+                              width={100}
+                              height={100}
+                              style={{ objectFit: "cover", marginBottom: 16 }}
+                            />
+                          </div>
+                        ) : (
+                          <p>Không có hình ảnh</p>
+                        )}
+                        <p>
+                          <strong>Tên sản phẩm:</strong>{" "}
+                          {mostReviewedProduct.product?.name || "N/A"}
+                        </p>
+                        <p>
+                          <strong>Số lượng đánh giá:</strong>{" "}
+                          {mostReviewedProduct.totalReviews}
+                        </p>
+                        <p>
+                          <strong>Giá tiền:</strong>{" "}
+                          {formatPrice(mostReviewedProduct.product?.finalPrice)}
+                        </p>
+                      </div>
+                    ) : (
+                      <p>Không có dữ liệu</p>
+                    )}
+                  </Card>
+                </div>
+
+                <div className={styles.tableContainer}>
+                  <Card title="Danh sách sản phẩm theo thứ tự đánh giá">
+                    <AntTable
+                      dataSource={productsByRating}
+                      columns={productsByRatingColumns}
+                      rowKey={(record) => record.product?.id || Math.random()}
+                      pagination={false}
+                      className={styles.table}
+                    />
+                  </Card>
+                </div>
               </div>
             </TabPane>
           </Tabs>
@@ -689,13 +703,22 @@ const AdminReviewList = () => {
                     <div className={styles.ratingDistribution}>
                       <h4>Phân bố đánh giá:</h4>
                       {[5, 4, 3, 2, 1].map((star) => (
-                        <div key={star} className={styles.ratingDistributionItem}>
+                        <div
+                          key={star}
+                          className={styles.ratingDistributionItem}
+                        >
                           <Rate
                             disabled
                             value={star}
-                            style={{ color: "#fadb14", fontSize: 20, marginRight: 8 }} // Tăng kích thước ngôi sao
+                            style={{
+                              color: "#fadb14",
+                              fontSize: 20,
+                              marginRight: 8,
+                            }} // Tăng kích thước ngôi sao
                           />
-                          <span>{productStatistics.ratingDistribution?.[star] || 0}</span>
+                          <span>
+                            {productStatistics.ratingDistribution?.[star] || 0}
+                          </span>
                         </div>
                       ))}
                     </div>

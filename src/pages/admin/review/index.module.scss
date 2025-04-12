@@ -100,37 +100,45 @@
 }
 
 .statisticsSection {
+  margin-top: 24px;
+  width: 100%;
+}
+
+.gridContainer {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 24px;
-  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+.tableContainer {
   width: 100%;
+}
 
-  .ant-card {
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s;
-    text-align: center;
+.ant-card {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s;
+  text-align: center;
 
-    &:hover {
-      transform: translateY(-4px);
-    }
+  &:hover {
+    transform: translateY(-4px);
+  }
 
-    .ant-card-head {
-      background-color: #fafafa;
-      border-bottom: 1px solid #e8e8e8;
-      padding: 0 16px;
-    }
+  .ant-card-head {
+    background-color: #fafafa;
+    border-bottom: 1px solid #e8e8e8;
+    padding: 0 16px;
+  }
 
-    .ant-card-body {
-      padding: 16px;
-      p {
-        margin: 8px 0;
-        font-size: 14px;
-        color: #595959;
-        strong {
-          color: #262626;
-        }
+  .ant-card-body {
+    padding: 16px;
+    p {
+      margin: 8px 0;
+      font-size: 14px;
+      color: #595959;
+      strong {
+        color: #262626;
       }
     }
   }
