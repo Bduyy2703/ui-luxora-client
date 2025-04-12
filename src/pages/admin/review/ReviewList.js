@@ -1,4 +1,3 @@
-// src/pages/admin/review/ReviewList.js
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Modal,
@@ -14,17 +13,23 @@ import {
   Statistic,
   DatePicker,
   InputNumber,
+  Progress,
+  Rate,
 } from "antd";
 import Swal from "sweetalert2";
 import Filter from "../../../components/admin/filter/Filter";
 import config from "../../../config";
-import { InfoOutlined, DeleteOutlined, EyeInvisibleOutlined, EyeOutlined } from "@ant-design/icons";
+import {
+  InfoOutlined,
+  DeleteOutlined,
+  EyeInvisibleOutlined,
+  EyeOutlined,
+} from "@ant-design/icons";
 import styles from "./index.module.scss";
 import {
   getAllReviews,
   toggleHiddenReview,
   adminDeleteReview,
-  getReviewsByProductId,
   getTopRatedProduct,
   getLowestRatedProduct,
   getMostReviewedProduct,
@@ -35,6 +40,12 @@ import {
 const { Option } = Select;
 const { TabPane } = Tabs;
 const { RangePicker } = DatePicker;
+
+// Hàm định dạng giá tiền
+const formatPrice = (price) => {
+  if (!price) return "N/A";
+  return `${parseFloat(price).toLocaleString("vi-VN")} VNĐ`;
+};
 
 const AdminReviewList = () => {
   const [data, setData] = useState([]);
@@ -59,9 +70,8 @@ const AdminReviewList = () => {
   const [productStatistics, setProductStatistics] = useState(null);
   const limit = config.LIMIT || 10;
 
-  const standardSort = ["productName", "createdAt"];
+  const standardSort = ["product.name", "createdAt"];
 
-  // Lấy danh sách đánh giá
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
@@ -76,13 +86,11 @@ const AdminReviewList = () => {
         throw new Error(res.error);
       }
       let items = res?.reviews || [];
-      
-      // Lọc theo rating
+
       if (ratingFilter !== undefined) {
         items = items.filter((item) => item.rating >= ratingFilter);
       }
 
-      // Lọc theo khoảng thời gian
       if (dateRangeFilter.length === 2) {
         const [startDate, endDate] = dateRangeFilter;
         items = items.filter((item) => {
@@ -95,27 +103,34 @@ const AdminReviewList = () => {
       setValidData(items);
       setTotal(res.total || 0);
     } catch (error) {
-      console.error("Error fetching reviews:", error);
+      console.error("Lỗi khi lấy đánh giá:", error);
       setData([]);
       setValidData([]);
       Swal.fire({
         title: "Lỗi!",
-        text: "Không thể tải danh sách đánh giá.",
+        text: error.message || "Không thể tải danh sách đánh giá.",
         icon: "error",
       });
     } finally {
       setLoading(false);
     }
-  }, [currentPage, limit, isHiddenFilter, productIdFilter, userIdFilter, ratingFilter, dateRangeFilter]);
+  }, [
+    currentPage,
+    limit,
+    isHiddenFilter,
+    productIdFilter,
+    userIdFilter,
+    ratingFilter,
+    dateRangeFilter,
+  ]);
 
-  // Lấy dữ liệu thống kê
   const fetchStatistics = useCallback(async () => {
     try {
       const topRated = await getTopRatedProduct();
       const lowestRated = await getLowestRatedProduct();
       const mostReviewed = await getMostReviewedProduct();
-      const productsByRatingRes = await getProductsByRating('DESC', 1, 10);
-      
+      const productsByRatingRes = await getProductsByRating("DESC", 1, 10);
+
       if (topRated.error) throw new Error(topRated.error);
       if (lowestRated.error) throw new Error(lowestRated.error);
       if (mostReviewed.error) throw new Error(mostReviewed.error);
@@ -126,27 +141,26 @@ const AdminReviewList = () => {
       setMostReviewedProduct(mostReviewed);
       setProductsByRating(productsByRatingRes.products || []);
     } catch (error) {
-      console.error("Error fetching statistics:", error);
+      console.error("Lỗi khi lấy thống kê:", error);
       Swal.fire({
         title: "Lỗi!",
-        text: "Không thể tải dữ liệu thống kê.",
+        text: error.message || "Không thể tải dữ liệu thống kê.",
         icon: "error",
       });
     }
   }, []);
 
-  // Lấy thống kê chi tiết của sản phẩm
   const fetchProductStatistics = async (productId) => {
     try {
       const res = await getProductReviewStatistics(productId);
       if (res.error) throw new Error(res.error);
       setProductStatistics(res);
     } catch (error) {
-      console.error("Error fetching product statistics:", error);
+      console.error("Lỗi khi lấy thống kê sản phẩm:", error);
       setProductStatistics(null);
       Swal.fire({
         title: "Lỗi!",
-        text: "Không thể tải thống kê sản phẩm.",
+        text: error.message || "Không thể tải thống kê sản phẩm.",
         icon: "error",
       });
     }
@@ -188,7 +202,7 @@ const AdminReviewList = () => {
       } catch (error) {
         Swal.fire({
           title: "Lỗi!",
-          text: "Đã xảy ra lỗi khi xóa đánh giá.",
+          text: error.message || "Đã xảy ra lỗi khi xóa đánh giá.",
           icon: "error",
           confirmButtonText: "OK",
         });
@@ -216,7 +230,7 @@ const AdminReviewList = () => {
     } catch (error) {
       Swal.fire({
         title: "Lỗi!",
-        text: "Đã xảy ra lỗi khi cập nhật trạng thái đánh giá.",
+        text: error.message || "Đã xảy ra lỗi khi cập nhật trạng thái đánh giá.",
         icon: "error",
         confirmButtonText: "OK",
       });
@@ -227,27 +241,9 @@ const AdminReviewList = () => {
 
   const handleViewDetails = async (review) => {
     setCurrentReview(review);
-    setLoading(true);
-    try {
-      const res = await getReviewsByProductId(review.productId);
-      if (res.error) {
-        throw new Error(res.error);
-      }
-      const selectedReview = res.reviews.find((r) => r.id === review.id);
-      setCurrentReview(selectedReview);
-      setCurrentReviewImages(selectedReview.images || []);
-      fetchProductStatistics(review.productId); // Lấy thống kê của sản phẩm
-      setDetailModalVisible(true);
-    } catch (error) {
-      console.error("Error fetching review details:", error);
-      Swal.fire({
-        title: "Lỗi!",
-        text: "Không thể tải chi tiết đánh giá.",
-        icon: "error",
-      });
-    } finally {
-      setLoading(false);
-    }
+    setCurrentReviewImages(review.images || []);
+    await fetchProductStatistics(review.productId);
+    setDetailModalVisible(true);
   };
 
   useEffect(() => {
@@ -261,32 +257,29 @@ const AdminReviewList = () => {
   useEffect(() => {
     setFilters([
       {
-        key: "productName",
+        key: "product.name",
         header: "Tên sản phẩm",
-        options: ["Tất cả", ...new Set(data.map((item) => item.productName))],
+        options: [
+          "Tất cả",
+          ...new Set(data.map((item) => item.product?.name).filter(Boolean)),
+        ],
       },
       {
         key: "createdAt",
         header: "Ngày tạo",
         options: [
           "Tất cả",
-          ...new Set(data.map((item) => new Date(item.createdAt).toLocaleDateString())),
+          ...new Set(
+            data
+              .map((item) => new Date(item.createdAt).toLocaleDateString())
+              .filter(Boolean)
+          ),
         ],
       },
     ]);
   }, [data]);
 
   const reviewColumns = [
-    {
-      title: "Sản phẩm",
-      key: "productName",
-      render: (record) => record.productName || "N/A",
-    },
-    {
-      title: "Rating",
-      key: "rating",
-      render: (record) => `${record.rating}/5`,
-    },
     {
       title: "Bình luận",
       key: "comment",
@@ -341,36 +334,66 @@ const AdminReviewList = () => {
 
   const productsByRatingColumns = [
     {
+      title: "Hình ảnh",
+      key: "images",
+      render: (record) => (
+        <div className={styles.productImage}>
+          {record.images && record.images.length > 0 ? (
+            <Image
+              src={record.images[0].fileUrl}
+              alt="Product Image"
+              width={50}
+              height={50}
+              style={{ objectFit: "cover" }}
+            />
+          ) : (
+            <span>Không có hình ảnh</span>
+          )}
+        </div>
+      ),
+    },
+    {
       title: "Sản phẩm",
-      key: "productName",
-      render: (record) => record.productName || "N/A",
+      key: "product.name",
+      render: (record) => record.product?.name || "N/A",
     },
     {
       title: "Đánh giá trung bình",
       key: "averageRating",
-      render: (record) => record.averageRating?.toFixed(2) || "N/A",
+      render: (record) => (
+        <Rate
+          disabled
+          value={Math.round(record.averageRating)}
+          style={{ color: "#fadb14", fontSize: 20 }} // Tăng kích thước ngôi sao
+        />
+      ),
     },
     {
       title: "Số lượng đánh giá",
-      key: "reviewCount",
-      render: (record) => record.reviewCount || 0,
+      key: "totalReviews",
+      render: (record) => record.totalReviews || 0,
+    },
+    {
+      title: "Giá tiền",
+      key: "finalPrice",
+      render: (record) => formatPrice(record.product?.finalPrice),
     },
   ];
 
   return (
-    <div className="wrapper">
-      <header className="admin-header">
+    <div className={styles.wrapper}>
+      <header className={styles.adminHeader}>
         <div className="container">
           <h2>QUẢN LÝ ĐÁNH GIÁ</h2>
         </div>
       </header>
-      <main className="main">
-        <div className="container">
+      <main className={styles.main}>
+        <div className={styles.container}>
           <Tabs defaultActiveKey="1">
             <TabPane tab="Danh sách đánh giá" key="1">
-              <div className="card">
-                <div className="card-header">
-                  <div className="card-tools">
+              <div className={styles.card}>
+                <div className={styles.cardHeader}>
+                  <div className={styles.cardTools}>
                     <Filter
                       filters={filters}
                       data={data}
@@ -378,12 +401,15 @@ const AdminReviewList = () => {
                       setValidData={setValidData}
                       standardSort={standardSort}
                       searchFields={[
-                        { key: "productName", placeholder: "Tìm kiếm theo tên sản phẩm" },
+                        {
+                          key: "product.name",
+                          placeholder: "Tìm kiếm theo bình luận",
+                        },
                         { key: "comment", placeholder: "Tìm kiếm theo bình luận" },
                       ]}
                     />
                     <Select
-                      style={{ width: 200, marginLeft: 16 }}
+                      style={{ width: 200 }}
                       placeholder="Lọc theo trạng thái"
                       allowClear
                       onChange={(value) => {
@@ -395,7 +421,7 @@ const AdminReviewList = () => {
                       <Option value={false}>Hiển thị</Option>
                     </Select>
                     <Select
-                      style={{ width: 200, marginLeft: 16 }}
+                      style={{ width: 200 }}
                       placeholder="Lọc theo sản phẩm"
                       allowClear
                       onChange={(value) => {
@@ -403,14 +429,17 @@ const AdminReviewList = () => {
                         setCurrentPage(1);
                       }}
                     >
-                      {[...new Set(data.map((item) => item.productId))].map((productId) => (
-                        <Option key={productId} value={productId}>
-                          {data.find((item) => item.productId === productId)?.productName || productId}
-                        </Option>
-                      ))}
+                      {[...new Set(data.map((item) => item.productId))].map(
+                        (productId) => (
+                          <Option key={productId} value={productId}>
+                            {data.find((item) => item.productId === productId)
+                              ?.product?.name || productId}
+                          </Option>
+                        )
+                      )}
                     </Select>
                     <InputNumber
-                      style={{ width: 200, marginLeft: 16 }}
+                      style={{ width: 200 }}
                       placeholder="Lọc theo rating (tối thiểu)"
                       min={1}
                       max={5}
@@ -420,25 +449,23 @@ const AdminReviewList = () => {
                       }}
                     />
                     <RangePicker
-                      style={{ marginLeft: 16 }}
                       onChange={(dates) => {
                         setDateRangeFilter(dates || []);
                         setCurrentPage(1);
                       }}
                     />
                   </div>
-                  <div className="card-btns">
+                  <div className={styles.cardBtns}>
                     <Button
                       danger
                       onClick={handleDeleteReview}
                       disabled={!checkedRow.length}
-                      style={{ marginLeft: 8 }}
                     >
-                      Xóa ({checkedRow.length})
+                      SẮP XẾP
                     </Button>
                   </div>
                 </div>
-                <div className="card-body">
+                <div className={styles.cardBody}>
                   <AntTable
                     dataSource={validData}
                     columns={reviewColumns}
@@ -446,8 +473,11 @@ const AdminReviewList = () => {
                     pagination={false}
                     rowSelection={{
                       selectedRowKeys: checkedRow,
-                      onChange: (selectedRowKeys) => setCheckedRow(selectedRowKeys),
+                      onChange: (selectedRowKeys) =>
+                        setCheckedRow(selectedRowKeys),
                     }}
+                    loading={loading}
+                    className={styles.table}
                   />
                 </div>
                 {total > limit && (
@@ -467,9 +497,43 @@ const AdminReviewList = () => {
                 <Card title="Sản phẩm được đánh giá cao nhất">
                   {topRatedProduct ? (
                     <div>
-                      <p><strong>Tên sản phẩm:</strong> {topRatedProduct.productName}</p>
-                      <p><strong>Đánh giá trung bình:</strong> {topRatedProduct.averageRating?.toFixed(2)}/5</p>
-                      <p><strong>Số lượng đánh giá:</strong> {topRatedProduct.reviewCount}</p>
+                      {topRatedProduct.images && topRatedProduct.images.length > 0 ? (
+                        <div className={styles.productImage}>
+                          <Image
+                            src={topRatedProduct.images[0].fileUrl}
+                            alt="Product Image"
+                            width={100}
+                            height={100}
+                            style={{ objectFit: "cover", marginBottom: 16 }}
+                          />
+                        </div>
+                      ) : (
+                        <p>Không có hình ảnh</p>
+                      )}
+                      <p>
+                        <strong>Tên sản phẩm:</strong>{" "}
+                        {topRatedProduct.product?.name || "N/A"}
+                      </p>
+                      <div className={styles.ratingCircle}>
+                        <Progress
+                          type="circle"
+                          percent={(topRatedProduct.averageRating / 5) * 100}
+                          format={() =>
+                            `${topRatedProduct.averageRating.toFixed(2)}/5`
+                          }
+                          strokeColor="#fadb14"
+                          width={100} // Tăng kích thước vòng điểm
+                          clockwise={false} // Đảo ngược hướng vòng điểm
+                        />
+                      </div>
+                      <p>
+                        <strong>Số lượng đánh giá:</strong>{" "}
+                        {topRatedProduct.totalReviews}
+                      </p>
+                      <p>
+                        <strong>Giá tiền:</strong>{" "}
+                        {formatPrice(topRatedProduct.product?.finalPrice)}
+                      </p>
                     </div>
                   ) : (
                     <p>Không có dữ liệu</p>
@@ -478,9 +542,43 @@ const AdminReviewList = () => {
                 <Card title="Sản phẩm được đánh giá thấp nhất">
                   {lowestRatedProduct ? (
                     <div>
-                      <p><strong>Tên sản phẩm:</strong> {lowestRatedProduct.productName}</p>
-                      <p><strong>Đánh giá trung bình:</strong> {lowestRatedProduct.averageRating?.toFixed(2)}/5</p>
-                      <p><strong>Số lượng đánh giá:</strong> {lowestRatedProduct.reviewCount}</p>
+                      {lowestRatedProduct.images && lowestRatedProduct.images.length > 0 ? (
+                        <div className={styles.productImage}>
+                          <Image
+                            src={lowestRatedProduct.images[0].fileUrl}
+                            alt="Product Image"
+                            width={100}
+                            height={100}
+                            style={{ objectFit: "cover", marginBottom: 16 }}
+                          />
+                        </div>
+                      ) : (
+                        <p>Không có hình ảnh</p>
+                      )}
+                      <p>
+                        <strong>Tên sản phẩm:</strong>{" "}
+                        {lowestRatedProduct.product?.name || "N/A"}
+                      </p>
+                      <div className={styles.ratingCircle}>
+                        <Progress
+                          type="circle"
+                          percent={(lowestRatedProduct.averageRating / 5) * 100}
+                          format={() =>
+                            `${lowestRatedProduct.averageRating.toFixed(2)}/5`
+                          }
+                          strokeColor="#fadb14"
+                          width={100} // Tăng kích thước vòng điểm
+                          clockwise={false} // Đảo ngược hướng vòng điểm
+                        />
+                      </div>
+                      <p>
+                        <strong>Số lượng đánh giá:</strong>{" "}
+                        {lowestRatedProduct.totalReviews}
+                      </p>
+                      <p>
+                        <strong>Giá tiền:</strong>{" "}
+                        {formatPrice(lowestRatedProduct.product?.finalPrice)}
+                      </p>
                     </div>
                   ) : (
                     <p>Không có dữ liệu</p>
@@ -489,9 +587,31 @@ const AdminReviewList = () => {
                 <Card title="Sản phẩm có nhiều đánh giá nhất">
                   {mostReviewedProduct ? (
                     <div>
-                      <p><strong>Tên sản phẩm:</strong> {mostReviewedProduct.productName}</p>
-                      <p><strong>Đánh giá trung bình:</strong> {mostReviewedProduct.averageRating?.toFixed(2)}/5</p>
-                      <p><strong>Số lượng đánh giá:</strong> {mostReviewedProduct.reviewCount}</p>
+                      {mostReviewedProduct.images && mostReviewedProduct.images.length > 0 ? (
+                        <div className={styles.productImage}>
+                          <Image
+                            src={mostReviewedProduct.images[0].fileUrl}
+                            alt="Product Image"
+                            width={100}
+                            height={100}
+                            style={{ objectFit: "cover", marginBottom: 16 }}
+                          />
+                        </div>
+                      ) : (
+                        <p>Không có hình ảnh</p>
+                      )}
+                      <p>
+                        <strong>Tên sản phẩm:</strong>{" "}
+                        {mostReviewedProduct.product?.name || "N/A"}
+                      </p>
+                      <p>
+                        <strong>Số lượng đánh giá:</strong>{" "}
+                        {mostReviewedProduct.totalReviews}
+                      </p>
+                      <p>
+                        <strong>Giá tiền:</strong>{" "}
+                        {formatPrice(mostReviewedProduct.product?.finalPrice)}
+                      </p>
                     </div>
                   ) : (
                     <p>Không có dữ liệu</p>
@@ -501,8 +621,9 @@ const AdminReviewList = () => {
                   <AntTable
                     dataSource={productsByRating}
                     columns={productsByRatingColumns}
-                    rowKey={(record) => record.productId}
+                    rowKey={(record) => record.product?.id || Math.random()}
                     pagination={false}
+                    className={styles.table}
                   />
                 </Card>
               </div>
@@ -511,7 +632,7 @@ const AdminReviewList = () => {
 
           <Modal
             title="Chi tiết đánh giá"
-            visible={detailModalVisible}
+            open={detailModalVisible}
             onCancel={() => {
               setDetailModalVisible(false);
               setCurrentReview(null);
@@ -520,22 +641,64 @@ const AdminReviewList = () => {
             }}
             footer={null}
             className={styles.reviewDetailModal}
-            width={800}
+            width={900}
           >
             {currentReview ? (
               <div className={styles.reviewDetailContent}>
                 <div className={styles.reviewInfo}>
-                  <h3>Tên sản phẩm: {currentReview.productName}</h3>
-                  <p><strong>Rating:</strong> {currentReview.rating}/5</p>
-                  <p><strong>Bình luận:</strong> {currentReview.comment}</p>
-                  <p><strong>Ngày tạo:</strong> {new Date(currentReview.createdAt).toLocaleString()}</p>
-                  <p><strong>Trạng thái:</strong> {currentReview.isHidden ? "Ẩn" : "Hiển thị"}</p>
+                  <h3>Tên sản phẩm: {currentReview.product?.name || "N/A"}</h3>
+                  <p>
+                    <strong>Rating:</strong>{" "}
+                    <Rate
+                      disabled
+                      value={currentReview.rating}
+                      style={{ color: "#fadb14", fontSize: 24 }} // Tăng kích thước ngôi sao
+                    />
+                  </p>
+                  <p>
+                    <strong>Bình luận:</strong> {currentReview.comment}
+                  </p>
+                  <p>
+                    <strong>Ngày tạo:</strong>{" "}
+                    {new Date(currentReview.createdAt).toLocaleString()}
+                  </p>
+                  <p>
+                    <strong>Trạng thái:</strong>{" "}
+                    {currentReview.isHidden ? "Ẩn" : "Hiển thị"}
+                  </p>
                 </div>
                 {productStatistics && (
                   <div className={styles.statisticsSection}>
                     <h3>Thống kê đánh giá sản phẩm</h3>
-                    <Statistic title="Đánh giá trung bình" value={productStatistics.averageRating?.toFixed(2)} suffix="/5" />
-                    <Statistic title="Số lượng đánh giá" value={productStatistics.reviewCount} />
+                    <div className={styles.ratingCircle}>
+                      <Progress
+                        type="circle"
+                        percent={(productStatistics.averageRating / 5) * 100}
+                        format={() =>
+                          `${productStatistics.averageRating.toFixed(2)}/5`
+                        }
+                        strokeColor="#fadb14"
+                        width={120} // Tăng kích thước vòng điểm
+                        clockwise={false} // Đảo ngược hướng vòng điểm
+                      />
+                    </div>
+                    <Statistic
+                      title="Số lượng đánh giá"
+                      value={productStatistics.totalReviews}
+                    />
+                    <div className={styles.ratingDistribution}>
+                      <h4>Phân bố đánh giá:</h4>
+                      {[5, 4, 3, 2, 1].map((star) => (
+                        <div key={star} className={styles.ratingDistributionItem}>
+                          <Rate
+                            disabled
+                            value={star}
+                            style={{ color: "#fadb14", fontSize: 20, marginRight: 8 }} // Tăng kích thước ngôi sao
+                          />
+                          <span>{productStatistics.ratingDistribution?.[star] || 0}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
                 {currentReviewImages.length > 0 && (
@@ -549,7 +712,7 @@ const AdminReviewList = () => {
                           alt="Review Image"
                           width={150}
                           height={150}
-                          style={{ objectFit: "cover", margin: "10px" }}
+                          style={{ objectFit: "cover" }}
                         />
                       ))}
                     </div>
