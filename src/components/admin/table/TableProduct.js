@@ -62,8 +62,6 @@ const Table = ({
   inventory,
   onViewDetails,
 }) => {
-  console.log("inventory", inventory);
-
   const nav = useNavigate();
   const [formattedRows, setFormattedRow] = useState([]);
   const [checkedState, setCheckedState] = useState([]);

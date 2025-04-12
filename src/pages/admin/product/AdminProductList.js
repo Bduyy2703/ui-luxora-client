@@ -31,7 +31,6 @@ import {
   getAllProductDetails,
 } from "../../../services/api/productDetailService";
 import { getInventoryList } from "../../../services/api/inventoryService";
-import TableProduct from "../../../components/admin/table/TableProduct";
 import styles from "./index.module.scss";
 
 const { Option, OptGroup } = AntSelect;
@@ -661,6 +660,67 @@ const AdminProductList = () => {
     },
   ];
 
+  const productColumns = [
+    {
+      title: "Hình ảnh",
+      key: "images",
+      render: (record) => {
+        console.log("record", record);
+
+        const image = record.images?.[0];
+        return image ? (
+          <Image
+            src={image}
+            alt="Product"
+            width={50}
+            height={50}
+            style={{ objectFit: "cover" }}
+          />
+        ) : (
+          <span>Không có hình ảnh</span>
+        );
+      },
+      width: 100,
+    },
+    {
+      title: "Tên sản phẩm",
+      dataIndex: "name",
+      key: "name",
+      width: 200,
+    },
+    {
+      title: "Giá sản phẩm",
+      dataIndex: "finalPrice",
+      key: "finalPrice",
+      render: (finalPrice) =>
+        finalPrice ? `${parseFloat(finalPrice).toLocaleString()} VNĐ` : "N/A",
+      width: 1100,
+    },
+    {
+      title: "Hành động",
+      key: "actions",
+      render: (record) => (
+        <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+          <Tooltip title="Chỉnh sửa">
+            <Button
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record)}
+              style={{ border: "none", color: "#1890ff" }}
+            />
+          </Tooltip>
+          <Tooltip title="Xem chi tiết">
+            <Button
+              icon={<PlusOutlined />}
+              onClick={() => handleViewDetails(record)}
+              style={{ border: "none", color: "#52c41a" }}
+            />
+          </Tooltip>
+        </div>
+      ),
+      align: "center",
+    },
+  ];
+
   const handleOpenAddDetailFromTable = (product) => {
     setCurrentProduct(product);
     setAddDetailModalVisible(true);
@@ -685,12 +745,12 @@ const AdminProductList = () => {
                   setValidData={setValidData}
                   standardSort={[
                     { name: "Tên sản phẩm", type: "name" },
-                    { name: "Giá sản phẩm", type: "originalPrice" },
+                    { name: "Giá sản phẩm", type: "finalPrice" },
                   ]}
                   searchFields={[
                     { key: "name", placeholder: "Tìm kiếm theo tên sản phẩm" },
                     {
-                      key: "originalPrice",
+                      key: "finalPrice",
                       placeholder: "Tìm kiếm theo giá gốc",
                     },
                   ]}
@@ -711,26 +771,16 @@ const AdminProductList = () => {
               </div>
             </div>
             <div className="card-body">
-              <TableProduct
-                rows={validData}
-                inventory={inventory}
-                columns={[
-                  {
-                    key: "name",
-                    header: "Tên sản phẩm",
-                    render: (row) => row.name,
-                  },
-                  {
-                    key: "finalPrice",
-                    header: "Giá sản phẩm",
-                    render: (row) =>
-                      `${parseFloat(row.finalPrice).toLocaleString()} đ`,
-                  },
-                ]}
-                setChecked={setCheckedRow}
-                onEdit={handleEdit}
-                onViewDetails={handleViewDetails}
-                onAddDetails={handleOpenAddDetailFromTable}
+              <AntTable
+                dataSource={validData}
+                columns={productColumns}
+                rowKey={(record) => record.id}
+                loading={loading}
+                rowSelection={{
+                  selectedRowKeys: checkedRow,
+                  onChange: (selectedRowKeys) => setCheckedRow(selectedRowKeys),
+                }}
+                pagination={false}
               />
             </div>
             {total > limit && (
@@ -993,7 +1043,7 @@ const AdminProductList = () => {
               addDetailForm.resetFields();
             }}
             footer={null}
-            className={`${styles.productModal} ${styles.addDetailModal}`} 
+            className={`${styles.productModal} ${styles.addDetailModal}`}
             width={600}
             centered
             style={{ height: "80vh" }}

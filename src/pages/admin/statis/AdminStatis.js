@@ -1,331 +1,771 @@
-import React, { useState, useEffect, useCallback } from "react";
-import axios from "axios";
-import * as Yup from "yup";
-import Swal from "sweetalert2";
-import Pagination from "../../../components/admin/pagination/Pagination";
-import Table from "../../../components/admin/table/Table";
-import Filter from "../../../components/admin/filter/Filter";
-import Modal from "../../../components/admin/modal/Modal";
-import LineChart from "../../../components/admin/lineChart/LineChart";
-import config from "../../../config";
+import React, { useState, useEffect } from "react";
+import {
+  Card,
+  DatePicker,
+  Row,
+  Col,
+  Typography,
+  Spin,
+  Menu,
+  Layout,
+  Statistic,
+  Select,
+  Switch,
+  InputNumber,
+  Image,
+} from "antd";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  LineChart,
+  Line,
+  Legend,
+  ResponsiveContainer,
+  LabelList,
+} from "recharts";
+import moment from "moment";
+import styles from "./statistics.module.scss";
+import {
+  getInvoiceRevenue,
+  getStatusStatistics,
+  getTopProducts,
+  getTopCustomers,
+  getPaymentMethodStatistics,
+  getInvoiceCountStatistics,
+} from "../../../services/api/invoiceService";
+import {
+  LogoutOutlined,
+  UserOutlined,
+  ShoppingCartOutlined,
+  PercentageOutlined,
+  StarOutlined,
+  BarChartOutlined,
+  DollarOutlined,
+} from "@ant-design/icons";
+import { getProductDetailsByIdDetails } from "../../../services/api/productDetailService";
+
+const { Header, Sider, Content } = Layout;
+const { Title, Text } = Typography;
+const { RangePicker } = DatePicker;
+const { Option } = Select;
 
 const AdminStatis = () => {
-    const [selectedMonth, setSelectedMonth] = useState(
-        new Date().getMonth() + 1
-    );
-    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-    const [users, setUsers] = useState([]);
-    const [products, setProducts] = useState([]);
-    const [invoices, setInvoices] = useState([]);
-    const [invoicesYear, setInvoicesYear] = useState([]);
-    const [revenueData, setRevenueData] = useState({});
-    const [invoiceData, setInvoiceData] = useState({});
-    const [userData, setUserData] = useState({});
-    const [topProduct, setTopProduct] = useState([]);
+  const [dateRange, setDateRange] = useState([
+    moment("2025-03-13"),
+    moment("2025-04-12"),
+  ]);
+  const [revenue, setRevenue] = useState(0);
+  const [totalInvoice, setTotalInvoice] = useState(0);
+  const [statusData, setStatusData] = useState([]);
+  const [topProducts, setTopProducts] = useState([]);
+  const [topCustomers, setTopCustomers] = useState([]);
+  const [paymentMethods, setPaymentMethods] = useState([]);
+  const [invoiceCount, setInvoiceCount] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [productImages, setProductImages] = useState({});
 
-    const fetchData = useCallback(async () => {
-        try {
-            const res = await axios.get(
-                `${config.API_URL}admin/getAllInvoices`
-            );
-            setInvoices(res.data.invoices);
+  // Separate onlyPaid states for each chart
+  const [onlyPaidRevenue, setOnlyPaidRevenue] = useState(true);
+  const [onlyPaidTopProducts, setOnlyPaidTopProducts] = useState(true);
+  const [onlyPaidTopCustomers, setOnlyPaidTopCustomers] = useState(true);
+  const [onlyPaidPaymentMethods, setOnlyPaidPaymentMethods] = useState(true);
 
-            const resPro = await axios.get(
-                `${config.API_URL}admin/getAllProducts`
-            );
-            setProducts(resPro.data.products);
+  // Other filters
+  const [topProductLimit, setTopProductLimit] = useState(5);
+  const [topCustomerLimit, setTopCustomerLimit] = useState(2);
+  const [invoiceCountType, setInvoiceCountType] = useState("daily");
+  const [selectedYear, setSelectedYear] = useState(2025);
+  const [selectedMonth, setSelectedMonth] = useState(9);
 
-            const resUser = await axios.get(`${config.API_URL}admin/users`);
-            setUsers(resUser.data.users);
-        } catch (error) {
-            console.error("Error fetching data:", error);
+  const COLORS = {
+    PAID: "#8B5A2B", // Nâu đậm nhẹ
+    PENDING: "#D2B48C", // Nâu nhạt hơn
+    CANCELLED: "#A0522D", // Nâu đỏ nhẹ
+    FAILED: "#CD853F", // Nâu cam nhẹ
+    PRODUCT: ["#F5F5DC", "#8B5A2B"], // Gradient từ kem nhạt đến nâu
+  };
+
+  const fetchData = async () => {
+    setLoading(true);
+    const startDate = dateRange[0];
+    const endDate = dateRange[1];
+
+    try {
+      // Revenue Statistics
+      const revenueRes = await getInvoiceRevenue(
+        startDate,
+        endDate,
+        onlyPaidRevenue,
+      );
+      console.log("Revenue Response:", revenueRes);
+      setRevenue(revenueRes.revenue || 0);
+      setTotalInvoice(revenueRes.totalInvoice || 0);
+
+      // Status Statistics
+      const statusRes = await getStatusStatistics(startDate, endDate);
+      console.log("Status Response:", statusRes);
+      const statusStats = statusRes?.statistics || [];
+      const statusDataMapped = [
+        { name: "PAID", value: 0 },
+        { name: "PENDING", value: 0 },
+        { name: "CANCELLED", value: 0 },
+        { name: "FAILED", value: 0 },
+      ].map((item) => {
+        const stat = statusStats.find((s) => s.status === item.name);
+        return { ...item, value: stat ? stat.count : 0 };
+      });
+      setStatusData(statusDataMapped);
+
+      // Top Products
+      const topProductsRes = await getTopProducts(
+        startDate,
+        endDate,
+        topProductLimit,
+        onlyPaidTopProducts,
+      );
+      const topProductsData = topProductsRes.map((item) => ({
+        name: `${item.productName} (ID: ${item.productDetailId})`,
+        revenue: item.totalRevenue,
+        productDetailId: item.productDetailId,
+      }));
+      setTopProducts(topProductsData);
+
+      // Fetch product images for Top Products
+      const imagePromises = topProductsData.map(async (product) => {
+        const productDetails = await getProductDetailsByIdDetails(
+          product.productDetailId,
+        );
+        return {
+          productDetailId: product.productDetailId,
+          imageUrl:
+            productDetails.images?.[0]?.fileUrl ||
+            "https://via.placeholder.com/40?text=Product",
+        };
+      });
+      const images = await Promise.all(imagePromises);
+      const imageMap = images.reduce((acc, item) => {
+        acc[item.productDetailId] = item.imageUrl;
+        return acc;
+      }, {});
+      setProductImages(imageMap);
+
+      // Top Customers
+      const topCustomersRes = await getTopCustomers(
+        startDate,
+        endDate,
+        topCustomerLimit,
+        onlyPaidTopCustomers,
+      );
+      setTopCustomers(
+        topCustomersRes.map((item) => ({
+          name: item.username,
+          totalSpent: item.totalSpent,
+        })),
+      );
+
+      // Payment Method Statistics
+      const paymentRes = await getPaymentMethodStatistics(
+        startDate,
+        endDate,
+        onlyPaidPaymentMethods,
+      );
+      const paymentData = paymentRes.reduce((acc, item) => {
+        const existing = acc.find(
+          (d) => d.paymentMethod === item.paymentMethod,
+        );
+        if (existing) {
+          existing[item.status] = item.totalRevenue;
+        } else {
+          acc.push({
+            paymentMethod: item.paymentMethod,
+            [item.status]: item.totalRevenue,
+          });
         }
-    }, []);
+        return acc;
+      }, []);
+      setPaymentMethods(paymentData);
 
-    useEffect(() => {
-        fetchData(); // Gọi hàm fetchData
-    }, [fetchData]);
+      // Invoice Count Statistics
+      const invoiceCountRes = await getInvoiceCountStatistics(
+        invoiceCountType,
+        selectedYear,
+        invoiceCountType === "daily" ? selectedMonth : undefined,
+      );
+      setInvoiceCount(
+        invoiceCountRes.map((item) => ({
+          period: item.period,
+          count: item.count,
+        })),
+      );
+    } catch (error) {
+      console.error("Error fetching statistics:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    useEffect(() => {
-        setInvoicesYear(getYearsFromOrders(invoices));
+  useEffect(() => {
+    fetchData();
+  }, [
+    dateRange,
+    onlyPaidRevenue,
+    onlyPaidTopProducts,
+    onlyPaidTopCustomers,
+    onlyPaidPaymentMethods,
+    topProductLimit,
+    topCustomerLimit,
+    invoiceCountType,
+    selectedYear,
+    selectedMonth,
+  ]);
 
-        setRevenueData(calcRevenueData(invoices, selectedMonth, selectedYear));
-
-        console.log(calcRevenueData(invoices, selectedMonth, selectedYear));
-
-        setInvoiceData(calcInvoiceData(invoices, selectedMonth, selectedYear));
-
-        setUserData(calcUserData(users, selectedMonth, selectedYear));
-
-        const top10Product = getTop5Product(
-            invoices,
-            selectedMonth,
-            selectedYear
-        );
-        setTopProduct(
-            top10Product.reduce((r, topP) => {
-                // Duyệt qua tất cả sản phẩm trong products
-                products.forEach((p) => {
-                    if (p._id === topP.pid) {
-                        // Thêm sản phẩm vào mảng kết quả
-                        r.push({
-                            _id: p._id,
-                            code: p.product_code,
-                            name: p.product_name,
-                            quantity: topP.quantity,
-                        });
-                    }
-                });
-                return r;
-            }, [])
-        );
-    }, [invoices, users, selectedMonth, selectedYear]);
-
-    const handleMonthChange = (event) => {
-        setSelectedMonth(Number(event.target.value));
-    };
-    const handleYearChange = (event) => {
-        setSelectedYear(Number(event.target.value));
-    };
-
+  // Custom Label để hiển thị hình ảnh trên cột
+  const CustomBarLabel = (props) => {
+    const { x, y, width, height, value, index } = props;
+    const product = topProducts[index];
+    const imageUrl =
+      productImages[product.productDetailId] ||
+      "https://via.placeholder.com/40?text=Product";
     return (
-        <div className='wrapper'>
-            <header className='admin-header'>
-                <div className='container'>
-                    <h2>THỐNG KÊ</h2>
-                    <div
-                        style={{
-                            display: "flex",
-                            flex: "1",
-                            justifyContent: "flex-end",
-                            gap: "15px",
-                        }}
-                    >
-                        <select
-                            name='monthSelect'
-                            defaultValue={selectedMonth}
-                            onChange={handleMonthChange}
-                        >
-                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(
-                                (m) => (
-                                    <option
-                                        key={m}
-                                        value={m}
-                                        label={`Tháng ${m}`}
-                                    />
-                                )
-                            )}
-                        </select>
-                        <select
-                            name='yearSelect'
-                            defaultValue={selectedYear}
-                            onChange={handleYearChange}
-                        >
-                            {invoicesYear.map((y) => (
-                                <option key={y} value={y} label={`Năm ${y}`} />
-                            ))}
-                        </select>
-                    </div>
-                </div>
-            </header>
-            <main className='main'>
-                <div className='container'>
-                    <div className=' col col 6'>
-                        <div className='card'>
-                            <div className='card-header'>
-                                <h2>DOANH THU</h2>
-                                <div className='card-btns'>
-                                    <h2>
-                                        Tổng:{" "}
-                                        {new Intl.NumberFormat("vi-VN", {
-                                            style: "currency",
-                                            currency: "VND",
-                                        }).format(Number(revenueData.total))}
-                                    </h2>
-                                </div>
-                            </div>
-                            <div className='card-body'>
-                                <LineChart
-                                    title={`Biểu đồ doanh thu tháng ${selectedMonth}, năm ${selectedYear}`}
-                                    label='Doanh thu'
-                                    chartData={revenueData}
-                                />
-                            </div>
-                        </div>
-                        <div className='card'>
-                            <div className='card-header'>
-                                <h2>TỔNG ĐƠN HÀNG</h2>
-                                <div className='card-btns'>
-                                    <h2>Tổng: {invoiceData.total} đơn</h2>
-                                </div>
-                            </div>
-                            <div className='card-body'>
-                                <LineChart
-                                    title={`Biểu đồ tổng đơn hàng tháng ${selectedMonth}, năm ${selectedYear}`}
-                                    label='Đơn'
-                                    chartData={invoiceData}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                    <div className=' col col 6'>
-                        <div className='card'>
-                            <div className='card-header'>
-                                <h2>SẢN PHẨM BÁN CHẠY</h2>
-                            </div>
-                            <div className='card-body'>
-                                <Table
-                                    rows={topProduct}
-                                    columns={config.TABLE_STATIS_PRO_COL}
-                                />
-                            </div>
-                        </div>
-                        <div className='card'>
-                            <div className='card-header'>
-                                <h2>NGƯỜI DÙNG MỚI</h2>
-                                <div className='card-btns'>
-                                    <h2>Tổng: {userData.total} người dùng</h2>
-                                </div>
-                            </div>
-                            <div className='card-body'>
-                                <LineChart
-                                    title={`Biểu đồ người dùng mới tháng ${selectedMonth}, năm ${selectedYear}`}
-                                    label='Người dùng'
-                                    chartData={userData}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </main>
+      <g>
+        <image
+          href={imageUrl}
+          x={x + width / 2 - 20}
+          y={y - 50}
+          width="40"
+          height="40"
+          className={styles.barImage}
+        />
+      </g>
+    );
+  };
+
+  return (
+    <Layout
+      style={{
+        minHeight: "100vh",
+        paddingLeft: "50px",
+        background: "linear-gradient(135deg, #F5F5DC, #e0e0e0)",
+      }}
+    >
+      {/* Sidebar */}
+      <Sider width={200} className={styles.sider}>
+        <div className={styles.logo}>
+          <Title level={4} style={{ color: "#fff", margin: 0 }}>
+            CARALUNA JEWELRY & GIFTS
+          </Title>
         </div>
-    );
+        <Menu theme="dark" mode="inline" defaultSelectedKeys={["5"]}>
+          <Menu.Item key="1" icon={<LogoutOutlined />}>
+            Đăng xuất
+          </Menu.Item>
+          <Menu.Item key="2" icon={<UserOutlined />}>
+            Quản lý người dùng
+          </Menu.Item>
+          <Menu.Item key="3" icon={<ShoppingCartOutlined />}>
+            Quản lý sản phẩm
+          </Menu.Item>
+          <Menu.Item key="4" icon={<PercentageOutlined />}>
+            Quản lý giảm giá
+          </Menu.Item>
+          <Menu.Item key="5" icon={<BarChartOutlined />}>
+            Thống kê
+          </Menu.Item>
+          <Menu.Item key="6" icon={<StarOutlined />}>
+            Đánh giá
+          </Menu.Item>
+        </Menu>
+      </Sider>
+
+      <Layout>
+        {/* Header */}
+        <Header className={styles.header}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              alignItems: "center",
+            }}
+          >
+            <RangePicker
+              value={dateRange}
+              onChange={(dates) => setDateRange(dates)}
+              format="YYYY-MM-DD"
+              className={styles.datePicker}
+            />
+          </div>
+        </Header>
+
+        {/* Content */}
+        <Content className={styles.content}>
+          <Spin spinning={loading}>
+            <Row gutter={[24, 24]}>
+              {/* Revenue Statistics */}
+              <Col xs={24} md={12}>
+                <Card className={styles.card}>
+                  <Row justify="space-between" align="middle">
+                    <Col>
+                      <Text strong>Chỉ tính hóa đơn PAID: </Text>
+                      <Switch
+                        checked={onlyPaidRevenue}
+                        onChange={(checked) => setOnlyPaidRevenue(checked)}
+                      />
+                    </Col>
+                  </Row>
+                  <Statistic
+                    title="Tổng Doanh Thu"
+                    value={revenue}
+                    precision={0}
+                    formatter={(value) => `${value.toLocaleString()} VNĐ`}
+                    prefix={<DollarOutlined />}
+                    valueStyle={{ color: "#8B5A2B", fontSize: "28px" }} // Nâu đậm nhẹ
+                  />
+                  <Statistic
+                    title="Tổng Đơn Hàng"
+                    value={totalInvoice}
+                    precision={0}
+                    prefix={<DollarOutlined />}
+                    valueStyle={{ color: "#8B5A2B", fontSize: "28px" }} // Nâu đậm nhẹ
+                  />
+                </Card>
+              </Col>
+
+              {/* Status Statistics (Pie Chart) */}
+              <Col xs={24} md={12}>
+                <Card
+                  title={
+                    <span className={styles.chartTitle}>
+                      Thống Kê Trạng Thái Hóa Đơn
+                    </span>
+                  }
+                  className={styles.card}
+                >
+                  <div className={styles.chartContainer}>
+                    {statusData.every((item) => item.value === 0) ? (
+                      <Text>Không có dữ liệu</Text>
+                    ) : (
+                      <ResponsiveContainer width="100%" height={300}>
+                        <PieChart>
+                          <Pie
+                            data={statusData}
+                            dataKey="value"
+                            nameKey="name"
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={100}
+                            label={({ name, value }) => `${name}: ${value}`}
+                            labelLine={true}
+                            labelStyle={{ className: styles.chartPieLabel }}
+                            isAnimationActive={true}
+                            animationDuration={800}
+                          >
+                            {statusData.map((entry, index) => (
+                              <Cell
+                                key={`cell-${index}`}
+                                fill={COLORS[entry.name]}
+                              />
+                            ))}
+                          </Pie>
+                          <Tooltip
+                            formatter={(value) => `${value} hóa đơn`}
+                            wrapperClassName={styles.chartTooltip}
+                            labelClassName={styles.chartLabel}
+                          />
+                          <Legend
+                            wrapperStyle={{ className: styles.chartLegend }}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    )}
+                  </div>
+                </Card>
+              </Col>
+
+              {/* Top Products (Horizontal Bar Chart) */}
+              <Col xs={24} md={12}>
+                <Card
+                  title={
+                    <span className={styles.chartTitle}>
+                      Top Sản Phẩm Bán Chạy
+                    </span>
+                  }
+                  className={styles.card}
+                >
+                  <Row
+                    justify="space-between"
+                    align="middle"
+                    style={{ marginBottom: 16 }}
+                  >
+                    <Col>
+                      <Text strong>Chỉ tính hóa đơn PAID: </Text>
+                      <Switch
+                        checked={onlyPaidTopProducts}
+                        onChange={(checked) => setOnlyPaidTopProducts(checked)}
+                      />
+                    </Col>
+                    <Col>
+                      <Text strong>Số lượng Top Sản Phẩm: </Text>
+                      <InputNumber
+                        min={1}
+                        max={20}
+                        value={topProductLimit}
+                        onChange={(value) => setTopProductLimit(value)}
+                      />
+                    </Col>
+                  </Row>
+                  <div className={styles.chartContainer}>
+                    {topProducts.length === 0 ? (
+                      <Text>Không có dữ liệu</Text>
+                    ) : (
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart
+                          data={topProducts}
+                          layout="horizontal"
+                          margin={{ top: 60, right: 30, left: 20, bottom: 10 }}
+                        >
+                          <defs>
+                            <linearGradient
+                              id="productGradient"
+                              x1="0"
+                              y1="0"
+                              x2="1"
+                              y2="0"
+                            >
+                              <stop offset="0%" stopColor={COLORS.PRODUCT[0]} />
+                              <stop
+                                offset="100%"
+                                stopColor={COLORS.PRODUCT[1]}
+                              />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            className={styles.chartGrid}
+                          />
+                          <XAxis
+                            dataKey="revenue"
+                            tickFormatter={(value) =>
+                              `${(value / 1000000).toFixed(1)}M`
+                            }
+                            className={styles.chartAxis}
+                          />
+                          <YAxis
+                            dataKey="name"
+                            type="category"
+                            width={150}
+                            className={styles.chartAxis}
+                          />
+                          <Tooltip
+                            formatter={(value) =>
+                              `${value.toLocaleString()} VNĐ`
+                            }
+                            wrapperClassName={styles.chartTooltip}
+                          />
+                          <Bar
+                            dataKey="revenue"
+                            fill="url(#productGradient)"
+                            barSize={20}
+                            className={styles.chartBar}
+                            isAnimationActive={true}
+                            animationDuration={1000}
+                          >
+                            <LabelList content={<CustomBarLabel />} />
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
+                  </div>
+                </Card>
+              </Col>
+
+              {/* Top Customers (Horizontal Bar Chart) */}
+              <Col xs={24} md={12}>
+                <Card
+                  title={
+                    <span className={styles.chartTitle}>
+                      Top Khách Hàng Chi Tiêu
+                    </span>
+                  }
+                  className={styles.card}
+                >
+                  <Row
+                    justify="space-between"
+                    align="middle"
+                    style={{ marginBottom: 16 }}
+                  >
+                    <Col>
+                      <Text strong>Chỉ tính hóa đơn PAID: </Text>
+                      <Switch
+                        checked={onlyPaidTopCustomers}
+                        onChange={(checked) => setOnlyPaidTopCustomers(checked)}
+                      />
+                    </Col>
+                    <Col>
+                      <Text strong>Số lượng Top Khách Hàng: </Text>
+                      <InputNumber
+                        min={1}
+                        max={20}
+                        value={topCustomerLimit}
+                        onChange={(value) => setTopCustomerLimit(value)}
+                      />
+                    </Col>
+                  </Row>
+                  <div className={styles.chartContainer}>
+                    {topCustomers.length === 0 ? (
+                      <Text>Không có dữ liệu</Text>
+                    ) : (
+                      <ResponsiveContainer width="100%" height={250}>
+                        <BarChart
+                          data={topCustomers}
+                          layout="horizontal"
+                          margin={{ top: 10, right: 30, left: 20, bottom: 10 }}
+                        >
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            className={styles.chartGrid}
+                          />
+                          <XAxis
+                            dataKey="totalSpent"
+                            tickFormatter={(value) =>
+                              `${(value / 1000000).toFixed(1)}M`
+                            }
+                            className={styles.chartAxis}
+                          />
+                          <YAxis
+                            dataKey="name"
+                            type="category"
+                            width={150}
+                            className={styles.chartAxis}
+                          />
+                          <Tooltip
+                            formatter={(value) =>
+                              `${value.toLocaleString()} VNĐ`
+                            }
+                            wrapperClassName={styles.chartTooltip}
+                          />
+                          <Bar
+                            dataKey="totalSpent"
+                            fill={COLORS.PAID}
+                            barSize={20}
+                            className={styles.chartBar}
+                            isAnimationActive={true}
+                            animationDuration={1000}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
+                  </div>
+                </Card>
+              </Col>
+
+              {/* Payment Method Statistics (Stacked Bar Chart) */}
+              <Col xs={24}>
+                <Card
+                  title={
+                    <span className={styles.chartTitle}>
+                      Doanh Thu Theo Phương Thức Thanh Toán
+                    </span>
+                  }
+                  className={styles.card}
+                >
+                  <Row
+                    justify="space-between"
+                    align="middle"
+                    style={{ marginBottom: 16 }}
+                  >
+                    <Col>
+                      <Text strong>Chỉ tính hóa đơn PAID: </Text>
+                      <Switch
+                        checked={onlyPaidPaymentMethods}
+                        onChange={(checked) =>
+                          setOnlyPaidPaymentMethods(checked)
+                        }
+                      />
+                    </Col>
+                  </Row>
+                  <div className={styles.chartContainer}>
+                    {paymentMethods.length === 0 ? (
+                      <Text>Không có dữ liệu</Text>
+                    ) : (
+                      <ResponsiveContainer width="100%" height={350}>
+                        <BarChart
+                          data={paymentMethods}
+                          margin={{ top: 10, right: 30, left: 20, bottom: 10 }}
+                        >
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            className={styles.chartGrid}
+                          />
+                          <XAxis
+                            dataKey="paymentMethod"
+                            className={styles.chartAxis}
+                          />
+                          <YAxis
+                            tickFormatter={(value) =>
+                              `${(value / 1000000).toFixed(1)}M`
+                            }
+                            className={styles.chartAxis}
+                          />
+                          <Tooltip
+                            formatter={(value) =>
+                              `${value.toLocaleString()} VNĐ`
+                            }
+                            wrapperClassName={styles.chartTooltip}
+                          />
+                          <Legend
+                            wrapperStyle={{ className: styles.chartLegend }}
+                          />
+                          <Bar
+                            dataKey="PAID"
+                            stackId="a"
+                            fill={COLORS.PAID}
+                            barSize={40}
+                            className={styles.chartBar}
+                            isAnimationActive={true}
+                            animationDuration={1000}
+                          />
+                          <Bar
+                            dataKey="PENDING"
+                            stackId="a"
+                            fill={COLORS.PENDING}
+                            barSize={40}
+                            className={styles.chartBar}
+                            isAnimationActive={true}
+                            animationDuration={1000}
+                          />
+                          <Bar
+                            dataKey="CANCELLED"
+                            stackId="a"
+                            fill={COLORS.CANCELLED}
+                            barSize={40}
+                            className={styles.chartBar}
+                            isAnimationActive={true}
+                            animationDuration={1000}
+                          />
+                          <Bar
+                            dataKey="FAILED"
+                            stackId="a"
+                            fill={COLORS.FAILED}
+                            barSize={40}
+                            className={styles.chartBar}
+                            isAnimationActive={true}
+                            animationDuration={1000}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
+                  </div>
+                </Card>
+              </Col>
+
+              {/* Invoice Count Statistics (Line Chart) */}
+              <Col xs={24}>
+                <Card
+                  title={
+                    <span className={styles.chartTitle}>Số Lượng Hóa Đơn</span>
+                  }
+                  className={styles.card}
+                >
+                  <Row
+                    justify="space-between"
+                    align="middle"
+                    style={{ marginBottom: 16 }}
+                  >
+                    <Col>
+                      <Text strong>Loại thống kê: </Text>
+                      <Select
+                        value={invoiceCountType}
+                        onChange={(value) => setInvoiceCountType(value)}
+                        style={{ width: 120 }}
+                      >
+                        <Option value="monthly">Theo tháng</Option>
+                        <Option value="daily">Theo ngày</Option>
+                      </Select>
+                    </Col>
+                    <Col>
+                      <Text strong>Năm: </Text>
+                      <InputNumber
+                        min={2000}
+                        max={moment().year() + 1}
+                        value={selectedYear}
+                        onChange={(value) => setSelectedYear(value)}
+                      />
+                    </Col>
+                    {invoiceCountType === "daily" && (
+                      <Col>
+                        <Text strong>Tháng: </Text>
+                        <Select
+                          value={selectedMonth}
+                          onChange={(value) => setSelectedMonth(value)}
+                          style={{ width: 120 }}
+                          placeholder="Chọn tháng"
+                        >
+                          {Array.from({ length: 12 }, (_, i) => i + 1).map(
+                            (month) => (
+                              <Option key={month} value={month}>
+                                Tháng {month}
+                              </Option>
+                            ),
+                          )}
+                        </Select>
+                      </Col>
+                    )}
+                  </Row>
+                  <div className={styles.chartContainer}>
+                    {invoiceCount.length === 0 ? (
+                      <Text>Không có dữ liệu</Text>
+                    ) : (
+                      <ResponsiveContainer width="100%" height={350}>
+                        <LineChart
+                          data={invoiceCount}
+                          margin={{ top: 10, right: 30, left: 20, bottom: 10 }}
+                        >
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            className={styles.chartGrid}
+                          />
+                          <XAxis
+                            dataKey="period"
+                            interval={0}
+                            angle={-45}
+                            textAnchor="end"
+                            height={60}
+                            className={styles.chartAxis}
+                          />
+                          <YAxis className={styles.chartAxis} />
+                          <Tooltip
+                            formatter={(value) => `${value} hóa đơn`}
+                            wrapperClassName={styles.chartTooltip}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="count"
+                            stroke={COLORS.PAID}
+                            strokeWidth={3}
+                            dot={{ r: 4 }}
+                            activeDot={{ r: 6 }}
+                            isAnimationActive={true}
+                            animationDuration={1200}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    )}
+                  </div>
+                </Card>
+              </Col>
+            </Row>
+          </Spin>
+        </Content>
+      </Layout>
+    </Layout>
+  );
 };
-
-const getDayFromMonth = (month, year) => {
-    return new Date(year, month, 0).getDate();
-};
-function filterDataByMonthAndYear(orders, month, year) {
-    return orders.filter((order) => {
-        const orderDate = new Date(order.createdAt);
-        return (
-            orderDate.getMonth() + 1 === month && // Tháng trong JavaScript là 0-11, cần +1
-            orderDate.getFullYear() === year
-        );
-    });
-}
-function getYearsFromOrders(orders) {
-    const years = orders
-        .map((order) => {
-            const orderDate = new Date(order.createdAt);
-            // Kiểm tra nếu createdAt là giá trị hợp lệ
-            if (isNaN(orderDate)) {
-                return null;
-            }
-
-            return orderDate.getFullYear();
-        })
-        .filter((year) => year !== null); // Lọc bỏ các giá trị null không hợp lệ
-
-    return Array.from(new Set(years)).sort((a, b) => b - a); // Loại bỏ trùng và sắp xếp tăng dần
-}
-function calcRevenueData(orders, month, year) {
-    const filteredOrders = filterDataByMonthAndYear(orders, month, year);
-
-    // Doanh thu theo ngày
-    const dailyRevenue = new Array(getDayFromMonth(month, year)).fill(0);
-    filteredOrders.forEach((o) => {
-        const orderDay = new Date(o.createdAt).getDate() - 1;
-
-        dailyRevenue[orderDay ] += o.amountToPay;
-    });
-
-    // Tổng doanh thu
-    const totalRevenue = Object.values(dailyRevenue).reduce(
-        (sum, revenue) => sum + revenue,
-        0
-    );
-    return {
-        labels: Array.from(
-            { length: getDayFromMonth(month, year) },
-            (_, i) => `Ngày ${i + 1}`
-        ),
-        data: dailyRevenue,
-        total: totalRevenue,
-    };
-}
-function calcInvoiceData(orders, month, year) {
-    const filteredOrders = filterDataByMonthAndYear(orders, month, year);
-
-    // Đơn hàng theo ngày
-    const dailyInvoice = new Array(getDayFromMonth(month, year)).fill(0);
-    filteredOrders.forEach((o) => {
-        const orderDay = new Date(o.createdAt).getDate() - 1;
-
-        dailyInvoice[orderDay ] += 1;
-    });
-
-    // Tổng đơn hàng
-    const totalInvoice = Object.values(dailyInvoice).reduce(
-        (sum, i) => sum + i,
-        0
-    );
-    return {
-        labels: Array.from(
-            { length: getDayFromMonth(month, year) },
-            (_, i) => `Ngày ${i + 1}`
-        ),
-        data: dailyInvoice,
-        total: totalInvoice,
-    };
-}
-function calcUserData(users, month, year) {
-    const filteredUsers = filterDataByMonthAndYear(users, month, year);
-
-    // Đơn hàng theo ngày
-    const dailyRegister = new Array(getDayFromMonth(month, year)).fill(0);
-    filteredUsers.forEach((o) => {
-        const regisDay = new Date(o.createdAt).getDate() - 1;
-
-        dailyRegister[regisDay] += 1;
-    });
-
-    // Tổng lượt đăng ký
-    const totalRegister = Object.values(dailyRegister).reduce(
-        (sum, i) => sum + i,
-        0
-    );
-    return {
-        labels: Array.from(
-            { length: getDayFromMonth(month, year) },
-            (_, i) => `Ngày ${i + 1}`
-        ),
-        data: dailyRegister,
-        total: totalRegister,
-    };
-}
-function getTop5Product(orders, month, year) {
-    const filteredOrders = filterDataByMonthAndYear(orders, month, year);
-
-    const products = [];
-    filteredOrders.forEach((order) => {
-        order.products.forEach((p) => {
-            if (products[p._id]) {
-                products[p._id] += 1;
-            } else {
-                products[p._id] = 1;
-            }
-        });
-    });
-
-    // Chuyển đổi đối tượng thành mảng các đối tượng có cấu trúc mới
-    const formattedProducts = Object.entries(products).map(
-        ([pid, quantity]) => ({
-            pid,
-            quantity,
-        })
-    );
-    return formattedProducts.slice(0, 5).sort((a,b)=> b.quantity-a.quantity);
-}
 
 export default AdminStatis;

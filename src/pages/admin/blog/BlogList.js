@@ -29,6 +29,7 @@ import {
   deleteBlog,
 } from "../../../services/api/blogService";
 
+// Các component DetailForm1, DetailForm2, DetailForm3 giữ nguyên
 const DetailForm1 = ({ currentBlog, currentBlogImages, styles }) => {
   const splitContentIntoParagraphs = (content) => {
     if (!content) return [];
@@ -122,7 +123,6 @@ const DetailForm1 = ({ currentBlog, currentBlogImages, styles }) => {
   );
 };
 
-// Component cho Form 2 (Carousel lớn, hiệu ứng parallax)
 const DetailForm2 = ({ currentBlog, currentBlogImages, styles }) => {
   const splitContentIntoParagraphs = (content) => {
     if (!content) return [];
@@ -215,7 +215,6 @@ const DetailForm2 = ({ currentBlog, currentBlogImages, styles }) => {
   );
 };
 
-// Component cho Form 3 (Layout dạng lưới, tông màu vàng ánh kim)
 const DetailForm3 = ({ currentBlog, currentBlogImages, styles }) => {
   const splitContentIntoParagraphs = (content) => {
     if (!content) return [];
@@ -304,7 +303,7 @@ const AdminBlogList = () => {
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [currentBlog, setCurrentBlog] = useState(null);
   const [currentBlogImages, setCurrentBlogImages] = useState([]);
-  const [selectedFormType, setSelectedFormType] = useState(null); // State để random form
+  const [selectedFormType, setSelectedFormType] = useState(null);
   const [form] = Form.useForm();
   const [editForm] = Form.useForm();
   const [currentPage, setCurrentPage] = useState(1);
@@ -525,7 +524,6 @@ const AdminBlogList = () => {
     setEditModalVisible(true);
   };
 
-  // Hàm random chọn formType
   const getRandomFormType = () => {
     const formTypes = ["form1", "form2", "form3"];
     const randomIndex = Math.floor(Math.random() * formTypes.length);
@@ -542,7 +540,7 @@ const AdminBlogList = () => {
       }
       setCurrentBlog(res.blog);
       setCurrentBlogImages(res.images || []);
-      setSelectedFormType(getRandomFormType()); // Random chọn form ở đây
+      setSelectedFormType(getRandomFormType());
       setDetailModalVisible(true);
     } catch (error) {
       console.error("Error fetching blog details:", error);
@@ -600,7 +598,9 @@ const AdminBlogList = () => {
     {
       title: "Tiêu đề",
       key: "title",
-      render: (record) => record.title || "N/A",
+      render: (record) => {
+        return <div>{record.title || "N/A"}</div>;
+      },
     },
     {
       title: "Đoạn trích",
@@ -793,9 +793,8 @@ const AdminBlogList = () => {
             </Form>
           </Modal>
 
-          {/* Modal Chỉnh sửa bài viết */}
           <Modal
-            title="Chỉnh sửa bài viết"
+            title={<div className={styles.modalTitle}>Chỉnh sửa bài viết</div>}
             visible={editModalVisible}
             onCancel={() => {
               setEditModalVisible(false);
@@ -805,16 +804,19 @@ const AdminBlogList = () => {
             footer={null}
             className={styles.blogModal}
             width={600}
+            centered
+            bodyStyle={{
+              maxHeight: "70vh",
+              overflowY: "auto",
+              padding: "24px 24px -1px",
+            }}
           >
             <Form form={editForm} layout="vertical" onFinish={handleUpdateBlog}>
               <Form.Item
                 label="Hình ảnh"
                 name="images"
                 valuePropName="fileList"
-                getValueFromEvent={(e) => {
-                  if (Array.isArray(e)) return e;
-                  return e?.fileList;
-                }}
+                getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
               >
                 <Upload listType="picture" beforeUpload={() => false} multiple>
                   <Button icon={<PlusOutlined />}>Chọn ảnh</Button>
@@ -843,9 +845,16 @@ const AdminBlogList = () => {
               >
                 <Input.TextArea rows={6} />
               </Form.Item>
-              <Form.Item className={styles.formActions}>
+              <Form.Item
+                className={styles.formActions}
+                style={{
+                  background: "#fff",
+                  margin: 0,
+                  zIndex: 10,
+                }}
+              >
                 <Button type="primary" htmlType="submit" loading={loading}>
-                  Cập nhật bài viết
+                  Cập nhật
                 </Button>
                 <Button
                   className={styles.cancelButton}
@@ -854,6 +863,7 @@ const AdminBlogList = () => {
                     setCurrentBlog(null);
                     editForm.resetFields();
                   }}
+                  style={{ marginLeft: 8 }}
                 >
                   Hủy
                 </Button>
@@ -861,7 +871,6 @@ const AdminBlogList = () => {
             </Form>
           </Modal>
 
-          {/* Modal Xem chi tiết bài viết */}
           <Modal
             title={null}
             visible={detailModalVisible}
@@ -869,7 +878,7 @@ const AdminBlogList = () => {
               setDetailModalVisible(false);
               setCurrentBlog(null);
               setCurrentBlogImages([]);
-              setSelectedFormType(null); // Reset form type khi đóng modal
+              setSelectedFormType(null);
             }}
             footer={null}
             className={styles.blogDetailModal}

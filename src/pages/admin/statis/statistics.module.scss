@@ -1,0 +1,162 @@
+// statistics.module.scss
+
+// Giữ nguyên các style hiện có
+.sider {
+  background: #001529;
+  .logo {
+    padding: 16px;
+    text-align: center;
+  }
+}
+
+.header {
+  background: #fff;
+  padding: 0 24px;
+  box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+}
+
+.content {
+  margin: 24px 16px;
+  padding: 24px;
+  background: #fff;
+  min-height: 280px;
+}
+
+.card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s;
+  background: linear-gradient(135deg, #f5f5dc 0%, #e4e7eb 100%); // Màu kem nhạt
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.datePicker {
+  margin-left: 16px;
+}
+
+// Style cho các biểu đồ
+.chartContainer {
+  padding: 16px;
+  // Thay background bằng hình ảnh bạn cung cấp
+//   background: url("/assets/images/logo2.jpg") center center / cover no-repeat; // Thay bằng đường dẫn thực tế
+  background-color: rgba(245, 245, 220, 0.2); // Màu kem nhạt với opacity mờ
+  border-radius: 8px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s;
+  opacity: 1;
+  &:hover {
+    background-color: rgba(245, 245, 220, 0.3); // Tăng opacity nhẹ khi hover
+  }
+  // Hiệu ứng lấp lánh
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.3),
+      transparent
+    );
+    animation: sparkle 3s infinite;
+  }
+}
+
+@keyframes sparkle {
+  0% {
+    left: -100%;
+  }
+  50% {
+    left: 100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+.chartTitle {
+  font-family: "Playfair Display", serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #8b5a2b; // Màu nâu đậm nhẹ
+  margin-bottom: 16px;
+  border-bottom: 2px solid #8b5a2b; // Viền nâu
+  padding-bottom: 8px;
+  text-align: center;
+}
+
+.chartTooltip {
+  background: #f5f5dc; // Màu kem nhạt
+  border: 1px solid #8b5a2b; // Viền nâu
+  border-radius: 4px;
+  padding: 8px 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  color: #8b5a2b; // Chữ nâu
+  p {
+    margin: 0;
+    line-height: 1.5;
+  }
+}
+
+.chartLabel {
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  fill: #8b5a2b; // Nhãn nâu
+}
+
+.chartGrid {
+  stroke: #d3d3d3; // Lưới nhạt hơn để phù hợp với tông màu
+  strokedasharray: 3 3;
+}
+
+.chartAxis {
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  fill: #8b5a2b; // Trục nâu
+  .tickLine {
+    stroke: #d3d3d3;
+  }
+}
+
+.chartBar {
+  transition: all 0.3s;
+//   &:hover {
+//     opacity: 0.9;
+//     transform: scale(1.05);
+//   }
+}
+
+.chartPieLabel {
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  fill: #8b5a2b; // Nhãn nâu
+}
+
+.chartLegend {
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  color: #8b5a2b; // Chú thích nâu
+  margin-top: 8px;
+}
+
+.barImage {
+  position: absolute;
+  top: -50px;
+  width: 40px;
+  height: 40px;
+  transition: all 0.3s;
+//   &:hover {
+//     transform: scale(1.2);
+//   }
+}
