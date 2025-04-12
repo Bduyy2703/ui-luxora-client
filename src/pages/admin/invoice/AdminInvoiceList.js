@@ -476,9 +476,6 @@ const AdminInvoiceList = () => {
                 Lưu ý: Nếu chọn trạng thái "CANCELLED", hệ thống sẽ tự động hủy
                 đơn và hoàn lại số lượng sản phẩm vào kho hàng.
               </Text>
-              <Form.Item name="note" label="Ghi chú">
-                <TextArea rows={4} placeholder="Nhập ghi chú (nếu có)" />
-              </Form.Item>
               <Form.Item>
                 <Button type="primary" htmlType="submit" loading={loading}>
                   Cập nhật
