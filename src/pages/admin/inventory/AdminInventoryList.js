@@ -405,7 +405,7 @@ const AdminInventoryList = () => {
                   standardSort={standardSort}
                   searchFields={[
                     { key: "warehouseName", placeholder: "Tìm theo tên kho" },
-                    { key: "location", placeholder: "Tìm theo vị trí" },
+                    { key: "location", placeholder: "Tìm theo địa chỉ" },
                   ]}
                 />
               </div>

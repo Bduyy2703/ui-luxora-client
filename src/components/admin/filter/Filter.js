@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Input, Select, Button } from "antd";
 import { SortAscendingOutlined } from "@ant-design/icons";
-import styles from "./filter.scss";
+import styles from "./filter.module.scss";
 
 const { Option } = Select;
 
@@ -12,6 +12,7 @@ const Filter = ({
   setValidData,
   standardSort,
   searchFields,
+  className,
 }) => {
   const [searchValues, setSearchValues] = useState({});
   const [sortField, setSortField] = useState(null);
@@ -121,22 +122,22 @@ const Filter = ({
   };
 
   return (
-    <div className={styles.filterWrapper}>
-      <div className={styles.searchFields}>
+    <div className={`${styles.filterWrapper} ${className}`}>
+      <div className={`${styles.searchFields} ${styles.customSearchFields}`}>
         {searchFields.map((field) => (
           <Input
             key={field.key}
             placeholder={field.placeholder}
             value={searchValues[field.key] || ""}
             onChange={(e) => handleSearch(field.key, e.target.value)}
-            style={{ width: 200, marginRight: 16 }}
+            style={{ width: 200, marginRight: 7 }}
           />
         ))}
       </div>
-      <div className={styles.sortSection}>
+      <div className={`${styles.sortSection} ${styles.customSortSection}`}>
         <Select
           placeholder="Sắp xếp"
-          style={{ width: 200, marginRight: 16 }}
+          style={{ width: 200, marginRight: "-9px" }}
           onChange={(value) => setSortField(value)}
         >
           {standardSort.map((sort) => (
@@ -147,7 +148,7 @@ const Filter = ({
         </Select>
         <Select
           defaultValue="asc"
-          style={{ width: 120, marginRight: 16 }}
+          style={{ width: 120, marginRight: "-9px" }}
           onChange={(value) => setSortOrder(value)}
         >
           <Option value="asc">Tăng dần</Option>

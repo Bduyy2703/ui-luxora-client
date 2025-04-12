@@ -374,7 +374,7 @@ const Table = ({
             {columns.map((col) => (
               <th key={col.key}>{col.header}</th>
             ))}
-            <th>Hành động</th>
+            {/* <th>Hành động</th> */}
           </tr>
         </thead>
         <tbody>
@@ -420,7 +420,7 @@ const Table = ({
                     gap: 8,
                   }}
                 >
-                  <Button
+                  {/* <Button
                     onClick={(e) => {
                       e.stopPropagation();
                       onAddDetails(row);
@@ -432,7 +432,7 @@ const Table = ({
                     }}
                   >
                     Thêm chi tiết
-                  </Button>
+                  </Button> */}
                   <Button
                     onClick={(e) => {
                       e.stopPropagation();
