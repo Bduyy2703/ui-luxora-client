@@ -12,6 +12,7 @@ import {
   Typography,
   Row,
   Col,
+  Tag,
 } from "antd";
 import Filter from "../../../components/admin/filter/Filter";
 import config from "../../../config";
@@ -148,28 +149,34 @@ const AdminInvoiceList = () => {
       dataIndex: "finalTotal",
       key: "finalTotal",
       render: (text) => `${parseFloat(text).toLocaleString()} VNĐ`,
+      align: "right",
     },
-    { title: "Phương thức", dataIndex: "paymentMethod", key: "paymentMethod" },
+    {
+      title: "Phương thức",
+      dataIndex: "paymentMethod",
+      key: "paymentMethod",
+      align: "center",
+    },
     {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
       render: (text) => (
-        <span
-          style={{
-            color:
-              text === "PAID"
-                ? "green"
-                : text === "CANCELLED"
-                  ? "red"
-                  : text === "FAILED"
-                    ? "purple"
-                    : "orange",
-          }}
+        <Tag
+          color={
+            text === "PAID"
+              ? "green"
+              : text === "CANCELLED"
+                ? "red"
+                : text === "FAILED"
+                  ? "purple"
+                  : "orange"
+          }
         >
           {text}
-        </span>
+        </Tag>
       ),
+      align: "center",
     },
     {
       title: "Ngày tạo",
@@ -315,6 +322,7 @@ const AdminInvoiceList = () => {
               ) : null
             }
             width={1000}
+            centered
           >
             {currentInvoice && (
               <div className={styles.detailModal}>
@@ -341,7 +349,20 @@ const AdminInvoiceList = () => {
                       {currentInvoice.paymentMethod}
                     </p>
                     <p>
-                      <strong>Trạng thái:</strong> {currentInvoice.status}
+                      <strong>Trạng thái:</strong>{" "}
+                      <Tag
+                        color={
+                          currentInvoice?.status === "PAID"
+                            ? "green"
+                            : currentInvoice?.status === "CANCELLED"
+                              ? "red"
+                              : currentInvoice?.status === "FAILED"
+                                ? "purple"
+                                : "orange"
+                        }
+                      >
+                        {currentInvoice.status}
+                      </Tag>
                     </p>
                     <p>
                       <strong>Ngày tạo:</strong>{" "}

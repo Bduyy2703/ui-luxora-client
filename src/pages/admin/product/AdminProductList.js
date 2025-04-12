@@ -984,134 +984,156 @@ const AdminProductList = () => {
           </Modal>
 
           <Modal
-            title="Thêm chi tiết sản phẩm"
+            title={
+              <div className={styles.modalTitle}>Thêm chi tiết sản phẩm</div>
+            }
             visible={addDetailModalVisible}
             onCancel={() => {
               setAddDetailModalVisible(false);
               addDetailForm.resetFields();
             }}
             footer={null}
-            className={`${styles.productModal} ${styles.sideModal}`}
-            width={400}
+            className={`${styles.productModal} ${styles.addDetailModal}`} 
+            width={600}
+            centered
+            style={{ height: "80vh" }}
           >
-            <Form
-              form={addDetailForm}
-              layout="vertical"
-              onFinish={handleAddProductDetails}
-            >
-              <Form.Item
-                label="Kích thước"
-                name="size"
-                rules={[
-                  { required: true, message: "Vui lòng chọn kích thước!" },
-                ]}
+            <div className={styles.modalContentWrapper}>
+              <Form
+                form={addDetailForm}
+                layout="vertical"
+                onFinish={handleAddProductDetails}
+                className={styles.formContent}
               >
-                <AntSelect placeholder="Chọn kích thước">
-                  {Object.values(ProductSize).map((size) => (
-                    <AntSelect.Option key={size} value={size}>
-                      {size}
-                    </AntSelect.Option>
-                  ))}
-                </AntSelect>
-              </Form.Item>
-              <Form.Item
-                label="Màu sắc"
-                name="color"
-                rules={[{ required: true, message: "Vui lòng chọn màu sắc!" }]}
-              >
-                <AntSelect placeholder="Chọn màu sắc">
-                  {Object.values(ProductColor).map((color) => (
-                    <AntSelect.Option key={color} value={color}>
-                      {color}
-                    </AntSelect.Option>
-                  ))}
-                </AntSelect>
-              </Form.Item>
-              <Form.Item
-                label="Chất liệu"
-                name="material"
-                rules={[
-                  { required: true, message: "Vui lòng chọn chất liệu!" },
-                ]}
-              >
-                <AntSelect placeholder="Chọn chất liệu">
-                  {Object.values(ProductMaterial).map((material) => (
-                    <AntSelect.Option key={material} value={material}>
-                      {material}
-                    </AntSelect.Option>
-                  ))}
-                </AntSelect>
-              </Form.Item>
-              <Form.Item
-                label="Số lượng tồn kho"
-                name="stock"
-                rules={[
-                  {
-                    required: true,
-                    message: "Vui lòng nhập số lượng tồn kho!",
-                  },
-                ]}
-              >
-                <Input type="number" />
-              </Form.Item>
-              <Form.Item label="Số lượng đã bán" name="sold" initialValue={0}>
-                <Input type="number" />
-              </Form.Item>
-              <Form.Item label="Chiều dài (cm)" name="length">
-                <Input type="number" />
-              </Form.Item>
-              <Form.Item label="Chiều rộng (cm)" name="width">
-                <Input type="number" />
-              </Form.Item>
-              <Form.Item label="Chiều cao (cm)" name="height">
-                <Input type="number" />
-              </Form.Item>
-              <Form.Item label="Trọng lượng (g)" name="weight">
-                <Input type="number" />
-              </Form.Item>
-              <Form.Item label="Hướng dẫn bảo quản" name="care_instructions">
-                <Input />
-              </Form.Item>
-              <Form.Item label="Kích thước đá" name="stone_size">
-                <Input />
-              </Form.Item>
-              <Form.Item label="Loại đá" name="stone_type">
-                <Input />
-              </Form.Item>
-              <Form.Item label="Phong cách thiết kế" name="design_style">
-                <Input />
-              </Form.Item>
-              <Form.Item label="Mô tả" name="description">
-                <Input.TextArea />
-              </Form.Item>
-              <Form.Item
-                label="Kho hàng"
-                name="inventoryId"
-                rules={[{ required: true, message: "Vui lòng chọn kho hàng!" }]}
-              >
-                <AntSelect placeholder="Chọn kho hàng">
-                  {inventory?.map((item) => (
-                    <AntSelect.Option key={item.id} value={item.id}>
-                      {item.location}
-                    </AntSelect.Option>
-                  ))}
-                </AntSelect>
-              </Form.Item>
-              <Form.Item className={styles.formActions}>
-                <Button type="primary" htmlType="submit" loading={loading}>
-                  Thêm chi tiết
-                </Button>
-                <Button
-                  className={styles.cancelButton}
-                  onClick={() => {
-                    setAddDetailModalVisible(false);
-                    addDetailForm.resetFields();
-                  }}
-                >
-                  Hủy
-                </Button>
-              </Form.Item>
-            </Form>
+                <div className={styles.scrollableContent}>
+                  <Form.Item
+                    label="Kích thước"
+                    name="size"
+                    rules={[
+                      { required: true, message: "Vui lòng chọn kích thước!" },
+                    ]}
+                  >
+                    <AntSelect placeholder="Chọn kích thước">
+                      {Object.values(ProductSize).map((size) => (
+                        <AntSelect.Option key={size} value={size}>
+                          {size}
+                        </AntSelect.Option>
+                      ))}
+                    </AntSelect>
+                  </Form.Item>
+                  <Form.Item
+                    label="Màu sắc"
+                    name="color"
+                    rules={[
+                      { required: true, message: "Vui lòng chọn màu sắc!" },
+                    ]}
+                  >
+                    <AntSelect placeholder="Chọn màu sắc">
+                      {Object.values(ProductColor).map((color) => (
+                        <AntSelect.Option key={color} value={color}>
+                          {color}
+                        </AntSelect.Option>
+                      ))}
+                    </AntSelect>
+                  </Form.Item>
+                  <Form.Item
+                    label="Chất liệu"
+                    name="material"
+                    rules={[
+                      { required: true, message: "Vui lòng chọn chất liệu!" },
+                    ]}
+                  >
+                    <AntSelect placeholder="Chọn chất liệu">
+                      {Object.values(ProductMaterial).map((material) => (
+                        <AntSelect.Option key={material} value={material}>
+                          {material}
+                        </AntSelect.Option>
+                      ))}
+                    </AntSelect>
+                  </Form.Item>
+                  <Form.Item
+                    label="Số lượng tồn kho"
+                    name="stock"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Vui lòng nhập số lượng tồn kho!",
+                      },
+                    ]}
+                  >
+                    <Input type="number" />
+                  </Form.Item>
+                  <Form.Item
+                    label="Số lượng đã bán"
+                    name="sold"
+                    initialValue={0}
+                  >
+                    <Input type="number" />
+                  </Form.Item>
+                  <Form.Item label="Chiều dài (cm)" name="length">
+                    <Input type="number" />
+                  </Form.Item>
+                  <Form.Item label="Chiều rộng (cm)" name="width">
+                    <Input type="number" />
+                  </Form.Item>
+                  <Form.Item label="Chiều cao (cm)" name="height">
+                    <Input type="number" />
+                  </Form.Item>
+                  <Form.Item label="Trọng lượng (g)" name="weight">
+                    <Input type="number" />
+                  </Form.Item>
+                  <Form.Item
+                    label="Hướng dẫn bảo quản"
+                    name="care_instructions"
+                  >
+                    <Input />
+                  </Form.Item>
+                  <Form.Item label="Kích thước đá" name="stone_size">
+                    <Input />
+                  </Form.Item>
+                  <Form.Item label="Loại đá" name="stone_type">
+                    <Input />
+                  </Form.Item>
+                  <Form.Item label="Phong cách thiết kế" name="design_style">
+                    <Input />
+                  </Form.Item>
+                  <Form.Item label="Mô tả" name="description">
+                    <Input.TextArea />
+                  </Form.Item>
+                  <Form.Item
+                    label="Kho hàng"
+                    name="inventoryId"
+                    rules={[
+                      { required: true, message: "Vui lòng chọn kho hàng!" },
+                    ]}
+                  >
+                    <AntSelect placeholder="Chọn kho hàng">
+                      {inventory?.map((item) => (
+                        <AntSelect.Option key={item.id} value={item.id}>
+                          {item.location}
+                        </AntSelect.Option>
+                      ))}
+                    </AntSelect>
+                  </Form.Item>
+                </div>
+                <div className={styles.modalFooter}>
+                  <Form.Item className={styles.formActions}>
+                    <Button type="primary" htmlType="submit" loading={loading}>
+                      Thêm chi tiết
+                    </Button>
+                    <Button
+                      className={styles.cancelButton}
+                      onClick={() => {
+                        setAddDetailModalVisible(false);
+                        addDetailForm.resetFields();
+                      }}
+                    >
+                      Hủy
+                    </Button>
+                  </Form.Item>
+                </div>
+              </Form>
+            </div>
           </Modal>
 
           <Modal

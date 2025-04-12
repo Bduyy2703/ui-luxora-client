@@ -162,7 +162,9 @@
           width: 100%;
           border-radius: 10px;
           border: 2px solid #d4af37;
-          transition: transform 0.5s ease, box-shadow 0.5s ease;
+          transition:
+            transform 0.5s ease,
+            box-shadow 0.5s ease;
 
           &:hover {
             transform: scale(1.05);
@@ -663,4 +665,3 @@
     transform: translateX(0);
   }
 }
-

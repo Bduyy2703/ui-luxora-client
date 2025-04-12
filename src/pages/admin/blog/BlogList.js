@@ -1,4 +1,3 @@
-// src/pages/admin/blog/BlogList.js
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Modal,
@@ -30,7 +29,6 @@ import {
   deleteBlog,
 } from "../../../services/api/blogService";
 
-// Component cho Form 1 (Thiết kế tối giản, sang trọng)
 const DetailForm1 = ({ currentBlog, currentBlogImages, styles }) => {
   const splitContentIntoParagraphs = (content) => {
     if (!content) return [];
@@ -667,6 +665,7 @@ const AdminBlogList = () => {
                   filters={filters}
                   data={data}
                   validData={validData}
+                  className={styles.blogFilter}
                   setValidData={setValidData}
                   standardSort={[
                     { name: "Tiêu đề", type: "title" },
@@ -776,7 +775,12 @@ const AdminBlogList = () => {
                 <Input.TextArea rows={6} />
               </Form.Item>
               <Form.Item className={styles.formActions}>
-                <Button type="primary" htmlType="submit" loading={loading}>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={loading}
+                  style={{ marginRight: 8 }}
+                >
                   Thêm bài viết
                 </Button>
                 <Button

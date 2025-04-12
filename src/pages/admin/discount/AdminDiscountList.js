@@ -406,6 +406,7 @@ const AdminDiscountList = () => {
             footer={null}
             className={styles.addDiscountModal}
             width={600}
+            centered
           >
             <Form form={form} layout="vertical" onFinish={handleAddDiscount}>
               <Form.Item
@@ -523,6 +524,7 @@ const AdminDiscountList = () => {
             footer={null}
             className={styles.addDiscountModal}
             width={600}
+            centered
           >
             <Form
               form={editForm}
@@ -637,7 +639,7 @@ const AdminDiscountList = () => {
 
           {/* Detail Discount Modal */}
           <Modal
-            title="Chi tiết mã giảm giá"
+            title="Chỉnh sửa mã giảm giá"
             visible={detailModalVisible}
             onCancel={() => {
               setDetailModalVisible(false);
@@ -647,6 +649,7 @@ const AdminDiscountList = () => {
             footer={null}
             className={styles.addDiscountModal}
             width={600}
+            centered
           >
             <Form
               form={detailForm}
