@@ -285,6 +285,7 @@ const AdminReviewList = () => {
       title: "Bình luận",
       key: "comment",
       render: (record) => record.comment || "N/A",
+      width: 500,
     },
     {
       title: "Ngày tạo",
@@ -293,6 +294,7 @@ const AdminReviewList = () => {
         record.createdAt
           ? new Date(record.createdAt).toLocaleDateString()
           : "N/A",
+      width: 150,
     },
     {
       title: "Trạng thái",
@@ -305,6 +307,7 @@ const AdminReviewList = () => {
           onChange={(checked) => handleToggleHidden(record.id, !checked)}
         />
       ),
+      width: 120,
     },
     {
       title: "Hành động",
@@ -330,6 +333,7 @@ const AdminReviewList = () => {
           </Tooltip>
         </div>
       ),
+      width: 120,
     },
   ];
 
@@ -352,11 +356,13 @@ const AdminReviewList = () => {
           )}
         </div>
       ),
+      width: 100,
     },
     {
       title: "Sản phẩm",
       key: "product.name",
       render: (record) => record.product?.name || "N/A",
+      width: 300,
     },
     {
       title: "Đánh giá trung bình",
@@ -365,26 +371,29 @@ const AdminReviewList = () => {
         <Rate
           disabled
           value={Math.round(record.averageRating)}
-          style={{ color: "#fadb14", fontSize: 20 }} // Tăng kích thước ngôi sao
+          style={{ color: "#fadb14", fontSize: 20 }}
         />
       ),
+      width: 200,
     },
     {
       title: "Số lượng đánh giá",
       key: "totalReviews",
       render: (record) => record.totalReviews || 0,
+      width: 150,
     },
     {
       title: "Giá tiền",
       key: "finalPrice",
       render: (record) => formatPrice(record.product?.finalPrice),
+      width: 150,
     },
   ];
 
   return (
     <div className={styles.wrapper}>
       <header className={styles.adminHeader}>
-        <div className="container">
+        <div className={styles.container}>
           <h2>QUẢN LÝ ĐÁNH GIÁ</h2>
         </div>
       </header>
@@ -395,69 +404,75 @@ const AdminReviewList = () => {
               <div className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTools}>
-                    <Filter
-                      filters={filters}
-                      data={data}
-                      validData={validData}
-                      setValidData={setValidData}
-                      standardSort={standardSort}
-                      searchFields={[
-                        {
-                          key: "product.name",
-                          placeholder: "Tìm kiếm theo bình luận",
-                        },
-                        {
-                          key: "comment",
-                          placeholder: "Tìm kiếm theo bình luận",
-                        },
-                      ]}
-                    />
-                    <Select
-                      style={{ width: 200 }}
-                      placeholder="Lọc theo trạng thái"
-                      allowClear
-                      onChange={(value) => {
-                        setIsHiddenFilter(value);
-                        setCurrentPage(1);
-                      }}
-                    >
-                      <Option value={true}>Ẩn</Option>
-                      <Option value={false}>Hiển thị</Option>
-                    </Select>
-                    <Select
-                      style={{ width: 200 }}
-                      placeholder="Lọc theo sản phẩm"
-                      allowClear
-                      onChange={(value) => {
-                        setProductIdFilter(value);
-                        setCurrentPage(1);
-                      }}
-                    >
-                      {[...new Set(data.map((item) => item.productId))].map(
-                        (productId) => (
-                          <Option key={productId} value={productId}>
-                            {data.find((item) => item.productId === productId)
-                              ?.product?.name || productId}
-                          </Option>
-                        ),
-                      )}
-                    </Select>
-                    <InputNumber
-                      style={{ width: 200 }}
-                      placeholder="Lọc theo rating (tối thiểu)"
-                      min={1}
-                      max={5}
-                      onChange={(value) => {
-                        setRatingFilter(value);
-                        setCurrentPage(1);
-                      }}
-                    />
-                    <RangePicker
-                      onChange={(dates) => {
-                        setDateRangeFilter(dates || []);
-                        setCurrentPage(1);
-                      }}
-                    />
+                    {/* Hàng 1: Bộ lọc tìm kiếm và sắp xếp */}
+                    <div className={styles.filterRow}>
+                      <Filter
+                        filters={filters}
+                        data={data}
+                        validData={validData}
+                        setValidData={setValidData}
+                        standardSort={standardSort}
+                        searchFields={[
+                          {
+                            key: "product.name",
+                            placeholder: "Tìm kiếm theo bình luận",
+                          },
+                          {
+                            key: "comment",
+                            placeholder: "Tìm kiếm theo bình luận",
+                          },
+                        ]}
+                      />
+                    </div>
+                    {/* Hàng 2: Các bộ lọc trạng thái, sản phẩm, rating, ngày */}
+                    <div className={styles.filterRow}>
+                      <Select
+                        style={{ width: 200 }}
+                        placeholder="Lọc theo trạng thái"
+                        allowClear
+                        onChange={(value) => {
+                          setIsHiddenFilter(value);
+                          setCurrentPage(1);
+                        }}
+                      >
+                        <Option value={true}>Ẩn</Option>
+                        <Option value={false}>Hiển thị</Option>
+                      </Select>
+                      <Select
+                        style={{ width: 200 }}
+                        placeholder="Lọc theo sản phẩm"
+                        allowClear
+                        onChange={(value) => {
+                          setProductIdFilter(value);
+                          setCurrentPage(1);
+                        }}
+                      >
+                        {[...new Set(data.map((item) => item.productId))].map(
+                          (productId) => (
+                            <Option key={productId} value={productId}>
+                              {data.find((item) => item.productId === productId)
+                                ?.product?.name || productId}
+                            </Option>
+                          ),
+                        )}
+                      </Select>
+                      <InputNumber
+                        style={{ width: 200 }}
+                        placeholder="Lọc theo rating (tối thiểu)"
+                        min={1}
+                        max={5}
+                        onChange={(value) => {
+                          setRatingFilter(value);
+                          setCurrentPage(1);
+                        }}
+                      />
+                      <RangePicker
+                        onChange={(dates) => {
+                          setDateRangeFilter(dates || []);
+                          setCurrentPage(1);
+                        }}
+                      />
+                    </div>
                   </div>
                   <div className={styles.cardBtns}>
                     <Button
@@ -465,7 +480,7 @@ const AdminReviewList = () => {
                       onClick={handleDeleteReview}
                       disabled={!checkedRow.length}
                     >
-                      SẮP XẾP
+                      Xóa
                     </Button>
                   </div>
                 </div>
@@ -482,6 +497,7 @@ const AdminReviewList = () => {
                     }}
                     loading={loading}
                     className={styles.table}
+                    scroll={{ x: "max-content" }}
                   />
                 </div>
                 {total > limit && (
@@ -637,6 +653,7 @@ const AdminReviewList = () => {
                       rowKey={(record) => record.product?.id || Math.random()}
                       pagination={false}
                       className={styles.table}
+                      scroll={{ x: "max-content" }}
                     />
                   </Card>
                 </div>
@@ -666,7 +683,7 @@ const AdminReviewList = () => {
                     <Rate
                       disabled
                       value={currentReview.rating}
-                      style={{ color: "#fadb14", fontSize: 24 }} // Tăng kích thước ngôi sao
+                      style={{ color: "#fadb14", fontSize: 24 }}
                     />
                   </p>
                   <p>
@@ -692,8 +709,8 @@ const AdminReviewList = () => {
                           `${productStatistics.averageRating.toFixed(2)}/5`
                         }
                         strokeColor="#fadb14"
-                        width={120} // Tăng kích thước vòng điểm
-                        clockwise={false} // Đảo ngược hướng vòng điểm
+                        width={120}
+                        clockwise={false}
                       />
                     </div>
                     <Statistic
@@ -714,7 +731,7 @@ const AdminReviewList = () => {
                               color: "#fadb14",
                               fontSize: 20,
                               marginRight: 8,
-                            }} // Tăng kích thước ngôi sao
+                            }}
                           />
                           <span>
                             {productStatistics.ratingDistribution?.[star] || 0}

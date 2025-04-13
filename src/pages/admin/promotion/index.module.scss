@@ -1,159 +1,176 @@
-.card {
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px;
-    border-bottom: 1px solid #f0f0f0;
+// Tùy chỉnh checkbox
+:global(.ant-table-selection-column) {
+  .ant-checkbox {
+    .ant-checkbox-inner {
+      width: 16px;
+      height: 16px;
+      border: 1px solid #d9d9d9;
+      border-radius: 2px;
+      background: transparent;
 
-    .card-tools {
-      flex: 1;
-    }
-
-    .card-btns {
-      display: flex;
-      gap: 8px;
-    }
-  }
-
-  .card-body {
-    padding: 16px;
-
-    .ant-table {
-      .ant-table-thead > tr > th {
-        background: #fafafa;
-        font-weight: 600;
-        border-right: 1px solid #f0f0f0;
-        text-align: center;
-      }
-
-      .ant-table-tbody > tr {
-        &:nth-child(odd) {
-          background: #f9f9f9;
-        }
-
-        &.ant-table-row-selected {
-          background: #e6f7ff;
-        }
-
-        td {
-          text-align: center;
-        }
+      // Ẩn dấu "+" mặc định
+      &::after {
+        display: none; // Ẩn dấu "+" của checkbox mặc định
       }
     }
-  }
 
-  .pagination {
-    padding: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    .ant-pagination {
-      .ant-pagination-item {
-        border-radius: 4px;
-      }
-
-      .ant-pagination-item-active {
-        background: #1890ff;
+    // Khi checkbox được chọn
+    &.ant-checkbox-checked {
+      .ant-checkbox-inner {
+        background-color: #1890ff; // Màu xanh khi được chọn
         border-color: #1890ff;
 
-        a {
-          color: #fff;
+        // Tạo dấu check tùy chỉnh
+        &::after {
+          display: block;
+          content: "";
+          position: absolute;
+          top: 2px;
+          left: 5px;
+          width: 5px;
+          height: 8px;
+          border: solid white;
+          border-width: 0 2px 2px 0;
+          transform: rotate(45deg);
         }
+      }
+    }
+
+    // Khi hover
+    &:hover {
+      .ant-checkbox-inner {
+        border-color: #40a9ff; // Màu viền khi hover
       }
     }
   }
 }
 
-// Style cho modal "Thêm người dùng"
-.addUserModal {
-  .ant-modal-content {
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.wrapper {
+  background-color: #f0f2f5;
+  min-height: 100vh;
+}
+
+.adminHeader {
+  background: #fff;
+  padding: 16px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  margin-bottom: 24px;
+
+  h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: #1d1d1d;
   }
+}
 
-  .ant-modal-header {
-    background: #1890ff;
-    border-radius: 8px 8px 0 0;
-    padding: 16px 24px;
+.container {
+  max-width: 100%;
+  padding: 0 32px;
+  margin-left: 280px;
+  width: calc(100% - 280px);
+}
 
-    .ant-modal-title {
-      color: #fff;
-      font-size: 18px;
+.main {
+  padding-bottom: 24px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.cardTools {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.filterRow {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.cardBtns {
+  display: flex;
+  gap: 8px;
+}
+
+.cardBody {
+  padding: 16px 24px;
+  overflow-x: auto;
+}
+
+.pagination {
+  padding: 16px 24px;
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid #f0f0f0;
+}
+
+.table {
+  :global(.ant-table-thead) {
+    th {
+      background: #fafafa;
       font-weight: 600;
+      color: #1d1d1d;
     }
   }
 
-  .ant-modal-body {
-    padding: 24px;
-
-    .ant-form-item {
-      margin-bottom: 20px;
-
-      .ant-form-item-label {
-        label {
-          font-weight: 500;
-          color: #333;
-        }
-      }
-
-      .ant-input,
-      .ant-select-selector,
-      .ant-input-password {
-        border-radius: 4px;
-        border: none !important;
-        transition: all 0.3s;
-
-        &:hover,
-        &:focus {
-          border-color: #1890ff;
-          box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
-        }
-      }
-
-      .ant-select-selector {
-        height: 40px !important;
-        display: flex;
-        align-items: center;
-      }
-    }
-  }
-
-  .formActions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    margin-bottom: 0;
-
-    .ant-btn {
-      height: 40px;
-      font-weight: 500;
-      border-radius: 4px;
-      transition: all 0.3s;
-
-      &.ant-btn-primary {
-        background: #1890ff;
-        border-color: #1890ff;
-
-        &:hover,
-        &:focus {
-          background: #40a9ff;
-          border-color: #40a9ff;
-        }
-      }
-    }
-
-    .cancelButton {
+  :global(.ant-table-tbody) {
+    tr:hover td {
       background: #f5f5f5;
-      border-color: #d9d9d9;
-      color: #333;
-
-      &:hover,
-      &:focus {
-        background: #e6e6e6;
-        border-color: #bfbfbf;
-        color: #333;
-      }
     }
+  }
+}
+
+.statisticsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.gridContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.tableContainer {
+  margin-top: 24px;
+}
+
+.detailContent {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.detailInfo {
+  background: #f9f9f9;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.detailSection {
+  margin-top: 16px;
+  h3 {
+    margin-bottom: 16px;
+  }
+  .ant-btn {
+    margin-bottom: 16px;
   }
 }
