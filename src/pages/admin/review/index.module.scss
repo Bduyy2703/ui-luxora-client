@@ -1,240 +1,202 @@
-// index.module.scss
+// Tùy chỉnh checkbox
+:global(.ant-table-selection-column) {
+  .ant-checkbox {
+    .ant-checkbox-inner {
+      width: 16px;
+      height: 16px;
+      border: 1px solid #d9d9d9;
+      border-radius: 2px;
+      background: transparent;
 
-.wrapper {
-  margin-left: 200px;
-  background-color: #f5f7fa;
-  min-height: 100vh;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: calc(100% - 200px);
-}
-
-.adminHeader {
-  background-color: #fff;
-  padding: 16px 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  margin-bottom: 24px;
-  width: 100%;
-  text-align: center;
-  h2 {
-    font-size: 24px;
-    font-weight: 600;
-    color: #1d39c4;
-    margin: 0;
-  }
-}
-
-.main {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-}
-
-.container {
-  max-width: 1200px;
-  width: 100%;
-  margin: 0 auto;
-}
-
-.card {
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
-  margin-bottom: 24px;
-  width: 100%;
-
-  .cardHeader {
-    padding: 16px 24px;
-    border-bottom: 1px solid #e8e8e8;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-
-    .cardTools {
-      display: flex;
-      gap: 16px;
-      align-items: center;
-      flex-wrap: wrap;
+      // Ẩn dấu "+" mặc định
+      &::after {
+        display: none; // Ẩn dấu "+" của checkbox mặc định
+      }
     }
 
-    .cardBtns {
-      .ant-btn {
-        border-radius: 4px;
-        font-weight: 500;
+    // Khi checkbox được chọn
+    &.ant-checkbox-checked {
+      .ant-checkbox-inner {
+        background-color: #1890ff; // Màu xanh khi được chọn
+        border-color: #1890ff;
+
+        // Tạo dấu check tùy chỉnh
+        &::after {
+          display: block;
+          content: "";
+          position: absolute;
+          top: 2px;
+          left: 5px;
+          width: 5px;
+          height: 8px;
+          border: solid white;
+          border-width: 0 2px 2px 0;
+          transform: rotate(45deg);
+        }
+      }
+    }
+
+    // Khi hover
+    &:hover {
+      .ant-checkbox-inner {
+        border-color: #40a9ff; // Màu viền khi hover
       }
     }
   }
+}
 
-  .cardBody {
-    padding: 24px;
+.wrapper {
+  background-color: #f0f2f5;
+  min-height: 100vh;
+}
+
+.adminHeader {
+  background: #fff;
+  padding: 16px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  margin-bottom: 24px;
+
+  h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: #1d1d1d;
   }
 }
 
-.table {
-  .ant-table {
-    border-radius: 8px;
-    overflow: hidden;
-  }
-  .ant-table-thead > tr > th {
-    background-color: #fafafa;
-    font-weight: 600;
-    text-align: center;
-  }
-  .ant-table-tbody > tr > td {
-    text-align: center;
-  }
-  .ant-table-tbody > tr:hover > td {
-    background-color: #f5f5f5;
-  }
+.container {
+  max-width: 100%;
+  padding: 0 32px;
+  margin-left: 265px;
+  width: calc(100% - 280px);
+}
+
+.main {
+  padding-bottom: 24px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.cardTools {
+  display: flex;
+  flex-direction: column; // Chia thành cột để tạo 2 hàng
+  gap: 12px; // Khoảng cách giữa 2 hàng
+  width: 100%;
+}
+
+.filterRow {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap; // Đảm bảo các phần tử xuống hàng nếu không đủ chỗ
+}
+
+.cardBtns {
+  display: flex;
+  gap: 8px;
+}
+
+.cardBody {
+  padding: 16px 24px;
+  overflow-x: auto;
 }
 
 .pagination {
-  text-align: center;
   padding: 16px 24px;
-  background-color: #fff;
-  border-top: 1px solid #e8e8e8;
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid #f0f0f0;
+}
+
+.table {
+  :global(.ant-table-thead) {
+    th {
+      background: #fafafa;
+      font-weight: 600;
+      color: #1d1d1d;
+    }
+  }
+
+  :global(.ant-table-tbody) {
+    tr:hover td {
+      background: #f5f5f5;
+    }
+  }
 }
 
 .statisticsSection {
-  margin-top: 24px;
-  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
 .gridContainer {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 24px;
-  margin-bottom: 24px;
 }
 
 .tableContainer {
-  width: 100%;
+  margin-top: 24px;
 }
 
-.ant-card {
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s;
-  text-align: center;
-
-  &:hover {
-    transform: translateY(-4px);
-  }
-
-  .ant-card-head {
-    background-color: #fafafa;
-    border-bottom: 1px solid #e8e8e8;
-    padding: 0 16px;
-  }
-
-  .ant-card-body {
-    padding: 16px;
-    p {
-      margin: 8px 0;
-      font-size: 14px;
-      color: #595959;
-      strong {
-        color: #262626;
-      }
-    }
-  }
+.productImage {
+  display: flex;
+  justify-content: center;
 }
 
 .reviewDetailModal {
-  .ant-modal-content {
-    border-radius: 8px;
+  :global(.ant-modal-body) {
+    padding: 24px;
   }
+}
 
-  .reviewDetailContent {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    padding: 16px;
+.reviewDetailContent {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
 
-    .reviewInfo {
-      h3 {
-        font-size: 18px;
-        margin-bottom: 16px;
-        color: #1d39c4;
-      }
-      p {
-        margin: 8px 0;
-        font-size: 14px;
-        strong {
-          color: #262626;
-        }
-      }
-    }
+.reviewInfo {
+  background: #f9f9f9;
+  padding: 16px;
+  border-radius: 8px;
+}
 
-    .statisticsSection {
-      h3 {
-        font-size: 16px;
-        margin-bottom: 16px;
-        color: #1d39c4;
-        text-align: center;
-      }
-      .ant-statistic {
-        margin-bottom: 16px;
-      }
-      .ratingDistribution {
-        margin-top: 16px;
-        .ratingDistributionItem {
-          display: flex;
-          align-items: center;
-          margin: 8px 0;
-          font-size: 14px;
-        }
-      }
-    }
-
-    .imageSection {
-      grid-column: span 2;
-      h3 {
-        font-size: 16px;
-        margin-bottom: 16px;
-        color: #1d39c4;
-      }
-      .imageList {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 16px;
-        justify-content: center;
-        img {
-          border-radius: 4px;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-          transition: transform 0.2s;
-          &:hover {
-            transform: scale(1.05);
-          }
-        }
-      }
-    }
+.imageSection {
+  .imageList {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
   }
 }
 
 .ratingCircle {
   display: flex;
   justify-content: center;
-  margin-bottom: 16px;
-  .ant-progress {
-    .ant-progress-text {
-      font-size: 18px; // Tăng kích thước chữ trong vòng điểm
-      font-weight: 500;
-      color: #262626;
-    }
-  }
+  margin: 16px 0;
 }
 
-.productImage {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 16px;
-  img {
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.ratingDistribution {
+  margin-top: 16px;
+
+  .ratingDistributionItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
   }
 }
