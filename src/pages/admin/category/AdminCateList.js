@@ -1,20 +1,28 @@
-import React, { useState, useEffect, useCallback } from "react";
+import {
+  Button,
+  Form,
+  Input,
+  Modal,
+  Pagination,
+  Select,
+  Table as AntTable,
+} from "antd";
+import { EditOutlined } from "@ant-design/icons";
+import { useCallback, useEffect, useState } from "react";
 import Swal from "sweetalert2";
-import { Modal, Form, Input, Select, Button, Pagination } from "antd";
 import config from "../../../config";
 import {
-  getAllCategories,
   createCategory,
-  updateCategory,
   deleteCategory,
+  getAllCategories,
   getCategoryByProduct,
+  updateCategory,
 } from "../../../services/api/categoryService";
-import Table from "../../../components/admin/table/Table";
-import { getProductList } from "../../../services/api/productService";
+import styles from "./index.module.scss";
 
 const { Option } = Select;
 
-const AdminUserList = () => {
+const AdminCategoryList = () => {
   const [data, setData] = useState([]);
   const [checkedRow, setCheckedRow] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
@@ -35,11 +43,8 @@ const AdminUserList = () => {
       setIsLoading(true);
       const categories = await getAllCategories();
       const categoriesArray = Array.isArray(categories) ? categories : [];
-      console.log("Categories fetched:", categoriesArray);
       setData(categoriesArray);
-
-      const parentCats = Array.isArray(categories) ? categories : [];
-      setParentCategories(parentCats);
+      setParentCategories(categoriesArray);
     } catch (error) {
       console.error("Error fetching data:", error);
       setData([]);
@@ -68,35 +73,36 @@ const AdminUserList = () => {
     }
   }, []);
 
-  const fetchProductsByChildCategory = useCallback(async (childCategoryId) => {
-    try {
-      const response = await getCategoryByProduct(childCategoryId);
-      const products = response.data || [];
-      const processedItems = products.map((item) => ({
-        ...item,
-        originalPrice: Number(item.originalPrice) || 0,
-      }));
-      setValidData(processedItems);
-      setCurrentPage(1);
-      const startIndex = 0;
-      const endIndex = pageSize;
-      setPageData(processedItems.slice(startIndex, endIndex));
-      // setPageData(processedItems);
-      // setValidData(processedItems);
-    } catch (error) {
-      console.error("Error fetching products by child category:", error);
-      setPageData([]);
-      setValidData([]);
-      Swal.fire({
-        title: "Lỗi!",
-        text: "Không thể lấy danh sách sản phẩm. Vui lòng thử lại.",
-        icon: "error",
-        showConfirmButton: false,
-        timer: 1500,
-        timerProgressBar: true,
-      });
-    }
-  }, []);
+  const fetchProductsByChildCategory = useCallback(
+    async (childCategoryId) => {
+      try {
+        const response = await getCategoryByProduct(childCategoryId);
+        const products = response.data || [];
+        const processedItems = products.map((item) => ({
+          ...item,
+          originalPrice: Number(item.originalPrice) || 0,
+        }));
+        setValidData(processedItems);
+        setCurrentPage(1);
+        const startIndex = 0;
+        const endIndex = pageSize;
+        setPageData(processedItems.slice(startIndex, endIndex));
+      } catch (error) {
+        console.error("Error fetching products by child category:", error);
+        setPageData([]);
+        setValidData([]);
+        Swal.fire({
+          title: "Lỗi!",
+          text: "Không thể lấy danh sách sản phẩm. Vui lòng thử lại.",
+          icon: "error",
+          showConfirmButton: false,
+          timer: 1500,
+          timerProgressBar: true,
+        });
+      }
+    },
+    [pageSize],
+  );
 
   const handlePageChange = (page, pageSize) => {
     setCurrentPage(page);
@@ -208,14 +214,8 @@ const AdminUserList = () => {
               await deleteCategory(id);
             }),
           );
-
           fetchData();
-
           setCheckedRow([]);
-          document
-            .querySelectorAll("input[type='checkbox']")
-            .forEach((ckb) => (ckb.checked = false));
-
           Swal.fire({
             title: "Xóa thành công!",
             icon: "success",
@@ -238,40 +238,6 @@ const AdminUserList = () => {
       }
     });
   }, [checkedRow, fetchData]);
-
-  const handleCheck = (e) => {
-    e.stopPropagation();
-    setCheckedRow(
-      Array.from(
-        document.querySelectorAll("input[name='ckb-data']:checked"),
-      ).map((checkbox) => {
-        return checkbox.value;
-      }),
-    );
-  };
-
-  const handleCheckAll = (e) => {
-    const checked = e.target.checked;
-    if (!checked) {
-      document
-        .querySelectorAll("input[type='checkbox']")
-        .forEach((ckb) => (ckb.checked = false));
-      setCheckedRow([]);
-    } else {
-      const allIds = [];
-      // Include both parent and child categories
-      data.forEach((row) => {
-        allIds.push(row.id);
-        if (row.children && row.children.length > 0) {
-          row.children.forEach((child) => allIds.push(child.id));
-        }
-      });
-      document
-        .querySelectorAll("input[type='checkbox']")
-        .forEach((ckb) => (ckb.checked = true));
-      setCheckedRow(allIds);
-    }
-  };
 
   const handleParentCateClick = (rowId) => {
     setChooseRow(rowId);
@@ -340,239 +306,274 @@ const AdminUserList = () => {
     return selectedCategory ? selectedCategory.children || [] : [];
   };
 
+  const parentColumns = [
+    {
+      title: "",
+      key: "checkbox",
+      width: 50,
+      render: (_, record) => (
+        <input
+          type="checkbox"
+          name="ckb-data"
+          value={record.id}
+          checked={checkedRow.includes(record.id)}
+          onChange={() => {
+            setCheckedRow((prev) =>
+              prev.includes(record.id)
+                ? prev.filter((id) => id !== record.id)
+                : [...prev, record.id],
+            );
+          }}
+        />
+      ),
+    },
+    { title: "Tên danh mục", dataIndex: "name", key: "name" },
+    { title: "Slug", dataIndex: "slug", key: "slug" },
+    {
+      title: "Hành động",
+      key: "actions",
+      width: 150,
+      render: (_, record) => (
+        <Button
+          type="text"
+          icon={<EditOutlined />}
+          onClick={() => handleEditCategory(record)}
+        />
+      ),
+    },
+  ];
+
+  // Cột cho bảng danh mục con
+  const childColumns = [
+    {
+      title: "",
+      key: "checkbox",
+      width: 50,
+      render: (_, record) => (
+        <input
+          type="checkbox"
+          name="ckb-data"
+          value={record.id}
+          checked={checkedRow.includes(record.id)}
+          onChange={() => {
+            setCheckedRow((prev) =>
+              prev.includes(record.id)
+                ? prev.filter((id) => id !== record.id)
+                : [...prev, record.id],
+            );
+          }}
+        />
+      ),
+    },
+    { title: "Tên danh mục", dataIndex: "name", key: "name" },
+    { title: "Slug", dataIndex: "slug", key: "slug" },
+    {
+      title: "Hành động",
+      key: "actions",
+      width: 100,
+      render: (_, record) => (
+        <Button
+          type="text"
+          icon={<EditOutlined />}
+          onClick={() => handleEditCategory(record)}
+        />
+      ),
+    },
+  ];
+
+  // Cột cho bảng sản phẩm (không thêm cột Hành động vì bạn không yêu cầu, nhưng để sẵn nếu cần)
+  const productColumns = [
+    { title: "ID", dataIndex: "id", key: "id" },
+    { title: "Tên sản phẩm", dataIndex: "name", key: "name" },
+    {
+      title: "Giá gốc",
+      dataIndex: "originalPrice",
+      key: "originalPrice",
+      render: (text) => `${text.toLocaleString()} VNĐ`,
+    },
+    {
+      title: "Giá cuối",
+      dataIndex: "finalPrice",
+      key: "finalPrice",
+      render: (text) => `${text.toLocaleString()} VNĐ`,
+    },
+    {
+      title: "Danh mục",
+      dataIndex: ["category", "name"],
+      key: "category",
+      render: (text) => text || "Không có danh mục",
+    },
+    // Nếu muốn thêm cột Hành động cho bảng sản phẩm, có thể thêm như sau:
+    // {
+    //   title: "Hành động",
+    //   key: "actions",
+    //   width: 100,
+    //   render: (_, record) => (
+    //     <Button
+    //       type="text"
+    //       icon={<EditOutlined />}
+    //       onClick={() => handleEditProduct(record)} // Cần định nghĩa hàm handleEditProduct
+    //     />
+    //   ),
+    // },
+  ];
+
   return (
-    <div className="wrapper">
-      <header className="admin-header">
-        <div className="container">
+    <div className={styles.adminWrapper}>
+      <header className={styles.adminHeader}>
+        <div className={styles.container}>
           <h2>QUẢN LÝ DANH MỤC</h2>
         </div>
       </header>
-      <div className="main">
-        <div className="container">
-          <div className="col col-4">
-            <div className="card">
-              <div className="card-header">
-                <h2>DANH MỤC</h2>
-                <div className="card-btns">
-                  <button className="admin-btn" onClick={handleOpenModal}>
-                    Thêm
-                  </button>
-                  <button className="admin-btn del-btn" onClick={handleDelete}>
-                    Xóa
-                  </button>
+      <div className={styles.main}>
+        <div className={styles.container}>
+          <div className={styles.verticalLayout}>
+            {/* Bảng danh mục cha */}
+            <div className={styles.section}>
+              <div className={styles.card}>
+                <div className={styles.cardHeader}>
+                  <h2>DANH MỤC</h2>
+                  <div>
+                    <Button
+                      type="primary"
+                      onClick={handleOpenModal}
+                      style={{ marginRight: 8 }}
+                    >
+                      Thêm
+                    </Button>
+                    <Button danger onClick={handleDelete}>
+                      Xóa
+                    </Button>
+                  </div>
+                </div>
+                <div className={styles.cardBody}>
+                  <AntTable
+                    rowKey="id"
+                    columns={parentColumns}
+                    dataSource={data}
+                    pagination={false}
+                    loading={isLoading}
+                    rowClassName={(record) =>
+                      chooseRow === record.id ? "ant-table-row-selected" : ""
+                    }
+                    onRow={(record) => ({
+                      onClick: () => {
+                        handleParentCateClick(record.id);
+                      },
+                    })}
+                  />
                 </div>
               </div>
-              <div className="card-body">
-                <table className="card-table">
-                  <thead>
-                    <tr>
-                      <th>
-                        <input
-                          type="checkbox"
-                          onClick={(e) => handleCheckAll(e)}
-                        />
-                      </th>
-                      {config.TABLE_CATE_COL.map((col) => (
-                        <th key={col.key}>{col.header}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Array.isArray(data) && data.length > 0 ? (
-                      data.map((row, index) => (
-                        <tr
-                          key={index}
-                          className={`table-row ${chooseRow === row.id ? "active" : ""}`}
-                          onClick={() => {
-                            handleParentCateClick(row.id);
-                            handleEditCategory(row);
-                          }}
-                          style={{
-                            cursor: "pointer",
-                          }}
-                        >
-                          <td>
-                            <input
-                              type="checkbox"
-                              name="ckb-data"
-                              value={row.id}
-                              onClick={(e) => handleCheck(e)}
-                            />
-                          </td>
-                          {config.TABLE_CATE_COL.map((col) => (
-                            <td key={col.key}>{row[col.key]}</td>
-                          ))}
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={config.TABLE_CATE_COL.length + 1}>
-                          Không tìm thấy
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
             </div>
-          </div>
-          <div className="col col-3">
-            <div className="card">
-              <div className="card-header">
-                <h2>DANH MỤC CON</h2>
-              </div>
-              <div className="card-body">
-                <table className="card-table">
-                  <thead>
-                    <tr>
-                      <th>
-                        <input
-                          type="checkbox"
-                          onClick={(e) => handleCheckAll(e)}
-                        />
-                      </th>
-                      {config.TABLE_CATE_COL.map((col) => (
-                        <th key={col.key}>{col.header}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Array.isArray(getChildCategories()) &&
-                    getChildCategories().length > 0 ? (
-                      getChildCategories().map((row, index) => (
-                        <tr
-                          key={index}
-                          className={`table-row ${selectedChildCategory === row.id ? "active" : ""}`}
-                          onClick={() => {
-                            handleChildCateClick(row.id); // Call the API when a child category is clicked
-                            handleEditCategory(row);
-                          }}
-                          style={{
-                            cursor: "pointer",
-                          }}
-                        >
-                          <td>
-                            <input
-                              type="checkbox"
-                              name="ckb-data"
-                              value={row.id}
-                              onClick={(e) => handleCheck(e)}
-                            />
-                          </td>
-                          {config.TABLE_CATE_COL.map((col) => (
-                            <td key={col.key}>{row[col.key]}</td>
-                          ))}
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={config.TABLE_CATE_COL.length + 1}>
-                          Không tìm thấy
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-          <div className="col col-6">
-            <div className="card">
-              <div className="card-header">
-                <h2>DANH SÁCH SẢN PHẨM</h2>
-              </div>
-              <div className="card-body">
-                <table className="card-table">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Tên sản phẩm</th>
-                      <th>Giá gốc</th>
-                      <th>Giá cuối</th>
-                      <th>Danh mục</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Array.isArray(pageData) && pageData.length > 0 ? (
-                      pageData.map((row, index) => (
-                        <tr key={index} style={{ cursor: "pointer" }}>
-                          <td>{row.id}</td>
-                          <td>{row.name}</td>
-                          <td>{row.originalPrice.toLocaleString()} VNĐ</td>
-                          <td>{row.finalPrice.toLocaleString()} VNĐ</td>
-                          <td>{row.category?.name || "Không có danh mục"}</td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={5}>Không tìm thấy sản phẩm</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              <div
-                className="card-footer"
-                style={{ display: "flex", justifyContent: "flex-end" }}
-              >
-                <div className="card-display-count"></div>
-                <Pagination
-                  current={currentPage}
-                  pageSize={pageSize}
-                  total={validData.length}
-                  onChange={handlePageChange}
-                />
-              </div>
-            </div>
-          </div>
 
-          <Modal
-            title={modalMode === "add" ? "Thêm danh mục" : "Chỉnh sửa danh mục"}
-            open={modalVisible}
-            onCancel={handleCancel}
-            footer={null}
-          >
-            <Form form={form} layout="vertical" onFinish={handleSubmit}>
-              <Form.Item
-                label="Tên danh mục"
-                name="name"
-                rules={[
-                  { required: true, message: "Vui lòng nhập tên danh mục!" },
-                ]}
-              >
-                <Input placeholder="Nhập tên danh mục" />
-              </Form.Item>
-              <Form.Item
-                label="Slug"
-                name="slug"
-                rules={[{ required: true, message: "Vui lòng nhập slug!" }]}
-              >
-                <Input placeholder="Nhập slug" />
-              </Form.Item>
-              <Form.Item label="Danh mục cha" name="parentId">
-                <Select placeholder="Chọn danh mục cha" allowClear>
-                  <Option value={null}>Không có danh mục cha</Option>
-                  {parentCategories.map((cat) => (
-                    <Option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-              <Form.Item>
-                <Button key="cancel" onClick={handleCancel}>
-                  Hủy
-                </Button>
-                <Button type="primary" htmlType="submit">
-                  {modalMode === "add" ? "Xác nhận" : "Cập nhật"}
-                </Button>
-              </Form.Item>
-            </Form>
-          </Modal>
+            {/* Bảng danh mục con */}
+            <div className={styles.section}>
+              <div className={styles.card}>
+                <div className={styles.cardHeader}>
+                  <h2>DANH MỤC CON</h2>
+                </div>
+                <div className={styles.cardBody}>
+                  <AntTable
+                    rowKey="id"
+                    columns={childColumns}
+                    dataSource={getChildCategories()}
+                    pagination={false}
+                    loading={isLoading}
+                    rowClassName={(record) =>
+                      selectedChildCategory === record.id
+                        ? "ant-table-row-selected"
+                        : ""
+                    }
+                    onRow={(record) => ({
+                      onClick: () => {
+                        handleChildCateClick(record.id);
+                      },
+                    })}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Bảng sản phẩm */}
+            <div className={styles.section}>
+              <div className={styles.card}>
+                <div className={styles.cardHeader}>
+                  <h2>DANH SÁCH SẢN PHẨM</h2>
+                </div>
+                <div className={styles.cardBody}>
+                  <AntTable
+                    rowKey="id"
+                    columns={productColumns}
+                    dataSource={pageData}
+                    pagination={false}
+                    locale={{ emptyText: "Không tìm thấy sản phẩm" }}
+                  />
+                </div>
+                {validData.length > pageSize && (
+                  <div className={styles.cardFooter}>
+                    <Pagination
+                      current={currentPage}
+                      pageSize={pageSize}
+                      total={validData.length}
+                      onChange={handlePageChange}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Modal thêm/sửa danh mục */}
+      <Modal
+        title={modalMode === "add" ? "Thêm danh mục" : "Chỉnh sửa danh mục"}
+        open={modalVisible}
+        onCancel={handleCancel}
+        footer={null}
+        centered
+      >
+        <Form form={form} layout="vertical" onFinish={handleSubmit}>
+          <Form.Item
+            label="Tên danh mục"
+            name="name"
+            rules={[{ required: true, message: "Vui lòng nhập tên danh mục!" }]}
+          >
+            <Input placeholder="Nhập tên danh mục" />
+          </Form.Item>
+          <Form.Item
+            label="Slug"
+            name="slug"
+            rules={[{ required: true, message: "Vui lòng nhập slug!" }]}
+          >
+            <Input placeholder="Nhập slug" />
+          </Form.Item>
+          <Form.Item label="Danh mục cha" name="parentId">
+            <Select placeholder="Chọn danh mục cha" allowClear>
+              <Option value={null}>Không có danh mục cha</Option>
+              {parentCategories.map((cat) => (
+                <Option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item>
+            <Button
+              key="cancel"
+              onClick={handleCancel}
+              style={{ marginRight: 8 }}
+            >
+              Hủy
+            </Button>
+            <Button type="primary" htmlType="submit">
+              {modalMode === "add" ? "Xác nhận" : "Cập nhật"}
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };
 
-export default AdminUserList;
+export default AdminCategoryList;

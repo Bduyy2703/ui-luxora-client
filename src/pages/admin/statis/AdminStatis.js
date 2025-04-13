@@ -50,6 +50,7 @@ import {
   DollarOutlined,
 } from "@ant-design/icons";
 import { getProductDetailsByIdDetails } from "../../../services/api/productDetailService";
+import { IconTruckDelivery } from "@tabler/icons-react";
 
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
@@ -328,11 +329,26 @@ const AdminStatis = () => {
                     valueStyle={{ color: "#8B5A2B", fontSize: "28px" }} // Nâu đậm nhẹ
                   />
                   <Statistic
-                    title="Tổng Đơn Hàng"
+                    title={
+                      <div style={{ marginBottom: "-10px" }}>Tổng Đơn Hàng</div>
+                    }
                     value={totalInvoice}
                     precision={0}
-                    prefix={<DollarOutlined />}
-                    valueStyle={{ color: "#8B5A2B", fontSize: "28px" }} // Nâu đậm nhẹ
+                    prefix={
+                      <IconTruckDelivery
+                        style={{
+                          width: "45px",
+                          height: "32px",
+                          marginTop: "12px",
+                        }}
+                      />
+                    }
+                    valueStyle={{
+                      color: "#8B5A2B",
+                      fontSize: "28px",
+                      display: "flex",
+                      alignItems: "center",
+                    }} // Nâu đậm nhẹ
                   />
                 </Card>
               </Col>
