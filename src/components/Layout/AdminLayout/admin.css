@@ -136,11 +136,11 @@
 }
 /* ADMIN LAYOUT */
 .admin-layout {
-    width: 100%;
+    /* width: 100%;
     min-height: 100vh;
     display: flex;
     flex-direction: row;
-    position: relative;
+    position: relative; */
     /* padding-left: 265px; */
 }
 

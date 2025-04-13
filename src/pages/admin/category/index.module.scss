@@ -1,0 +1,92 @@
+.adminWrapper {
+  background-color: #f0f2f5;
+  min-height: 100vh;
+}
+
+.adminHeader {
+  background-color: #fff;
+  padding: 16px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  margin-bottom: 24px;
+
+  h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: #1d1d1d;
+  }
+}
+
+.container {
+  max-width: 100%;
+  padding: 0px 40px 0px 285px;
+}
+
+.main {
+  padding-bottom: 24px;
+}
+
+.verticalLayout {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.section {
+  width: 100%;
+  .card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+  }
+
+  .cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    border-bottom: 1px solid #f0f0f0;
+
+    h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 500;
+      color: #1d1d1d;
+    }
+  }
+
+  .cardBody {
+    padding: 16px 24px;
+  }
+
+  .cardFooter {
+    padding: 16px 24px;
+    display: flex;
+    justify-content: flex-end;
+    border-top: 1px solid #f0f0f0;
+  }
+}
+
+:global(.ant-table-row-selected) {
+  background-color: #e6f7ff !important;
+}
+
+:global(.ant-table) {
+  .ant-table-thead > tr > th {
+    background: #fafafa;
+    font-weight: 600;
+    color: #1d1d1d;
+  }
+
+  .ant-table-tbody > tr:hover > td {
+    background: #f5f5f5;
+  }
+}
+
+:global(.ant-btn-text) {
+  color: #1890ff;
+  &:hover {
+    color: #40a9ff;
+  }
+}
