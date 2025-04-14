@@ -969,84 +969,88 @@ const PromotionList = () => {
         }}
         footer={null}
         width={800}
+        centered
+        style={{ maxHeight: "80vh" }}
       >
-        {currentPromotion ? (
-          <div className={styles.detailContent}>
-            <div className={styles.detailInfo}>
-              <h3>Tên chương trình: {currentPromotion.name}</h3>
-              <p>
-                <strong>Số tiền giảm giá:</strong>{" "}
-                {currentPromotion.discountAmount}%
-              </p>
-              <p>
-                <strong>Ngày bắt đầu:</strong>{" "}
-                {new Date(currentPromotion.startDate).toLocaleDateString()}
-              </p>
-              <p>
-                <strong>Ngày kết thúc:</strong>{" "}
-                {new Date(currentPromotion.endDate).toLocaleDateString()}
-              </p>
-              <p>
-                <strong>Trạng thái:</strong>{" "}
-                {currentPromotion.isActive ? "Đang diễn ra" : "Đã kết thúc"}
-              </p>
-              <p>
-                <strong>Áp dụng toàn bộ sản phẩm:</strong>{" "}
-                {currentPromotion.isGlobalSale ? "Có" : "Không"}
-              </p>
-            </div>
-            <div className={styles.detailSection}>
-              <h3>Sản phẩm trong chương trình</h3>
-              {!currentPromotion.isGlobalSale && (
-                <Button
-                  type="primary"
-                  onClick={() => {
-                    setProductModalVisible(true);
-                    fetchProductsForModal();
-                  }}
-                >
-                  Thêm sản phẩm
-                </Button>
-              )}
-              <AntTable
-                dataSource={
-                  currentPromotion.isGlobalSale
-                    ? allProducts
-                    : currentPromotion.productStrategySales || []
-                }
-                columns={productColumns}
-                rowKey={(record) => record.id}
-                pagination={false}
-                className={styles.table}
-                scroll={{ x: "max-content" }}
-              />
-            </div>
-            {!currentPromotion.isGlobalSale && (
+        <div style={{ maxHeight: "80vh", overflowY: "auto" }}>
+          {currentPromotion ? (
+            <div className={styles.detailContent}>
+              <div className={styles.detailInfo}>
+                <h3>Tên chương trình: {currentPromotion.name}</h3>
+                <p>
+                  <strong>Số tiền giảm giá:</strong>{" "}
+                  {currentPromotion.discountAmount}%
+                </p>
+                <p>
+                  <strong>Ngày bắt đầu:</strong>{" "}
+                  {new Date(currentPromotion.startDate).toLocaleDateString()}
+                </p>
+                <p>
+                  <strong>Ngày kết thúc:</strong>{" "}
+                  {new Date(currentPromotion.endDate).toLocaleDateString()}
+                </p>
+                <p>
+                  <strong>Trạng thái:</strong>{" "}
+                  {currentPromotion.isActive ? "Đang diễn ra" : "Đã kết thúc"}
+                </p>
+                <p>
+                  <strong>Áp dụng toàn bộ sản phẩm:</strong>{" "}
+                  {currentPromotion.isGlobalSale ? "Có" : "Không"}
+                </p>
+              </div>
               <div className={styles.detailSection}>
-                <h3>Danh mục trong chương trình</h3>
-                <Button
-                  type="primary"
-                  onClick={() => {
-                    setCategoryModalVisible(true);
-                    fetchCategoriesForModal();
-                  }}
-                >
-                  Thêm danh mục
-                </Button>
+                <h3>Sản phẩm trong chương trình</h3>
+                {!currentPromotion.isGlobalSale && (
+                  <Button
+                    type="primary"
+                    onClick={() => {
+                      setProductModalVisible(true);
+                      fetchProductsForModal();
+                    }}
+                  >
+                    Thêm sản phẩm
+                  </Button>
+                )}
                 <AntTable
-                  dataSource={currentPromotion.categoryStrategySales || []}
-                  columns={categoryColumns}
+                  dataSource={
+                    currentPromotion.isGlobalSale
+                      ? allProducts
+                      : currentPromotion.productStrategySales || []
+                  }
+                  columns={productColumns}
                   rowKey={(record) => record.id}
                   pagination={false}
                   className={styles.table}
                   scroll={{ x: "max-content" }}
                 />
               </div>
-            )}
-          </div>
-        ) : (
-          <p>Không có dữ liệu</p>
-        )}
+              {!currentPromotion.isGlobalSale && (
+                <div className={styles.detailSection}>
+                  <h3>Danh mục trong chương trình</h3>
+                  <Button
+                    type="primary"
+                    onClick={() => {
+                      setCategoryModalVisible(true);
+                      fetchCategoriesForModal();
+                    }}
+                  >
+                    Thêm danh mục
+                  </Button>
+                  <AntTable
+                    dataSource={currentPromotion.categoryStrategySales || []}
+                    columns={categoryColumns}
+                    rowKey={(record) => record.id}
+                    pagination={false}
+                    className={styles.table}
+                    scroll={{ x: "max-content" }}
+                  />
+                </div>
+              )}
+            </div>
+          ) : (
+            <p>Không có dữ liệu</p>
+          )}
+        </div>
       </Modal>
 
       <Modal
