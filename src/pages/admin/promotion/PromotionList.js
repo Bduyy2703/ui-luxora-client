@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Modal,
   Button,
@@ -36,14 +36,11 @@ import {
   getSaleProduct,
   getSaleCategories,
 } from "../../../services/api/promotionService";
-import { getProductDetailsByIdDetails } from "../../../services/api/productDetailService";
-import {
-  getProductList,
-  getByIdProduct,
-} from "../../../services/api/productService";
+import { getByIdProduct } from "../../../services/api/productService";
+import { getProductList } from "../../../services/api/productService";
 import { getAllCategories } from "../../../services/api/categoryService";
 
-const { Option } = Select;
+const { Option, OptGroup } = Select;
 const { TabPane } = Tabs;
 const { RangePicker } = DatePicker;
 
@@ -75,14 +72,32 @@ const PromotionList = () => {
   const [allProducts, setAllProducts] = useState([]);
   const [productsForModal, setProductsForModal] = useState([]);
   const [selectedProductIds, setSelectedProductIds] = useState([]);
-  // Thêm state để lưu danh sách danh mục trong modal "Thêm danh mục vào chương trình"
   const [categoriesForModal, setCategoriesForModal] = useState([]);
-  // Thêm state để lưu danh sách danh mục được chọn
   const [selectedCategoryIds, setSelectedCategoryIds] = useState([]);
   const limit = config.LIMIT || 10;
 
   const standardSort = ["name", "startDate"];
 
+  const renderProductImage = (images) => {
+    const imageUrl = images?.[0];
+    const src =
+      typeof imageUrl === "string"
+        ? imageUrl
+        : imageUrl?.fileUrl || "/fallback-image.jpg";
+    return (
+      <Image
+        src={src}
+        alt="Product Image"
+        width={50}
+        height={50}
+        style={{ objectFit: "cover" }}
+        fallback="/fallback-image.jpg"
+        onError={() => console.error("Failed to load image:", src)}
+      />
+    );
+  };
+
+  // Tải danh sách sản phẩm và danh mục
   useEffect(() => {
     const fetchProductList = async () => {
       try {
@@ -106,6 +121,7 @@ const PromotionList = () => {
     fetchCategoryList();
   }, []);
 
+  // Tải danh sách chương trình khuyến mãi
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
@@ -115,11 +131,9 @@ const PromotionList = () => {
         isActive: isActiveFilter,
       };
       const res = await getAllSales(query);
-      if (res.error) {
-        throw new Error(res.error);
-      }
-      let items = res || [];
+      if (res.error) throw new Error(res.error);
 
+      let items = res || [];
       if (dateRangeFilter.length === 2) {
         const [startDate, endDate] = dateRangeFilter;
         items = items.filter((item) => {
@@ -132,7 +146,6 @@ const PromotionList = () => {
       setValidData(items);
       setTotal(res.total || 0);
     } catch (error) {
-      console.error("Lỗi khi lấy chương trình khuyến mãi:", error);
       setData([]);
       setValidData([]);
       Swal.fire({
@@ -148,15 +161,16 @@ const PromotionList = () => {
 
   const fetchStatistics = useCallback(async () => {
     try {
-      const activeSaleRes = await getSaleActive();
-      const productsRes = await getSaleProduct();
-      const categoriesRes = await getSaleCategories();
+      const [activeSaleRes, productsRes, categoriesRes] = await Promise.all([
+        getSaleActive(),
+        getSaleProduct(),
+        getSaleCategories(),
+      ]);
 
       setActiveSale(activeSaleRes?.sale || null);
       setSaleProducts(productsRes?.products || []);
       setSaleCategories(categoriesRes?.categories || []);
     } catch (error) {
-      console.error("Lỗi khi lấy thống kê:", error);
       Swal.fire({
         title: "Lỗi!",
         text: error.message || "Không thể tải dữ liệu thống kê.",
@@ -173,6 +187,7 @@ const PromotionList = () => {
     fetchStatistics();
   }, [fetchStatistics]);
 
+  // Cập nhật filters
   useEffect(() => {
     setFilters([
       {
@@ -199,12 +214,11 @@ const PromotionList = () => {
   }, [data]);
 
   const handleDeletePromotion = async () => {
-    if (!Array.isArray(checkedRow) || checkedRow.length === 0) {
+    if (!checkedRow.length) {
       Swal.fire({
         title: "Thông báo",
         text: "Vui lòng chọn ít nhất một chương trình để xóa.",
         icon: "warning",
-        confirmButtonText: "OK",
       });
       return;
     }
@@ -236,7 +250,6 @@ const PromotionList = () => {
           title: "Lỗi!",
           text: error.message || "Đã xảy ra lỗi khi xóa chương trình.",
           icon: "error",
-          confirmButtonText: "OK",
         });
       } finally {
         setLoading(false);
@@ -266,18 +279,17 @@ const PromotionList = () => {
         payload.isGlobalSale = values.isGlobalSale;
 
         if (!values.isGlobalSale) {
-          const hasCategories =
-            values.categories && values.categories.length > 0;
+          const hasCategory = !!values.categoryId;
           const hasProducts = values.products && values.products.length > 0;
 
-          if (!hasCategories && !hasProducts) {
+          if (!hasCategory && !hasProducts) {
             throw new Error(
               "Vui lòng chọn ít nhất một danh mục hoặc sản phẩm!",
             );
           }
 
-          if (hasCategories) {
-            payload.categories = values.categories;
+          if (hasCategory) {
+            payload.categories = [values.categoryId];
           }
           if (hasProducts) {
             payload.products = values.products;
@@ -290,6 +302,7 @@ const PromotionList = () => {
 
       setModalVisible(false);
       form.resetFields();
+      setIsGlobalSale(false);
       fetchData();
     } catch (error) {
       message.error(
@@ -308,13 +321,13 @@ const PromotionList = () => {
       const categoryIds = Array.isArray(promotion.categoryStrategySales)
         ? promotion.categoryStrategySales
             .map((item) => item.category?.id)
-            .filter((id) => id)
+            .filter(Boolean)
         : [];
 
       const productIds = Array.isArray(promotion.productStrategySales)
         ? promotion.productStrategySales
             .map((item) => item.product?.id)
-            .filter((id) => id)
+            .filter(Boolean)
         : [];
 
       form.setFieldsValue({
@@ -325,7 +338,7 @@ const PromotionList = () => {
           promotion.startDate ? moment(promotion.startDate) : null,
           promotion.endDate ? moment(promotion.endDate) : null,
         ],
-        categories: categoryIds,
+        categoryId: categoryIds[0] || null, // Chỉ lấy danh mục đầu tiên khi sửa
         products: productIds,
         isActive: promotion.isActive || false,
       });
@@ -338,9 +351,8 @@ const PromotionList = () => {
     setModalVisible(true);
   };
 
+  // Xem chi tiết chương trình
   const handleViewDetails = async (promotion) => {
-    console.log("promotion", promotion);
-
     try {
       const saleDetails = await getSaleById(promotion.id);
       if (saleDetails.isGlobalSale) {
@@ -361,11 +373,7 @@ const PromotionList = () => {
       } else {
         const productsWithImages = await Promise.all(
           (saleDetails?.productStrategySales || []).map(async (item) => {
-            console.log("item", item);
-
             const productDetails = await getByIdProduct(item?.product?.id);
-            console.log("productDetails", productDetails);
-
             return {
               ...item.product,
               images: productDetails.images || [],
@@ -391,7 +399,7 @@ const PromotionList = () => {
   };
 
   const handleAddProduct = async () => {
-    if (selectedProductIds.length === 0) {
+    if (!selectedProductIds.length) {
       message.error("Vui lòng chọn ít nhất một sản phẩm!");
       return;
     }
@@ -402,7 +410,6 @@ const PromotionList = () => {
         if (isNaN(parsedProductId)) {
           throw new Error(`ID sản phẩm không hợp lệ: ${productId}`);
         }
-
         await addProductToSale(currentPromotion.id, {
           productId: parsedProductId,
         });
@@ -426,9 +433,9 @@ const PromotionList = () => {
     }
   };
 
-  // Cập nhật hàm handleAddCategory để thêm nhiều danh mục
+  // Thêm danh mục
   const handleAddCategory = async () => {
-    if (selectedCategoryIds.length === 0) {
+    if (!selectedCategoryIds.length) {
       message.error("Vui lòng chọn ít nhất một danh mục!");
       return;
     }
@@ -439,15 +446,14 @@ const PromotionList = () => {
         if (isNaN(parsedCategoryId)) {
           throw new Error(`ID danh mục không hợp lệ: ${categoryId}`);
         }
-
         await addCategoryToSale(currentPromotion.id, {
           categoryId: parsedCategoryId,
         });
       }
       message.success("Thêm danh mục thành công!");
       setCategoryModalVisible(false);
-      setSelectedCategoryIds([]); // Reset danh sách danh mục được chọn
-      handleViewDetails(currentPromotion); // Làm mới chi tiết chương trình khuyến mãi
+      setSelectedCategoryIds([]);
+      handleViewDetails(currentPromotion);
     } catch (error) {
       message.error(error.message || "Lỗi khi thêm danh mục!");
     }
@@ -463,6 +469,7 @@ const PromotionList = () => {
     }
   };
 
+  // Tải sản phẩm cho modal
   const fetchProductsForModal = async () => {
     try {
       const productsResponse = await getProductList(1, 1000);
@@ -482,13 +489,11 @@ const PromotionList = () => {
     }
   };
 
-  // Hàm để lấy danh sách danh mục khi mở modal "Thêm danh mục vào chương trình"
   const fetchCategoriesForModal = async () => {
     try {
       const categoriesResponse = await getAllCategories();
       const categoriesData = categoriesResponse || [];
 
-      // Lọc các danh mục chưa có trong chương trình khuyến mãi
       const existingCategoryIds = (
         currentPromotion?.categoryStrategySales || []
       ).map((item) => item.category?.id);
@@ -503,50 +508,52 @@ const PromotionList = () => {
     }
   };
 
-  const columns = [
-    {
-      title: "Tên chương trình",
-      key: "name",
-      render: (record) => record.name || "N/A",
-      width: 200,
-    },
-    {
-      title: "Giảm giá (%)",
-      key: "discountAmount",
-      render: (record) => record.discountAmount || 0,
-      width: 120,
-    },
-    {
-      title: "Ngày bắt đầu",
-      key: "startDate",
-      render: (record) =>
-        record.startDate
-          ? new Date(record.startDate).toLocaleDateString()
-          : "N/A",
-      width: 150,
-    },
-    {
-      title: "Ngày kết thúc",
-      key: "endDate",
-      render: (record) =>
-        record.endDate ? new Date(record.endDate).toLocaleDateString() : "N/A",
-      width: 150,
-    },
-    {
-      title: "Trạng thái",
-      key: "isActive",
-      render: (record) => (
-        <Tag color={record.isActive ? "green" : "red"}>
-          {record.isActive ? "Đang diễn ra" : "Đã kết thúc"}
-        </Tag>
-      ),
-      width: 120,
-    },
-    {
-      title: "Hành động",
-      key: "actions",
-      render: (record) => {
-        return (
+  const columns = useMemo(
+    () => [
+      {
+        title: "Tên chương trình",
+        key: "name",
+        render: (record) => record.name || "N/A",
+        width: 200,
+      },
+      {
+        title: "Giảm giá (%)",
+        key: "discountAmount",
+        render: (record) => record.discountAmount || 0,
+        width: 120,
+      },
+      {
+        title: "Ngày bắt đầu",
+        key: "startDate",
+        render: (record) =>
+          record.startDate
+            ? new Date(record.startDate).toLocaleDateString()
+            : "N/A",
+        width: 150,
+      },
+      {
+        title: "Ngày kết thúc",
+        key: "endDate",
+        render: (record) =>
+          record.endDate
+            ? new Date(record.endDate).toLocaleDateString()
+            : "N/A",
+        width: 150,
+      },
+      {
+        title: "Trạng thái",
+        key: "isActive",
+        render: (record) => (
+          <Tag color={record.isActive ? "green" : "red"}>
+            {record.isActive ? "Đang diễn ra" : "Đã kết thúc"}
+          </Tag>
+        ),
+        width: 120,
+      },
+      {
+        title: "Hành động",
+        key: "actions",
+        render: (record) => (
           <div style={{ display: "flex", gap: 8 }}>
             <Button type="primary" onClick={() => handleViewDetails(record)}>
               Chi tiết
@@ -554,137 +561,125 @@ const PromotionList = () => {
             <Button type="primary" onClick={() => openModal(record)}>
               Sửa
             </Button>
-            <Button
-              danger
-              onClick={() => {
-                setCheckedRow([record.id]);
-                handleDeletePromotion();
-              }}
-              disabled={record.isActive}
-            >
-              Xóa
-            </Button>
           </div>
-        );
+        ),
+        width: 200,
       },
-      width: 200,
-    },
-  ];
+    ],
+    [],
+  );
 
-  const productColumns = [
-    {
-      title: "Hình ảnh",
-      key: "images",
-      render: (record) => (
-        <Image
-          src={record.product?.images?.[0]?.fileUrl || "N/A"}
-          alt="Product Image"
-          width={50}
-          height={50}
-          style={{ objectFit: "cover" }}
-        />
-      ),
-      width: 100,
-    },
-    {
-      title: "Tên sản phẩm",
-      key: "name",
-      render: (record) => record.product?.name || "N/A",
-      width: 200,
-    },
-    {
-      title: "Giá gốc",
-      key: "originalPrice",
-      render: (record) => record.product?.originalPrice || "N/A",
-      width: 100,
-      align: "right",
-    },
-    {
-      title: "Giá sau khi giảm",
-      key: "finalPrice",
-      render: (record) => record.product?.finalPrice || "N/A",
-      width: 150,
-      align: "right",
-    },
-    {
-      title: "Hành động",
-      key: "actions",
-      render: (record) => (
-        <Button danger onClick={() => handleRemoveProduct(record.product.id)}>
-          Xóa
-        </Button>
-      ),
-      width: 100,
-    },
-  ];
+  const productColumns = useMemo(
+    () => [
+      {
+        title: "Hình ảnh",
+        key: "images",
+        render: (record) => renderProductImage(record.product?.images),
+        width: 100,
+      },
+      {
+        title: "Tên sản phẩm",
+        key: "name",
+        render: (record) => record.product?.name || "N/A",
+        width: 200,
+      },
+      {
+        title: "Giá gốc",
+        key: "originalPrice",
+        render: (record) => record.product?.originalPrice || "N/A",
+        width: 100,
+        align: "right",
+      },
+      {
+        title: "Giá sau khi giảm",
+        key: "finalPrice",
+        render: (record) => record.product?.finalPrice || "N/A",
+        width: 150,
+        align: "right",
+      },
+      {
+        title: "Hành động",
+        key: "actions",
+        render: (record) => (
+          <Button danger onClick={() => handleRemoveProduct(record.product.id)}>
+            Xóa
+          </Button>
+        ),
+        width: 100,
+      },
+    ],
+    [],
+  );
 
-  const productModalColumns = [
-    {
-      title: "Hình ảnh",
-      key: "images",
-      render: (record) => (
-        <Image
-          src={record.images?.[0]?.fileUrl || "N/A"}
-          alt="Product Image"
-          width={50}
-          height={50}
-          style={{ objectFit: "cover" }}
-        />
-      ),
-      width: 100,
-    },
-    {
-      title: "Tên sản phẩm",
-      key: "name",
-      render: (record) => record.name || "N/A",
-      width: 200,
-    },
-    {
-      title: "Giá gốc",
-      key: "originalPrice",
-      render: (record) => record.originalPrice || "N/A",
-      width: 100,
-      align: "right",
-    },
-    {
-      title: "Giá sau khi giảm",
-      key: "finalPrice",
-      render: (record) => record.finalPrice || "N/A",
-      width: 150,
-      align: "right",
-    },
-  ];
+  const productModalColumns = useMemo(
+    () => [
+      {
+        title: "Hình ảnh",
+        key: "images",
+        render: (record) => renderProductImage(record.images),
+        width: 100,
+      },
+      {
+        title: "Tên sản phẩm",
+        key: "name",
+        render: (record) => record.name || "N/A",
+        width: 200,
+      },
+      {
+        title: "Giá gốc",
+        key: "originalPrice",
+        render: (record) => record.originalPrice || "N/A",
+        width: 100,
+        align: "right",
+      },
+      {
+        title: "Giá sau khi giảm",
+        key: "finalPrice",
+        render: (record) => record.finalPrice || "N/A",
+        width: 150,
+        align: "right",
+      },
+    ],
+    [],
+  );
 
-  const categoryColumns = [
-    {
-      title: "Tên danh mục",
-      key: "name",
-      render: (record) => record.category?.name || "N/A",
-      width: 200,
-    },
-    {
-      title: "Hành động",
-      key: "actions",
-      render: (record) => (
-        <Button danger onClick={() => handleRemoveCategory(record.category.id)}>
-          Xóa
-        </Button>
-      ),
-      width: 100,
-    },
-  ];
+  const categoryColumns = useMemo(
+    () => [
+      {
+        title: "Tên danh mục",
+        key: "name",
+        render: (record) => record.category?.name || "N/A",
+        width: 200,
+      },
+      {
+        title: "Hành động",
+        key: "actions",
+        render: (record) => (
+          <Button
+            danger
+            onClick={() => handleRemoveCategory(record.category.id)}
+          >
+            Xóa
+          </Button>
+        ),
+        width: 100,
+      },
+    ],
+    [],
+  );
 
-  // Định nghĩa columns cho bảng trong modal "Thêm danh mục vào chương trình"
-  const categoryModalColumns = [
-    {
-      title: "Tên danh mục",
-      key: "name",
-      render: (record) => record.name || "N/A",
-      width: 200,
-    },
-  ];
-
-  console.log("currentPromotion", currentPromotion);
+  // Columns cho modal thêm danh mục
+  const categoryModalColumns = useMemo(
+    () => [
+      {
+        title: "Tên danh mục",
+        key: "name",
+        render: (record) => record.name || "N/A",
+        width: 200,
+      },
+    ],
+    [],
+  );
 
   return (
     <div className={styles.wrapper}>
@@ -810,14 +805,8 @@ const PromotionList = () => {
                       dataSource={saleProducts}
                       renderItem={(item) => (
                         <List.Item>
-                          <Image
-                            src={item.images?.[0]?.fileUrl || "N/A"}
-                            alt="Product Image"
-                            width={50}
-                            height={50}
-                            style={{ objectFit: "cover", marginRight: 16 }}
-                          />
-                          <span>{item.name}</span>
+                          {renderProductImage(item.images)}
+                          <span style={{ marginLeft: 16 }}>{item.name}</span>
                         </List.Item>
                       )}
                     />
@@ -921,25 +910,32 @@ const PromotionList = () => {
                   onChange={(checked) => {
                     setIsGlobalSale(checked);
                     if (checked) {
-                      form.setFieldsValue({ categories: [], products: [] });
+                      form.setFieldsValue({ categoryId: null, products: [] });
                     }
                   }}
                 />
               </Form.Item>
               {!isGlobalSale && (
                 <>
-                  <Form.Item name="categories" label="Danh mục áp dụng">
-                    <Select
-                      mode="multiple"
-                      placeholder="Chọn danh mục"
-                      allowClear
-                      style={{ width: "100%" }}
-                    >
-                      {categoryList.map((category) => (
-                        <Option key={category.id} value={category.id}>
-                          {category.name}
-                        </Option>
-                      ))}
+                  <Form.Item
+                    label="Danh mục áp dụng"
+                    name="categoryId"
+                    rules={[
+                      { required: true, message: "Vui lòng chọn danh mục!" },
+                    ]}
+                  >
+                    <Select placeholder="Chọn danh mục">
+                      {categoryList.map((cat) =>
+                        cat.children.length > 0 ? (
+                          <OptGroup key={cat.id} label={cat.name}>
+                            {cat.children.map((child) => (
+                              <Option key={child.id} value={child.id}>
+                                {child.name}
+                              </Option>
+                            ))}
+                          </OptGroup>
+                        ) : null,
+                      )}
                     </Select>
                   </Form.Item>
                   <Form.Item name="products" label="Sản phẩm áp dụng">
@@ -980,7 +976,7 @@ const PromotionList = () => {
               <h3>Tên chương trình: {currentPromotion.name}</h3>
               <p>
                 <strong>Số tiền giảm giá:</strong>{" "}
-                {currentPromotion.discountAmount} %
+                {currentPromotion.discountAmount}%
               </p>
               <p>
                 <strong>Ngày bắt đầu:</strong>{" "}
@@ -1012,26 +1008,18 @@ const PromotionList = () => {
                   Thêm sản phẩm
                 </Button>
               )}
-
-              {!currentPromotion.isGlobalSale ? (
-                <AntTable
-                  dataSource={currentPromotion.productStrategySales || []}
-                  columns={productColumns}
-                  rowKey={(record) => record.id}
-                  pagination={false}
-                  className={styles.table}
-                  scroll={{ x: "max-content" }}
-                />
-              ) : (
-                <AntTable
-                  dataSource={allProducts}
-                  columns={productColumns}
-                  rowKey={(record) => record.id}
-                  pagination={false}
-                  className={styles.table}
-                  scroll={{ x: "max-content" }}
-                />
-              )}
+              <AntTable
+                dataSource={
+                  currentPromotion.isGlobalSale
+                    ? allProducts
+                    : currentPromotion.productStrategySales || []
+                }
+                columns={productColumns}
+                rowKey={(record) => record.id}
+                pagination={false}
+                className={styles.table}
+                scroll={{ x: "max-content" }}
+              />
             </div>
             {!currentPromotion.isGlobalSale && (
               <div className={styles.detailSection}>
@@ -1040,7 +1028,7 @@ const PromotionList = () => {
                   type="primary"
                   onClick={() => {
                     setCategoryModalVisible(true);
-                    fetchCategoriesForModal(); // Gọi API để lấy danh sách danh mục khi mở modal
+                    fetchCategoriesForModal();
                   }}
                 >
                   Thêm danh mục
@@ -1079,9 +1067,8 @@ const PromotionList = () => {
           pagination={false}
           rowSelection={{
             selectedRowKeys: selectedProductIds,
-            onChange: (selectedRowKeys) => {
-              setSelectedProductIds(selectedRowKeys);
-            },
+            onChange: (selectedRowKeys) =>
+              setSelectedProductIds(selectedRowKeys),
           }}
           className={styles.table}
           scroll={{ x: "max-content" }}
@@ -1093,10 +1080,10 @@ const PromotionList = () => {
         open={categoryModalVisible}
         onCancel={() => {
           setCategoryModalVisible(false);
-          setCategoriesForModal([]); // Reset danh sách danh mục
-          setSelectedCategoryIds([]); // Reset danh sách danh mục được chọn
+          setCategoriesForModal([]);
+          setSelectedCategoryIds([]);
         }}
-        onOk={handleAddCategory} // Gọi hàm handleAddCategory khi nhấn OK
+        onOk={handleAddCategory}
         width={800}
       >
         <AntTable
@@ -1106,9 +1093,8 @@ const PromotionList = () => {
           pagination={false}
           rowSelection={{
             selectedRowKeys: selectedCategoryIds,
-            onChange: (selectedRowKeys) => {
-              setSelectedCategoryIds(selectedRowKeys);
-            },
+            onChange: (selectedRowKeys) =>
+              setSelectedCategoryIds(selectedRowKeys),
           }}
           className={styles.table}
           scroll={{ x: "max-content" }}
