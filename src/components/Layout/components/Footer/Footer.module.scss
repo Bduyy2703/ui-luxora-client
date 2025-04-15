@@ -6,7 +6,7 @@
   justify-content: space-between;
   border-bottom: 1px solid #17a2b8;
   background-color: #4daeb3;
-  
+
   .introduce {
     display: flex;
     // justify-content: space-evenly;
@@ -47,7 +47,7 @@
     color: #fff;
     margin-top: 30px;
 
-    .new{
+    .new {
       padding-bottom: 12px;
     }
 
@@ -140,5 +140,22 @@
       padding-left: 0px;
       margin-top: 10px;
     }
+  }
+}
+
+/* Các style hiện tại giữ nguyên, chỉ thêm style cho blogLink */
+.blogLink {
+  color: white;
+  text-decoration: none;
+
+  &:hover {
+    color: #e6ff83;
+    text-decoration: underline;
+  }
+
+  span {
+    display: block;
+    font-size: 14px;
+    line-height: 1.4;
   }
 }

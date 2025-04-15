@@ -20,18 +20,17 @@ import Checkout from "../pages/Checkout";
 import PaymentSuccess from "../pages/PaymentSuccess";
 import InvoiceDetail from "../pages/invoiceDetail";
 import ThankYou from "../pages/PaymentSuccess";
+import BlogsListPage from "../pages/blogs";
 
-// Middleware để kiểm tra đăng nhập
 function requireAuth(to, from, next) {
-  const token = localStorage.getItem('decodedToken');
-  if (token === 'user') {
-    next(); // Cho phép truy cập
+  const token = localStorage.getItem("decodedToken");
+  if (token === "user") {
+    next();
   } else {
-    next('/login'); // Chuyển hướng đến trang đăng nhập
+    next("/login");
   }
 }
 
-// không cần đăng nhập vẫn xem được
 const publicRoutes = [
   { path: "/", component: Home },
   { path: "/register", component: Register },
@@ -59,19 +58,44 @@ const publicRoutes = [
   { path: "/otp", component: VerifyRegister },
   { path: "/detail-product/:id", component: DetailProduct },
   { path: "/list-product", component: ProductList },
+  { path: "/blog/:id", component: BlogsListPage },
   { path: "/reset-password", component: ResetPassword },
   { path: "/checkout", component: Checkout, layout: null },
   { path: "/payment-success", component: ThankYou, layout: null },
-
 ];
 
 // ví dụ phải đăng nhập mới xem được
 const privateRoutes = [
-  { path: "/account", component: ProfileUser, layout: DefaultProfile, beforeEnter: requireAuth },
-  { path: "/account/orders", component: CartUser, layout: DefaultProfile, beforeEnter: requireAuth },
-  { path: "/account/changepassword", component: PasswordUser, layout: DefaultProfile, beforeEnter: requireAuth },
-  { path: "/account/addresses", component: AddressesUser, layout: DefaultProfile, beforeEnter: requireAuth },
-  { path: "/account/orders/invoice-detail", component: InvoiceDetail, layout: DefaultProfile, beforeEnter: requireAuth },
+  {
+    path: "/account",
+    component: ProfileUser,
+    layout: DefaultProfile,
+    beforeEnter: requireAuth,
+  },
+  {
+    path: "/account/orders",
+    component: CartUser,
+    layout: DefaultProfile,
+    beforeEnter: requireAuth,
+  },
+  {
+    path: "/account/changepassword",
+    component: PasswordUser,
+    layout: DefaultProfile,
+    beforeEnter: requireAuth,
+  },
+  {
+    path: "/account/addresses",
+    component: AddressesUser,
+    layout: DefaultProfile,
+    beforeEnter: requireAuth,
+  },
+  {
+    path: "/account/orders/invoice-detail",
+    component: InvoiceDetail,
+    layout: DefaultProfile,
+    beforeEnter: requireAuth,
+  },
 ];
 
 export { publicRoutes, privateRoutes };
