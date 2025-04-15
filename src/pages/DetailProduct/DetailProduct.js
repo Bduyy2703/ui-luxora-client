@@ -10,6 +10,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { notification } from "antd";
 import Breadcrumb from "../../components/Breadcrumb";
 import { getByIdProduct } from "../../services/api/productService";
+import { addToCart } from "../../services/api/cartService";
 
 export const DetailProduct = () => {
   const [rating, setRating] = useState(0);
@@ -55,7 +56,57 @@ export const DetailProduct = () => {
     return !!(accessToken && email);
   };
 
-  const handleAddToCart = () => {
+  // const handleAddToCart = () => {
+  //   if (!checkLoginStatus()) {
+  //     notification.error({
+  //       message: "Thông báo",
+  //       description: "Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng",
+  //       duration: 3,
+  //     });
+  //     navigate("/login");
+  //     return;
+  //   }
+
+  //   const cartItems = JSON.parse(localStorage.getItem("cartItems")) || [];
+  //   // Kiểm tra dựa trên id, selectedColor và selectedSize
+  //   const existingProductIndex = cartItems.findIndex(
+  //     (item) =>
+  //       item.id === id &&
+  //       item.selectedColor === selectedColor &&
+  //       item.selectedSize ===
+  //         product.productDetails?.find(
+  //           (detail) => detail.color === selectedColor,
+  //         )?.size,
+  //   );
+
+  //   if (existingProductIndex !== -1) {
+  //     // Nếu đã tồn tại cùng id, color và size, tăng số lượng
+  //     cartItems[existingProductIndex].quantity += quantity;
+  //   } else {
+  //     // Nếu khác color hoặc size, tạo mục mới
+  //     cartItems.push({
+  //       id: id,
+  //       product: product,
+  //       quantity: quantity,
+  //       selectedColor: selectedColor,
+  //       selectedSize: product.productDetails?.find(
+  //         (detail) => detail.color === selectedColor,
+  //       )?.size,
+  //     });
+  //   }
+
+  //   localStorage.setItem("cartItems", JSON.stringify(cartItems));
+
+  //   notification.success({
+  //     message: "Thông báo",
+  //     description: "Thêm vào giỏ hàng thành công",
+  //     duration: 3,
+  //   });
+
+  //   navigate(`/cart/gio-hang-cua-ban`);
+  // };
+
+  const handleAddToCart = async () => {
     if (!checkLoginStatus()) {
       notification.error({
         message: "Thông báo",
@@ -66,43 +117,45 @@ export const DetailProduct = () => {
       return;
     }
 
-    const cartItems = JSON.parse(localStorage.getItem("cartItems")) || [];
-    // Kiểm tra dựa trên id, selectedColor và selectedSize
-    const existingProductIndex = cartItems.findIndex(
-      (item) =>
-        item.id === id &&
-        item.selectedColor === selectedColor &&
-        item.selectedSize ===
-          product.productDetails?.find(
-            (detail) => detail.color === selectedColor,
-          )?.size,
-    );
+    try {
+      const selectedDetail = product.productDetails?.find(
+        (detail) => detail.color === selectedColor,
+      );
 
-    if (existingProductIndex !== -1) {
-      // Nếu đã tồn tại cùng id, color và size, tăng số lượng
-      cartItems[existingProductIndex].quantity += quantity;
-    } else {
-      // Nếu khác color hoặc size, tạo mục mới
-      cartItems.push({
-        id: id,
-        product: product,
+      if (!selectedDetail) {
+        notification.error({
+          message: "Thông báo",
+          description: "Không tìm thấy thông tin sản phẩm phù hợp",
+          duration: 3,
+        });
+        return;
+      }
+
+      const cartData = {
+        productDetailsId: selectedDetail.id,
         quantity: quantity,
-        selectedColor: selectedColor,
-        selectedSize: product.productDetails?.find(
-          (detail) => detail.color === selectedColor,
-        )?.size,
+      };
+
+      const response = await addToCart(cartData);
+
+      if (response) {
+        notification.success({
+          message: "Thông báo",
+          description: "Thêm vào giỏ hàng thành công",
+          duration: 3,
+        });
+        navigate(`/cart/gio-hang-cua-ban`);
+      } else {
+        throw new Error("Thêm vào giỏ hàng thất bại");
+      }
+    } catch (error) {
+      console.error("Lỗi khi thêm vào giỏ hàng:", error);
+      notification.error({
+        message: "Thông báo",
+        description: "Thêm vào giỏ hàng thất bại, vui lòng thử lại",
+        duration: 3,
       });
     }
-
-    localStorage.setItem("cartItems", JSON.stringify(cartItems));
-
-    notification.success({
-      message: "Thông báo",
-      description: "Thêm vào giỏ hàng thành công",
-      duration: 3,
-    });
-
-    navigate(`/cart/gio-hang-cua-ban`);
   };
 
   const colorOptions = [

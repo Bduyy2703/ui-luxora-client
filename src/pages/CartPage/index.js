@@ -1,17 +1,26 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import styles from "./CartPage.module.scss";
 import cartEmptyImage from "../../assets/icon/cart-empty.png";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import Breadcrumb from "../../components/Breadcrumb";
 import { fetchDiscounts } from "../../services/api/discountService";
 import { fetchPayment } from "../../services/api/checkoutService";
+import { getCart } from "../../services/api/cartService";
 import { Modal, notification } from "antd";
+
+import placeholderImage from "../../assets/images/daychuyen1/vyn13-t-1-1659674319051.webp"; // Thay bằng đường dẫn thực tế nếu bạn có file placeholder cục bộ
 
 const CartPage = () => {
   const [cartItems, setCartItems] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentItemKey, setCurrentItemKey] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const selectedProductDetailsId = useMemo(
+    () => location.state?.selectedProductDetailsId,
+    [location.state?.selectedProductDetailsId],
+  );
 
   const breadcrumbItems = [
     { label: "Trang chủ", path: "/" },
@@ -19,12 +28,35 @@ const CartPage = () => {
   ];
 
   useEffect(() => {
-    const items = JSON.parse(localStorage.getItem("cartItems")) || [];
-    setCartItems(items);
-  }, []);
+    const fetchCartItems = async () => {
+      try {
+        const response = await getCart();
+        if (response && Array.isArray(response.cartItems)) {
+          const filteredItems = selectedProductDetailsId
+            ? response.cartItems.filter(
+                (item) => item.productDetails.id === selectedProductDetailsId,
+              )
+            : response.cartItems;
+          setCartItems(filteredItems);
+        } else {
+          setCartItems([]);
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy dữ liệu giỏ hàng:", error);
+        notification.error({
+          message: "Thông báo",
+          description: "Không thể tải dữ liệu giỏ hàng, vui lòng thử lại",
+          duration: 3,
+        });
+        setCartItems([]);
+      }
+    };
+
+    fetchCartItems();
+  }, [selectedProductDetailsId]);
 
   const getItemKey = (item) =>
-    `${item.id}-${item.selectedColor}-${item.selectedSize}`;
+    `${item.id}-${item.productDetails.color}-${item.productDetails.size}`;
 
   const handleDecrement = (itemKey) => {
     setCartItems((prevItems) => {
@@ -35,7 +67,6 @@ const CartPage = () => {
         }
         return item;
       });
-      localStorage.setItem("cartItems", JSON.stringify(updatedItems));
       return updatedItems;
     });
   };
@@ -49,7 +80,6 @@ const CartPage = () => {
         }
         return item;
       });
-      localStorage.setItem("cartItems", JSON.stringify(updatedItems));
       return updatedItems;
     });
   };
@@ -64,7 +94,6 @@ const CartPage = () => {
       const updatedItems = prevItems.filter(
         (item) => getItemKey(item) !== currentItemKey,
       );
-      localStorage.setItem("cartItems", JSON.stringify(updatedItems));
       notification.success({
         message: "Thông báo",
         description: "Xóa sản phẩm thành công",
@@ -79,19 +108,28 @@ const CartPage = () => {
   };
 
   const groupedItems = cartItems.reduce((acc, item) => {
-    if (!acc[item.id]) {
-      acc[item.id] = [];
+    const productId = item.productDetails.product.id;
+    if (!acc[productId]) {
+      acc[productId] = [];
     }
-    acc[item.id].push(item);
+    acc[productId].push(item);
     return acc;
   }, {});
 
-  const totalAmount = cartItems.reduce((total, item) => {
-    return (
-      total +
-      (item.product.finalPrice || item.product.originalPrice) * item.quantity
-    );
-  }, 0);
+  const totalAmount = useMemo(
+    () =>
+      cartItems.reduce((total, item) => {
+        return (
+          total +
+          parseFloat(
+            item.productDetails.product.finalPrice ||
+              item.productDetails.product.originalPrice,
+          ) *
+            item.quantity
+        );
+      }, 0),
+    [cartItems],
+  );
 
   const [paymentData, setPaymentData] = useState([]);
   const [discount_id, setDiscount_id] = useState(null);
@@ -102,10 +140,10 @@ const CartPage = () => {
     try {
       const emailtoken = localStorage.getItem("userEmail");
       const items = cartItems.map((item) => ({
-        product_id: item?.id,
+        product_id: item.productDetails.product.id,
         quantity: item.quantity,
-        color: item.selectedColor,
-        size: item.selectedSize,
+        color: item.productDetails.color,
+        size: item.productDetails.size,
       }));
 
       const response = await fetchPayment({ emailtoken, items, discount_id });
@@ -157,10 +195,10 @@ const CartPage = () => {
                   const firstItem = items[0];
 
                   const colors = [
-                    ...new Set(items.map((item) => item.selectedColor)),
+                    ...new Set(items.map((item) => item.productDetails.color)),
                   ].join(", ");
                   const sizes = [
-                    ...new Set(items.map((item) => item.selectedSize)),
+                    ...new Set(items.map((item) => item.productDetails.size)),
                   ].join(", ");
 
                   return (
@@ -170,21 +208,21 @@ const CartPage = () => {
                           <img
                             className={styles.image}
                             src={
-                              firstItem.product.images?.[0]?.fileUrl ||
-                              "https://via.placeholder.com/100"
+                              firstItem.productDetails.product.images?.[0]
+                                ?.fileUrl || placeholderImage // Sử dụng hình ảnh cục bộ thay vì URL không hợp lệ
                             }
-                            alt={firstItem.product.name}
+                            alt={firstItem.productDetails.product.name}
                             onError={(e) => {
-                              console.log(
-                                "Error loading cart image:",
-                                firstItem.product.images?.[0]?.fileUrl,
-                              );
-                              e.target.src = "https://via.placeholder.com/100";
+                              // Chỉ gán src nếu nó chưa phải là placeholderImage, tránh vòng lặp
+                              if (e.target.src !== placeholderImage) {
+                                e.target.src = placeholderImage;
+                              }
                             }}
                           />
                           <div className={styles.productDetails}>
                             <div className={styles.name}>
-                              {firstItem.product.name || "Tên sản phẩm"}
+                              {firstItem.productDetails.product.name ||
+                                "Tên sản phẩm"}
                             </div>
                             <div className={styles.material}>
                               Màu sắc: {colors || "N/A"}
@@ -199,7 +237,8 @@ const CartPage = () => {
                           <div key={itemKey} className={styles.variantRow}>
                             <div className={styles.variantInfo}>
                               <span>
-                                {item.selectedColor} - {item.selectedSize}
+                                {item.productDetails.color} -{" "}
+                                {item.productDetails.size}
                               </span>
                               <a
                                 title="Xóa"
@@ -211,8 +250,10 @@ const CartPage = () => {
                             </div>
                             <div className={styles.price}>
                               {new Intl.NumberFormat("vi-VN").format(
-                                item.product.finalPrice ||
-                                  item.product.originalPrice,
+                                parseFloat(
+                                  item.productDetails.product.finalPrice ||
+                                    item.productDetails.product.originalPrice,
+                                ),
                               )}
                               <span className={styles.dong}>đ</span>
                             </div>
@@ -235,8 +276,11 @@ const CartPage = () => {
                             </div>
                             <div className={styles.price}>
                               {new Intl.NumberFormat("vi-VN").format(
-                                (item.product.finalPrice ||
-                                  item.product.originalPrice) * item.quantity,
+                                parseFloat(
+                                  (item.productDetails.product.finalPrice ||
+                                    item.productDetails.product.originalPrice) *
+                                    item.quantity,
+                                ),
                               )}
                               <span className={styles.dong}>đ</span>
                             </div>

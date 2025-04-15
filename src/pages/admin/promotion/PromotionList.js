@@ -57,6 +57,7 @@ const PromotionList = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [currentPromotion, setCurrentPromotion] = useState(null);
+  const [currentPromotionId, setCurrentPromotionId] = useState(null);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [activeSale, setActiveSale] = useState(null);
   const [saleProducts, setSaleProducts] = useState([]);
@@ -387,11 +388,14 @@ const PromotionList = () => {
             product: productsWithImages[index],
           }),
         );
+        console.log("saleDetails.productStrategySales:", saleDetails);
 
         setAllProducts([]);
       }
 
       setCurrentPromotion(saleDetails);
+      setCurrentPromotionId(Number(saleDetails?.id));
+
       setDetailModalVisible(true);
     } catch (error) {
       message.error("Không thể tải chi tiết chương trình khuyến mãi.");
@@ -425,8 +429,8 @@ const PromotionList = () => {
 
   const handleRemoveProduct = async (productId) => {
     try {
-      console.log("productId",productId)
-      await removeProductFromSale(currentPromotion.id, productId);
+      console.log("productId", productId);
+      await removeProductFromSale(currentPromotionId, productId);
       message.success("Xóa sản phẩm thành công!");
       handleViewDetails(currentPromotion);
     } catch (error) {
@@ -462,8 +466,8 @@ const PromotionList = () => {
 
   const handleRemoveCategory = async (categoryId) => {
     try {
-      console.log('category',categoryId)
-      console.log('urrentPromotion.id',currentPromotion.id)
+      console.log("category", categoryId);
+      console.log("urrentPromotion.id", currentPromotion.id);
       await removeCategoryFromSale(currentPromotion.id, categoryId);
       message.success("Xóa danh mục thành công!");
       handleViewDetails(currentPromotion);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom"; // Thêm useLocation
 import { getProductList } from "../../services/api/productService";
 import {
   Image,
@@ -22,6 +22,7 @@ const { Panel } = Collapse;
 
 const ProductList = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -51,10 +52,25 @@ const ProductList = () => {
   const sizes = ["Nhỏ", "Trung", "Lớn"];
 
   const productDetailsMock = {
-    17: { material: "Bạc Y 925", size: "Trung" }, 
+    17: { material: "Bạc Y 925", size: "Trung" },
     15: { material: "Ngọc Trai", size: "Nhỏ" },
     16: { material: "Đá CZ", size: "Lớn" },
   };
+
+  useEffect(() => {
+    const { state } = location;
+    if (state?.isCategory && state?.categoryId) {
+      setSelectedFilters((prev) => ({
+        ...prev,
+        categoryId: state.categoryId,
+      }));
+    } else if (state?.isSale) {
+      setSelectedFilters((prev) => ({
+        ...prev,
+        categoryId: null,
+      }));
+    }
+  }, [location]);
 
   const fetchProductsData = useCallback(async () => {
     setLoading(true);
@@ -75,7 +91,7 @@ const ProductList = () => {
       ];
 
       setProducts(productsData);
-      setFilteredProducts(productsData); 
+      setFilteredProducts(productsData);
       setTotalItems(total);
       setTotalPages(totalPagesData);
       setCategories(uniqueCategories);
@@ -221,19 +237,6 @@ const ProductList = () => {
           ))}
         </Panel>
 
-        {/* <Panel header="Chất liệu chính" key="materials">
-          {materials.map((material, index) => (
-            <div key={index} className={styles.checkboxItem}>
-              <Checkbox
-                checked={selectedFilters.materials.includes(material)}
-                onChange={() => handleFilterChange("materials", material)}
-              >
-                {material}
-              </Checkbox>
-            </div>
-          ))}
-        </Panel> */}
-
         <Panel header="Kích thước" key="sizes">
           {sizes.map((size, index) => (
             <div key={index} className={styles.checkboxItem}>
@@ -332,7 +335,7 @@ const ProductList = () => {
                             console.log(
                               `Không thể tải hình ảnh cho sản phẩm ${product.name}`,
                             );
-                            e.target.src = "/images/fallback.jpg"; // Hình ảnh mặc định
+                            e.target.src = "/images/fallback.jpg";
                           }}
                         />
                       </div>
