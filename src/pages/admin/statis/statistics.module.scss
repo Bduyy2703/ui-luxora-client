@@ -13,7 +13,7 @@
 }
 
 .content {
-  margin: 24px 16px;
+  margin: 24px 16px 24px 32px; /* Tăng margin-left từ 16px lên 32px để tạo khoảng cách với sidebar */
   padding: 24px;
   background: #FFFFFF;
   min-height: 280px;

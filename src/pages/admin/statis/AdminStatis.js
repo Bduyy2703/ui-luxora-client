@@ -28,6 +28,7 @@ import {
   Line,
   Legend,
   ResponsiveContainer,
+  LabelList,
 } from "recharts";
 import { motion, AnimatePresence } from "framer-motion";
 import moment from "moment";
@@ -50,6 +51,7 @@ import {
 } from "@ant-design/icons";
 import { IconTruckDelivery } from "@tabler/icons-react";
 import styles from "./statistics.module.scss";
+import { getProductDetailsByIdDetails } from "../../../services/api/productDetailService";
 
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
@@ -58,8 +60,8 @@ const { Option } = Select;
 
 const AdminStatis = () => {
   const [dateRange, setDateRange] = useState([
-    moment("2025-03-13"),
-    moment("2025-04-12"),
+    moment("2025-01-01"),
+    moment("2026-01-01"),
   ]);
   const [revenue, setRevenue] = useState(0);
   const [totalInvoice, setTotalInvoice] = useState(0);
@@ -76,7 +78,7 @@ const AdminStatis = () => {
   const [onlyPaidPaymentMethods, setOnlyPaidPaymentMethods] = useState(true);
 
   const [topProductLimit, setTopProductLimit] = useState(5);
-  const [topCustomerLimit, setTopCustomerLimit] = useState(2);
+  const [topCustomerLimit, setTopCustomerLimit] = useState(5);
   const [invoiceCountType, setInvoiceCountType] = useState("daily");
   const [selectedYear, setSelectedYear] = useState(2025);
   const [selectedMonth, setSelectedMonth] = useState(9);
@@ -86,6 +88,7 @@ const AdminStatis = () => {
   const [growthRate, setGrowthRate] = useState(0);
   const [revenueByMonth, setRevenueByMonth] = useState([]);
   const [conversionRate, setConversionRate] = useState(0);
+  const [productImages, setProductImages] = useState({}); // Lưu URL hình ảnh theo productDetailId
 
   const COLORS = {
     PAID: "#A0DFFF",
@@ -127,17 +130,46 @@ const AdminStatis = () => {
 
       // Lấy top sản phẩm
       const topProductsRes = await getTopProducts(startDate, endDate, topProductLimit, onlyPaidTopProducts);
-      setTopProducts(topProductsRes.map((item) => ({
+      console.log("Top Products Data:", topProductsRes); // Debug dữ liệu
+      const mappedTopProducts = topProductsRes.map((item) => ({
         name: `${item.productName} (ID: ${item.productDetailId})`,
-        revenue: item.totalRevenue,
-      })));
+        revenue: item.totalRevenue || 0,
+        productDetailId: item.productDetailId,
+      }));
+      setTopProducts(mappedTopProducts);
+
+      // Lấy hình ảnh sản phẩm
+      const imagePromises = mappedTopProducts.map(async (product) => {
+        const idMatch = product.name.match(/ID: (\d+)/);
+        const productDetailId = idMatch ? parseInt(idMatch[1]) : null;
+        if (productDetailId) {
+          try {
+            const productData = await getProductDetailsByIdDetails(productDetailId);
+            const imageUrl = productData?.images?.[0]?.fileUrl || "";
+            return { productDetailId, imageUrl };
+          } catch (error) {
+            console.error(`Error fetching image for product ID ${productDetailId}:`, error);
+            return { productDetailId, imageUrl: "" };
+          }
+        }
+        return { productDetailId: null, imageUrl: "" };
+      });
+
+      const images = await Promise.all(imagePromises);
+      const imageMap = images.reduce((acc, { productDetailId, imageUrl }) => {
+        if (productDetailId) acc[productDetailId] = imageUrl;
+        return acc;
+      }, {});
+      setProductImages(imageMap);
 
       // Lấy top khách hàng
       const topCustomersRes = await getTopCustomers(startDate, endDate, topCustomerLimit, onlyPaidTopCustomers);
-      setTopCustomers(topCustomersRes.map((item) => ({
-        name: item.username,
-        totalSpent: item.totalSpent,
-      })));
+      console.log("Top Customers Data:", topCustomersRes); // Debug dữ liệu
+      const mappedTopCustomers = topCustomersRes.map((item) => ({
+        name: item.username || "Unknown",
+        totalSpent: item.totalSpent || 0,
+      }));
+      setTopCustomers(mappedTopCustomers);
 
       // Lấy doanh thu theo phương thức thanh toán
       const paymentRes = await getPaymentMethodStatistics(startDate, endDate, onlyPaidPaymentMethods);
@@ -230,6 +262,30 @@ const AdminStatis = () => {
     console.log("Chi tiết:", data);
   };
 
+  // Custom label để hiển thị hình ảnh phía trên cột
+  const CustomBarLabel = (props) => {
+    const { x, y, width, height, value, index } = props;
+    const product = (showTopProducts ? topProducts : topCustomers)[index];
+    const idMatch = product.name.match(/ID: (\d+)/);
+    const productDetailId = idMatch ? parseInt(idMatch[1]) : null;
+    const imageUrl = productDetailId ? productImages[productDetailId] : "";
+    
+    if (!imageUrl) return null;
+
+    return (
+      <g>
+        <image
+          x={x + width / 2 - 12} // Căn giữa hình ảnh trên cột
+          y={y - 30} // Đặt phía trên cột
+          width={24}
+          height={24}
+          href={imageUrl}
+          style={{ borderRadius: "4px" }}
+        />
+      </g>
+    );
+  };
+
   return (
     <Layout style={{ minHeight: "100vh", background: "#FFFFFF" }}>
       <Sider width={200} className={styles.sider}>
@@ -305,7 +361,7 @@ const AdminStatis = () => {
                 >
                   <Card className={styles.kpiCard}>
                     <Statistic
-                      title={<span className={styles.kpiTitle}>Lợi Nhuận Gộp 75% </span>}
+                      title={<span className={styles.kpiTitle}>Lợi Nhuận Gộp 75%</span>}
                       value={revenue * 0.75}
                       precision={0}
                       formatter={(value) => `${(value / 1000000).toFixed(1)}M VNĐ`}
@@ -467,56 +523,52 @@ const AdminStatis = () => {
                           exit={{ rotateY: -90, opacity: 0 }}
                           transition={{ duration: 0.5 }}
                         >
-                          <ResponsiveContainer width="100%" height={300}>
-                            <BarChart
-                              data={showTopProducts ? topProducts : topCustomers}
-                              layout="horizontal"
-                              margin={{ top: 20, right: 30, left: 20, bottom: 10 }}
-                            >
-                              <defs>
-                                <linearGradient id="productGradient" x1="0" y1="0" x2="1" y2="0">
-                                  <stop offset="0%" stopColor={COLORS.PRODUCT[0]} />
-                                  <stop offset="100%" stopColor={COLORS.PRODUCT[1]} />
-                                </linearGradient>
-                              </defs>
-                              <CartesianGrid strokeDasharray="3 3" className={styles.chartGrid} />
-                              <XAxis
-                                dataKey={showTopProducts ? "revenue" : "totalSpent"}
-                                tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`}
-                                className={styles.chartAxis}
-                              />
-                              <YAxis
-                                dataKey="name"
-                                type="category"
-                                width={150}
-                                className={styles.chartAxis}
-                              />
-                              <Tooltip
-                                formatter={(value) => `${(value / 1000000).toFixed(1)}M VNĐ`}
-                                wrapperClassName={styles.chartTooltip}
-                              />
-                              <Bar
-                                dataKey={showTopProducts ? "revenue" : "totalSpent"}
-                                fill="url(#productGradient)"
-                                barSize={20}
-                                onClick={handleBarClick}
+                          {(showTopProducts ? topProducts : topCustomers).length === 0 ? (
+                            <Text className={styles.statText}>Không có dữ liệu</Text>
+                          ) : (
+                            <ResponsiveContainer width="100%" height={350}>
+                              <BarChart
+                                data={showTopProducts ? topProducts : topCustomers}
+                                layout="horizontal"
+                                margin={{ top: 40, right: 30, left: 20, bottom: 10 }}
                               >
-                                {(showTopProducts ? topProducts : topCustomers).map((entry, index) => (
-                                  <motion.g
-                                    key={`bar-${index}`}
-                                    initial={{ scaleY: 0 }}
-                                    animate={{ scaleY: 1 }}
-                                    transition={{ duration: 1, delay: index * 0.2 }}
-                                  >
-                                    <Bar
-                                      className={styles.chartBar}
-                                      style={{ transform: "rotateX(45deg)" }}
-                                    />
-                                  </motion.g>
-                                ))}
-                              </Bar>
-                            </BarChart>
-                          </ResponsiveContainer>
+                                <defs>
+                                  <linearGradient id="productGradient" x1="0" y1="0" x2="1" y2="0">
+                                    <stop offset="0%" stopColor={COLORS.PRODUCT[0]} />
+                                    <stop offset="100%" stopColor={COLORS.PRODUCT[1]} />
+                                  </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" className={styles.chartGrid} />
+                                <XAxis
+                                  dataKey={showTopProducts ? "revenue" : "totalSpent"}
+                                  tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`}
+                                  className={styles.chartAxis}
+                                />
+                                <YAxis
+                                  dataKey="name"
+                                  type="category"
+                                  width={180}
+                                  className={styles.chartAxis}
+                                />
+                                <Tooltip
+                                  formatter={(value) => `${(value / 1000000).toFixed(1)}M VNĐ`}
+                                  wrapperClassName={styles.chartTooltip}
+                                />
+                                <Bar
+                                  dataKey={showTopProducts ? "revenue" : "totalSpent"}
+                                  fill="url(#productGradient)"
+                                  barSize={20}
+                                  onClick={handleBarClick}
+                                >
+                                  <LabelList
+                                    dataKey="revenue"
+                                    position="top"
+                                    content={CustomBarLabel}
+                                  />
+                                </Bar>
+                              </BarChart>
+                            </ResponsiveContainer>
+                          )}
                         </motion.div>
                       </AnimatePresence>
                     </div>
