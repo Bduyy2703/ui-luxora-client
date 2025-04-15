@@ -1,25 +1,34 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { debounce } from "lodash";
 import styles from "./CartPage.module.scss";
 import cartEmptyImage from "../../assets/icon/cart-empty.png";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import Breadcrumb from "../../components/Breadcrumb";
 import { fetchDiscounts } from "../../services/api/discountService";
 import { fetchPayment } from "../../services/api/checkoutService";
-import { getCart } from "../../services/api/cartService";
-import { Modal, notification } from "antd";
-
-import placeholderImage from "../../assets/images/daychuyen1/vyn13-t-1-1659674319051.webp"; // Thay bằng đường dẫn thực tế nếu bạn có file placeholder cục bộ
+import {
+  getCart,
+  updateCartItem,
+  deleteCartItem,
+  deleteCart,
+} from "../../services/api/cartService";
+import { getByIdProduct } from "../../services/api/productService";
+import { Modal, notification, Tooltip } from "antd";
+import placeholderImage from "../../assets/images/daychuyen1/vyn13-t-1-1659674319051.webp";
 
 const CartPage = () => {
   const [cartItems, setCartItems] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentItemKey, setCurrentItemKey] = useState(null);
+  const [loadingItems, setLoadingItems] = useState({});
+  const [productDetailsMap, setProductDetailsMap] = useState({});
+  const [isLoadingCart, setIsLoadingCart] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
   const selectedProductDetailsId = useMemo(
     () => location.state?.selectedProductDetailsId,
-    [location.state?.selectedProductDetailsId],
+    [location.state?.selectedProductDetailsId]
   );
 
   const breadcrumbItems = [
@@ -27,108 +36,249 @@ const CartPage = () => {
     { label: "Giỏ hàng" },
   ];
 
+  // Lấy dữ liệu giỏ hàng
   useEffect(() => {
     const fetchCartItems = async () => {
-      try {
-        const response = await getCart();
-        if (response && Array.isArray(response.cartItems)) {
-          const filteredItems = selectedProductDetailsId
-            ? response.cartItems.filter(
-                (item) => item.productDetails.id === selectedProductDetailsId,
-              )
-            : response.cartItems;
-          setCartItems(filteredItems);
-        } else {
-          setCartItems([]);
+      setIsLoadingCart(true);
+      let retries = 2;
+      while (retries >= 0) {
+        try {
+          const response = await getCart();
+          if (response && Array.isArray(response.cartItems)) {
+            const filteredItems = selectedProductDetailsId
+              ? response.cartItems.filter(
+                  (item) => item.productDetails.id === selectedProductDetailsId
+                )
+              : response.cartItems;
+            setCartItems(filteredItems);
+            break;
+          } else {
+            setCartItems([]);
+          }
+        } catch (error) {
+          retries--;
+          if (retries < 0) {
+            console.error("Lỗi khi lấy dữ liệu giỏ hàng:", error);
+            notification.error({
+              message: "Thông báo",
+              description: "Không thể tải dữ liệu giỏ hàng, vui lòng thử lại",
+              duration: 3,
+            });
+            setCartItems([]);
+          }
         }
-      } catch (error) {
-        console.error("Lỗi khi lấy dữ liệu giỏ hàng:", error);
-        notification.error({
-          message: "Thông báo",
-          description: "Không thể tải dữ liệu giỏ hàng, vui lòng thử lại",
-          duration: 3,
-        });
-        setCartItems([]);
       }
+      setIsLoadingCart(false);
     };
 
     fetchCartItems();
   }, [selectedProductDetailsId]);
 
-  const getItemKey = (item) =>
-    `${item.id}-${item.productDetails.color}-${item.productDetails.size}`;
+  // Lấy chi tiết sản phẩm
+  useEffect(() => {
+    const fetchProductDetails = async () => {
+      const uniqueProductIds = [
+        ...new Set(cartItems.map((item) => item.productDetails.product.id)),
+      ].filter((productId) => !productDetailsMap[productId]);
 
-  const handleDecrement = (itemKey) => {
-    setCartItems((prevItems) => {
-      const updatedItems = prevItems.map((item) => {
-        const key = getItemKey(item);
-        if (key === itemKey && item.quantity > 1) {
-          return { ...item, quantity: item.quantity - 1 };
+      if (uniqueProductIds.length === 0) return;
+
+      try {
+        const productPromises = uniqueProductIds.map(async (productId) => {
+          const productData = await getByIdProduct(productId);
+          return { productId, productData };
+        });
+
+        const productResults = (await Promise.all(productPromises)).filter(
+          (result) => result !== null
+        );
+
+        setProductDetailsMap((prev) => ({
+          ...prev,
+          ...productResults.reduce((acc, { productId, productData }) => {
+            acc[productId] = productData;
+            return acc;
+          }, {}),
+        }));
+      } catch (error) {
+        console.error("Lỗi khi lấy chi tiết sản phẩm:", error);
+        notification.error({
+          message: "Thông báo",
+          description: "Không thể tải chi tiết sản phẩm, vui lòng thử lại",
+          duration: 3,
+        });
+      }
+    };
+
+    if (cartItems.length > 0) {
+      fetchProductDetails();
+    }
+  }, [cartItems]);
+
+  const getItemKey = useCallback(
+    (item) => `${item.id}-${item.productDetails.color}-${item.productDetails.size}`,
+    []
+  );
+
+  const debouncedUpdateCartItem = useMemo(
+    () =>
+      debounce(async (cartItemId, quantity, callback) => {
+        try {
+          await updateCartItem(cartItemId, quantity);
+          const response = await getCart();
+          callback(response.cartItems || []);
+        } catch (error) {
+          notification.error({
+            message: "Thông báo",
+            description: "Cập nhật số lượng thất bại, vui lòng thử lại",
+            duration: 3,
+          });
         }
-        return item;
-      });
-      return updatedItems;
-    });
-  };
+      }, 300),
+    []
+  );
 
-  const handleIncrement = (itemKey) => {
-    setCartItems((prevItems) => {
-      const updatedItems = prevItems.map((item) => {
-        const key = getItemKey(item);
-        if (key === itemKey) {
-          return { ...item, quantity: item.quantity + 1 };
-        }
-        return item;
-      });
-      return updatedItems;
-    });
-  };
+  // Hủy debounce khi unmount
+  useEffect(() => {
+    return () => {
+      debouncedUpdateCartItem.cancel();
+    };
+  }, [debouncedUpdateCartItem]);
 
-  const showDeleteConfirm = (itemKey) => {
+  const handleIncrement = useCallback(
+    (itemKey) => {
+      const item = cartItems.find((i) => getItemKey(i) === itemKey);
+      if (!item) return;
+
+      const newQuantity = item.quantity + 1;
+
+      if (newQuantity > item.productDetails.stock) {
+        notification.error({
+          message: "Thông báo",
+          description: `Số lượng tồn kho chỉ còn ${item.productDetails.stock} sản phẩm`,
+          duration: 3,
+        });
+        return;
+      }
+
+      setLoadingItems((prev) => ({ ...prev, [itemKey]: true }));
+      setCartItems((prev) =>
+        prev.map((i) =>
+          getItemKey(i) === itemKey ? { ...i, quantity: newQuantity } : i
+        )
+      );
+
+      debouncedUpdateCartItem(item.id, newQuantity, (newCartItems) => {
+        setCartItems(newCartItems);
+        setLoadingItems((prev) => ({ ...prev, [itemKey]: false }));
+      });
+    },
+    [cartItems, debouncedUpdateCartItem, getItemKey]
+  );
+
+  const handleDecrement = useCallback(
+    (itemKey) => {
+      const item = cartItems.find((i) => getItemKey(i) === itemKey);
+      if (!item || item.quantity <= 1) return;
+
+      const newQuantity = item.quantity - 1;
+
+      setLoadingItems((prev) => ({ ...prev, [itemKey]: true }));
+      setCartItems((prev) =>
+        prev.map((i) =>
+          getItemKey(i) === itemKey ? { ...i, quantity: newQuantity } : i
+        )
+      );
+
+      debouncedUpdateCartItem(item.id, newQuantity, (newCartItems) => {
+        setCartItems(newCartItems);
+        setLoadingItems((prev) => ({ ...prev, [itemKey]: false }));
+      });
+    },
+    [cartItems, debouncedUpdateCartItem, getItemKey]
+  );
+
+  const showDeleteConfirm = useCallback((itemKey) => {
     setCurrentItemKey(itemKey);
     setIsModalVisible(true);
-  };
+  }, []);
 
-  const handleRemoveItem = () => {
-    setCartItems((prevItems) => {
-      const updatedItems = prevItems.filter(
-        (item) => getItemKey(item) !== currentItemKey,
-      );
+  const handleRemoveItem = useCallback(async () => {
+    const item = cartItems.find((i) => getItemKey(i) === currentItemKey);
+    if (!item) return;
+
+    try {
+      await deleteCartItem(item.id);
+      const response = await getCart();
+      setCartItems(response.cartItems || []);
       notification.success({
         message: "Thông báo",
         description: "Xóa sản phẩm thành công",
+        duration: 3,
       });
-      return updatedItems;
-    });
-    setIsModalVisible(false);
-  };
-
-  const handleCancel = () => {
-    setIsModalVisible(false);
-  };
-
-  const groupedItems = cartItems.reduce((acc, item) => {
-    const productId = item.productDetails.product.id;
-    if (!acc[productId]) {
-      acc[productId] = [];
+    } catch (error) {
+      console.error("Lỗi khi xóa sản phẩm:", error);
+      notification.error({
+        message: "Thông báo",
+        description: "Xóa sản phẩm thất bại, vui lòng thử lại",
+        duration: 3,
+      });
     }
-    acc[productId].push(item);
-    return acc;
-  }, {});
+    setIsModalVisible(false);
+  }, [cartItems, currentItemKey, getItemKey]);
+
+  const handleClearCart = useCallback(() => {
+    Modal.confirm({
+      title: "Xác nhận xóa toàn bộ giỏ hàng",
+      content: "Bạn có chắc chắn muốn xóa tất cả sản phẩm trong giỏ hàng?",
+      okText: "Xóa",
+      cancelText: "Hủy",
+      onOk: async () => {
+        try {
+          await deleteCart();
+          setCartItems([]);
+          notification.success({
+            message: "Thông báo",
+            description: "Xóa toàn bộ giỏ hàng thành công",
+            duration: 3,
+          });
+        } catch (error) {
+          console.error("Lỗi khi xóa giỏ hàng:", error);
+          notification.error({
+            message: "Thông báo",
+            description: "Xóa giỏ hàng thất bại, vui lòng thử lại",
+            duration: 3,
+          });
+        }
+      },
+    });
+  }, []);
+
+  const handleCancel = useCallback(() => {
+    setIsModalVisible(false);
+  }, []);
+
+  const groupedItems = useMemo(() => {
+    return cartItems.reduce((acc, item) => {
+      const productId = item.productDetails.product.id;
+      if (!acc[productId]) {
+        acc[productId] = [];
+      }
+      acc[productId].push(item);
+      return acc;
+    }, {});
+  }, [cartItems]);
 
   const totalAmount = useMemo(
     () =>
       cartItems.reduce((total, item) => {
-        return (
-          total +
-          parseFloat(
-            item.productDetails.product.finalPrice ||
-              item.productDetails.product.originalPrice,
-          ) *
-            item.quantity
+        const productData = productDetailsMap[item.productDetails.product.id];
+        const price = parseFloat(
+          productData?.finalPrice || item.productDetails.product.finalPrice
         );
+        return total + price * item.quantity;
       }, 0),
-    [cartItems],
+    [cartItems, productDetailsMap]
   );
 
   const [paymentData, setPaymentData] = useState([]);
@@ -136,7 +286,7 @@ const CartPage = () => {
 
   localStorage.setItem("discount_id", discount_id);
 
-  const handleCheckout = async () => {
+  const handleCheckout = useCallback(async () => {
     try {
       const emailtoken = localStorage.getItem("userEmail");
       const items = cartItems.map((item) => ({
@@ -150,6 +300,11 @@ const CartPage = () => {
 
       if (response.error) {
         console.error("Lỗi khi lấy dữ liệu thanh toán:", response.error);
+        notification.error({
+          message: "Thông báo",
+          description: "Lỗi khi xử lý thanh toán, vui lòng thử lại",
+          duration: 3,
+        });
         return;
       }
       setPaymentData(response);
@@ -159,8 +314,13 @@ const CartPage = () => {
       });
     } catch (error) {
       console.error("Lỗi không mong muốn:", error);
+      notification.error({
+        message: "Thông báo",
+        description: "Lỗi không mong muốn, vui lòng thử lại",
+        duration: 3,
+      });
     }
-  };
+  }, [cartItems, discount_id, navigate]);
 
   return (
     <>
@@ -169,13 +329,32 @@ const CartPage = () => {
         <span className={styles.nameCart}>Giỏ hàng của bạn</span>
         <div className={styles.cart}>
           <div className={styles.cartLeft}>
-            {cartItems.length === 0 ? (
+            {isLoadingCart ? (
+              <div className={styles.skeleton}>
+                {[...Array(2)].map((_, index) => (
+                  <div key={index} className={styles.skeletonItem}>
+                    <div className={styles.skeletonImage} />
+                    <div>
+                      <div className={styles.skeletonText} />
+                      <div className={styles.skeletonText} />
+                    </div>
+                    <div className={styles.skeletonPrice} />
+                    <div className={styles.skeletonQuantity}>
+                      <div className={styles.skeletonButton} />
+                      <div className={styles.skeletonText} style={{ width: "50px" }} />
+                      <div className={styles.skeletonButton} />
+                    </div>
+                    <div className={styles.skeletonPrice} />
+                  </div>
+                ))}
+              </div>
+            ) : cartItems.length === 0 ? (
               <>
                 <div>
                   <img
                     className={styles.img}
                     src={cartEmptyImage}
-                    alt="cart1"
+                    alt="Giỏ hàng trống"
                   />
                 </div>
                 <div className={styles.empty}>
@@ -208,12 +387,11 @@ const CartPage = () => {
                           <img
                             className={styles.image}
                             src={
-                              firstItem.productDetails.product.images?.[0]
-                                ?.fileUrl || placeholderImage // Sử dụng hình ảnh cục bộ thay vì URL không hợp lệ
+                              productDetailsMap[firstItem.productDetails.product.id]
+                                ?.images?.[0]?.fileUrl || placeholderImage
                             }
-                            alt={firstItem.productDetails.product.name}
+                            alt={firstItem.productDetails.product.name || "Sản phẩm"}
                             onError={(e) => {
-                              // Chỉ gán src nếu nó chưa phải là placeholderImage, tránh vòng lặp
                               if (e.target.src !== placeholderImage) {
                                 e.target.src = placeholderImage;
                               }
@@ -233,6 +411,8 @@ const CartPage = () => {
                       </div>
                       {items.map((item) => {
                         const itemKey = getItemKey(item);
+                        const productData =
+                          productDetailsMap[item.productDetails.product.id];
                         return (
                           <div key={itemKey} className={styles.variantRow}>
                             <div className={styles.variantInfo}>
@@ -241,7 +421,7 @@ const CartPage = () => {
                                 {item.productDetails.size}
                               </span>
                               <a
-                                title="Xóa"
+                                title="Xóa sản phẩm"
                                 className={styles.removeBtn}
                                 onClick={() => showDeleteConfirm(itemKey)}
                               >
@@ -251,36 +431,58 @@ const CartPage = () => {
                             <div className={styles.price}>
                               {new Intl.NumberFormat("vi-VN").format(
                                 parseFloat(
-                                  item.productDetails.product.finalPrice ||
-                                    item.productDetails.product.originalPrice,
-                                ),
+                                  productData?.finalPrice ||
+                                    item.productDetails.product.finalPrice
+                                )
                               )}
                               <span className={styles.dong}>đ</span>
                             </div>
                             <div className={styles.quantityControl}>
-                              <button
-                                className={styles.quantityButton}
-                                onClick={() => handleDecrement(itemKey)}
+                              <Tooltip
+                                title={
+                                  item.quantity <= 1
+                                    ? "Số lượng tối thiểu"
+                                    : undefined
+                                }
                               >
-                                -
-                              </button>
+                                <button
+                                  className={styles.quantityButton}
+                                  onClick={() => handleDecrement(itemKey)}
+                                  disabled={
+                                    loadingItems[itemKey] || item.quantity <= 1
+                                  }
+                                >
+                                  {loadingItems[itemKey] ? "..." : "-"}
+                                </button>
+                              </Tooltip>
                               <span className={styles.quantity}>
-                                {item.quantity}
+                                {item.quantity} / {item.productDetails.stock}
                               </span>
-                              <button
-                                className={styles.quantityButton}
-                                onClick={() => handleIncrement(itemKey)}
+                              <Tooltip
+                                title={
+                                  item.quantity >= item.productDetails.stock
+                                    ? `Tồn kho tối đa: ${item.productDetails.stock}`
+                                    : undefined
+                                }
                               >
-                                +
-                              </button>
+                                <button
+                                  className={styles.quantityButton}
+                                  onClick={() => handleIncrement(itemKey)}
+                                  disabled={
+                                    loadingItems[itemKey] ||
+                                    item.quantity >= item.productDetails.stock
+                                  }
+                                >
+                                  {loadingItems[itemKey] ? "..." : "+"}
+                                </button>
+                              </Tooltip>
                             </div>
                             <div className={styles.price}>
                               {new Intl.NumberFormat("vi-VN").format(
                                 parseFloat(
-                                  (item.productDetails.product.finalPrice ||
-                                    item.productDetails.product.originalPrice) *
-                                    item.quantity,
-                                ),
+                                  productData?.finalPrice ||
+                                    item.productDetails.product.finalPrice
+                                ) * item.quantity
                               )}
                               <span className={styles.dong}>đ</span>
                             </div>
@@ -292,7 +494,7 @@ const CartPage = () => {
                 })}
                 <Modal
                   title="Xác nhận xóa"
-                  visible={isModalVisible}
+                  open={isModalVisible}
                   onOk={handleRemoveItem}
                   onCancel={handleCancel}
                   okText="Xóa"
@@ -304,6 +506,14 @@ const CartPage = () => {
                   <Link to="/" className={styles.goOn}>
                     Tiếp tục mua hàng
                   </Link>
+                  {cartItems.length > 0 && (
+                    <button
+                      className={styles.clearCartBtn}
+                      onClick={handleClearCart}
+                    >
+                      Xóa toàn bộ giỏ hàng
+                    </button>
+                  )}
                   <div className={styles.subTotal}>
                     <div className={styles.cartSubTotal}>
                       <div>TỔNG TIỀN:</div>
@@ -371,18 +581,7 @@ const DiscountCard = ({ totalAmount, setDiscount_id }) => {
           src="//bizweb.dktcdn.net/100/461/213/themes/870653/assets/code_dis.gif?1729756726879"
           alt="Gift Icon"
         />
-        <button
-          style={{
-            backgroundColor: "#000",
-            color: "#fff",
-            borderRadius: "5px",
-            padding: "5px 10px",
-            width: "100%",
-          }}
-          onClick={toggleDiscounts}
-        >
-          MÃ GIẢM GIÁ
-        </button>
+        <button onClick={toggleDiscounts}>MÃ GIẢM GIÁ</button>
       </div>
       {showDiscounts && (
         <div className={styles.discountCardContent}>

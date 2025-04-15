@@ -13,6 +13,7 @@ import { getByIdProduct } from "../../services/api/productService";
 import { addToCart } from "../../services/api/cartService";
 
 export const DetailProduct = () => {
+  const [loading, setLoading] = useState(false);
   const [rating, setRating] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [product, setProduct] = useState({});
@@ -119,7 +120,7 @@ export const DetailProduct = () => {
 
     try {
       const selectedDetail = product.productDetails?.find(
-        (detail) => detail.color === selectedColor,
+        (detail) => detail.color === selectedColor
       );
 
       if (!selectedDetail) {
@@ -131,23 +132,28 @@ export const DetailProduct = () => {
         return;
       }
 
+      if (selectedDetail.stock < quantity) {
+        notification.error({
+          message: "Thông báo",
+          description: `Số lượng tồn kho chỉ còn ${selectedDetail.stock} sản phẩm`,
+          duration: 3,
+        });
+        return;
+      }
+
+      setLoading(true); // Thêm state loading
       const cartData = {
         productDetailsId: selectedDetail.id,
         quantity: quantity,
       };
 
-      const response = await addToCart(cartData);
+      await addToCart(cartData);
 
-      if (response) {
-        notification.success({
-          message: "Thông báo",
-          description: "Thêm vào giỏ hàng thành công",
-          duration: 3,
-        });
-        navigate(`/cart/gio-hang-cua-ban`);
-      } else {
-        throw new Error("Thêm vào giỏ hàng thất bại");
-      }
+      notification.success({
+        message: "Thông báo",
+        description: "Thêm vào giỏ hàng thành công",
+        duration: 3,
+      });
     } catch (error) {
       console.error("Lỗi khi thêm vào giỏ hàng:", error);
       notification.error({
@@ -155,9 +161,10 @@ export const DetailProduct = () => {
         description: "Thêm vào giỏ hàng thất bại, vui lòng thử lại",
         duration: 3,
       });
+    } finally {
+      setLoading(false);
     }
   };
-
   const colorOptions = [
     ...new Set(product.productDetails?.map((detail) => detail.color) || []),
   ];
@@ -264,8 +271,11 @@ export const DetailProduct = () => {
                       type="button"
                       className={styles.btn}
                       onClick={handleAddToCart}
+                      disabled={loading}
                     >
-                      <h1 className={styles.titleBtn}>Thêm vào giỏ hàng</h1>
+                      <h1 className={styles.titleBtn}>
+                        {loading ? "Đang xử lý..." : "Thêm vào giỏ hàng"}
+                      </h1>
                     </button>
                     <button
                       type="button"
