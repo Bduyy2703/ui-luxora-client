@@ -50,50 +50,32 @@ const ProductList = () => {
   const materials = ["Bạc Y 925", "Ngọc Trai", "Đá CZ"];
   const sizes = ["Nhỏ", "Trung", "Lớn"];
 
-  // Giả định chất liệu và kích thước cho sản phẩm (vì API không trả về)
   const productDetailsMock = {
-    17: { material: "Bạc Y 925", size: "Trung" }, // Sản phẩm 3
-    15: { material: "Ngọc Trai", size: "Nhỏ" }, // Sản phẩm 1
-    16: { material: "Đá CZ", size: "Lớn" }, // Sản phẩm 2
+    17: { material: "Bạc Y 925", size: "Trung" }, 
+    15: { material: "Ngọc Trai", size: "Nhỏ" },
+    16: { material: "Đá CZ", size: "Lớn" },
   };
 
-  // URL hình ảnh tạm thời (từ Imgur)
-  const tempImageUrls = {
-    17: "https://i.imgur.com/5tXhY4f.jpg", // Sản phẩm 3
-    15: "https://i.imgur.com/8kJ2q0T.jpg", // Sản phẩm 1
-    16: "https://i.imgur.com/3mL5v2N.jpg", // Sản phẩm 2
-  };
-
-  // Fetch danh sách sản phẩm
   const fetchProductsData = useCallback(async () => {
     setLoading(true);
     try {
       const response = await getProductList(currentPage, limit);
+      console.log("response", response);
       const productsData = response.data || [];
       const total = response.total || 0;
       const totalPagesData = response.totalPages || 1;
 
-      // Trích xuất danh mục từ sản phẩm
       const uniqueCategories = [
         ...new Map(
           productsData.map((product) => [
             product.category.id,
-            {
-              id: product.category.id,
-              name: product.category.name,
-            },
+            { id: product.category.id, name: product.category.name },
           ]),
         ).values(),
       ];
 
-      // Thay thế URL hình ảnh tạm thời
-      const updatedProducts = productsData.map((product) => ({
-        ...product,
-        images: [tempImageUrls[product.id] || product.images[0]], // Sử dụng URL tạm thời
-      }));
-
-      setProducts(updatedProducts);
-      setFilteredProducts(updatedProducts); // Ban đầu hiển thị tất cả
+      setProducts(productsData);
+      setFilteredProducts(productsData); 
       setTotalItems(total);
       setTotalPages(totalPagesData);
       setCategories(uniqueCategories);
@@ -131,7 +113,6 @@ const ProductList = () => {
       });
     }
 
-    // Lọc theo chất liệu
     if (selectedFilters.materials.length > 0) {
       filtered = filtered.filter((product) => {
         const material = productDetailsMock[product.id]?.material;
@@ -139,7 +120,6 @@ const ProductList = () => {
       });
     }
 
-    // Lọc theo kích thước
     if (selectedFilters.sizes.length > 0) {
       filtered = filtered.filter((product) => {
         const size = productDetailsMock[product.id]?.size;
@@ -156,17 +136,14 @@ const ProductList = () => {
     applyFilters();
   }, [selectedFilters, applyFilters]);
 
-  // Xử lý phân trang
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
 
-  // Xử lý click vào sản phẩm
   const handleProductClick = (productId) => {
     navigate(`/detail-product/${productId}`);
   };
 
-  // Xử lý thay đổi bộ lọc
   const handleFilterChange = (type, value) => {
     setSelectedFilters((prev) => {
       if (type === "categoryId") {
@@ -183,19 +160,16 @@ const ProductList = () => {
     });
   };
 
-  // Xử lý click vào danh mục
   const handleCategoryClick = (categoryId) => {
     setSelectedFilters((prev) => ({ ...prev, categoryId }));
   };
 
-  // Xử lý nút lọc
   const handleFilter = () => {
     if (isMobileFilterOpen) {
       setIsMobileFilterOpen(false);
     }
   };
 
-  // Xóa bộ lọc
   const handleClearFilters = () => {
     setSelectedFilters({
       priceRanges: [],
@@ -205,14 +179,12 @@ const ProductList = () => {
     });
   };
 
-  // Parse giá từ chuỗi thành số
   const parsePrice = (price) => {
     return parseFloat(price).toLocaleString("vi-VN");
   };
 
   if (error) return <div className={styles.errorMessage}>{error}</div>;
 
-  // Render sidebar (dùng chung cho desktop và mobile)
   const renderSidebar = () => (
     <div className={styles.filterContent}>
       <Collapse
@@ -249,7 +221,7 @@ const ProductList = () => {
           ))}
         </Panel>
 
-        <Panel header="Chất liệu chính" key="materials">
+        {/* <Panel header="Chất liệu chính" key="materials">
           {materials.map((material, index) => (
             <div key={index} className={styles.checkboxItem}>
               <Checkbox
@@ -260,7 +232,7 @@ const ProductList = () => {
               </Checkbox>
             </div>
           ))}
-        </Panel>
+        </Panel> */}
 
         <Panel header="Kích thước" key="sizes">
           {sizes.map((size, index) => (
@@ -292,10 +264,8 @@ const ProductList = () => {
   return (
     <div className={styles.productListContainer}>
       <div className={styles.mainContent}>
-        {/* Sidebar cho desktop */}
         <aside className={styles.sidebar}>{renderSidebar()}</aside>
 
-        {/* Nút mở bộ lọc trên mobile */}
         <div className={styles.mobileFilterButton}>
           <Button
             icon={<FilterOutlined />}
@@ -305,7 +275,6 @@ const ProductList = () => {
           </Button>
         </div>
 
-        {/* Drawer bộ lọc cho mobile */}
         <Drawer
           title="Bộ lọc sản phẩm"
           placement="left"
@@ -344,49 +313,52 @@ const ProductList = () => {
             <p>Không có sản phẩm nào.</p>
           ) : (
             <div className={styles.productGrid}>
-              {products.map((product) => (
-                <Card
-                  key={product.id}
-                  className={styles.productCard}
-                  hoverable
-                  cover={
-                    <div className={styles.imageWrapper}>
-                      <Image
-                        src={product.images?.[0] || "/images/fallback.jpg"}
-                        alt={product.name}
-                        fallback="/images/fallback.jpg"
-                        className={styles.productImage}
-                        preview={false}
+              {filteredProducts.map((product) => {
+                console.log("productt:", product?.images);
+
+                return (
+                  <Card
+                    key={product.id}
+                    className={styles.productCard}
+                    hoverable
+                    cover={
+                      <div className={styles.imageWrapper}>
+                        <img
+                          src={product.images[0]}
+                          alt={product.name}
+                          className={styles.productImage}
+                          onClick={() => handleProductClick(product.id)}
+                          onError={(e) => {
+                            console.log(
+                              `Không thể tải hình ảnh cho sản phẩm ${product.name}`,
+                            );
+                            e.target.src = "/images/fallback.jpg"; // Hình ảnh mặc định
+                          }}
+                        />
+                      </div>
+                    }
+                  >
+                    <div className={styles.productInfo}>
+                      <h3
+                        className={styles.productName}
                         onClick={() => handleProductClick(product.id)}
-                        onError={() =>
-                          console.log(
-                            `Không thể tải hình ảnh cho sản phẩm ${product.name}`,
-                          )
-                        }
-                      />
-                    </div>
-                  }
-                >
-                  <div className={styles.productInfo}>
-                    <h3
-                      className={styles.productName}
-                      onClick={() => handleProductClick(product.id)}
-                    >
-                      {product.name}
-                    </h3>
-                    <div className={styles.priceContainer}>
-                      <span className={styles.productPrice}>
-                        {parsePrice(product.finalPrice)}đ
-                      </span>
-                      {product.finalPrice !== product.originalPrice && (
-                        <span className={styles.salePrice}>
-                          {parsePrice(product.originalPrice)}đ
+                      >
+                        {product.name}
+                      </h3>
+                      <div className={styles.priceContainer}>
+                        <span className={styles.productPrice}>
+                          {parsePrice(product.finalPrice)}đ
                         </span>
-                      )}
+                        {product.finalPrice !== product.originalPrice && (
+                          <span className={styles.salePrice}>
+                            {parsePrice(product.originalPrice)}đ
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </Card>
-              ))}
+                  </Card>
+                );
+              })}
             </div>
           )}
 

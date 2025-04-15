@@ -81,6 +81,7 @@
   .detail {
     width: 487px;
     height: 100%;
+    margin-left: 30px;
 
     .title {
       font-size: 26px;
@@ -365,5 +366,43 @@
         }
       }
     }
+  }
+}
+
+/* Thêm vào cuối file DetailProduct.module.scss */
+.colorOptions {
+  display: flex;
+  gap: 10px;
+  margin-left: 10px;
+
+  .colorOption {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+
+    input[type="radio"] {
+      margin-right: 5px;
+      accent-color: #71bec2;
+    }
+
+    span {
+      font-size: 14px;
+      color: #3a3535;
+      font-weight: 400;
+    }
+  }
+}
+
+.size {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #0a0000;
+
+  div:first-child {
+    font-weight: 500;
   }
 }

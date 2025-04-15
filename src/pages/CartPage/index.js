@@ -10,7 +10,7 @@ import { Modal, notification } from "antd";
 const CartPage = () => {
   const [cartItems, setCartItems] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [currentItemId, setCurrentItemId] = useState(null);
+  const [currentItemKey, setCurrentItemKey] = useState(null);
   const navigate = useNavigate();
 
   const breadcrumbItems = [
@@ -23,37 +23,46 @@ const CartPage = () => {
     setCartItems(items);
   }, []);
 
-  const handleDecrement = (itemId) => {
+  const getItemKey = (item) =>
+    `${item.id}-${item.selectedColor}-${item.selectedSize}`;
+
+  const handleDecrement = (itemKey) => {
     setCartItems((prevItems) => {
-      const updatedItems = prevItems.map((item) =>
-        item.id === itemId && item.quantity > 1
-          ? { ...item, quantity: item.quantity - 1 }
-          : item,
-      );
+      const updatedItems = prevItems.map((item) => {
+        const key = getItemKey(item);
+        if (key === itemKey && item.quantity > 1) {
+          return { ...item, quantity: item.quantity - 1 };
+        }
+        return item;
+      });
       localStorage.setItem("cartItems", JSON.stringify(updatedItems));
       return updatedItems;
     });
   };
 
-  const handleIncrement = (itemId) => {
+  const handleIncrement = (itemKey) => {
     setCartItems((prevItems) => {
-      const updatedItems = prevItems.map((item) =>
-        item.id === itemId ? { ...item, quantity: item.quantity + 1 } : item,
-      );
+      const updatedItems = prevItems.map((item) => {
+        const key = getItemKey(item);
+        if (key === itemKey) {
+          return { ...item, quantity: item.quantity + 1 };
+        }
+        return item;
+      });
       localStorage.setItem("cartItems", JSON.stringify(updatedItems));
       return updatedItems;
     });
   };
 
-  const showDeleteConfirm = (itemId) => {
-    setCurrentItemId(itemId);
+  const showDeleteConfirm = (itemKey) => {
+    setCurrentItemKey(itemKey);
     setIsModalVisible(true);
   };
 
   const handleRemoveItem = () => {
     setCartItems((prevItems) => {
       const updatedItems = prevItems.filter(
-        (item) => item.id !== currentItemId,
+        (item) => getItemKey(item) !== currentItemKey,
       );
       localStorage.setItem("cartItems", JSON.stringify(updatedItems));
       notification.success({
@@ -69,6 +78,14 @@ const CartPage = () => {
     setIsModalVisible(false);
   };
 
+  const groupedItems = cartItems.reduce((acc, item) => {
+    if (!acc[item.id]) {
+      acc[item.id] = [];
+    }
+    acc[item.id].push(item);
+    return acc;
+  }, {});
+
   const totalAmount = cartItems.reduce((total, item) => {
     return (
       total +
@@ -77,7 +94,6 @@ const CartPage = () => {
   }, 0);
 
   const [paymentData, setPaymentData] = useState([]);
-
   const [discount_id, setDiscount_id] = useState(null);
 
   localStorage.setItem("discount_id", discount_id);
@@ -88,6 +104,8 @@ const CartPage = () => {
       const items = cartItems.map((item) => ({
         product_id: item?.id,
         quantity: item.quantity,
+        color: item.selectedColor,
+        size: item.selectedSize,
       }));
 
       const response = await fetchPayment({ emailtoken, items, discount_id });
@@ -128,82 +146,106 @@ const CartPage = () => {
               </>
             ) : (
               <>
-                <div className={styles.top}>
-                  <div style={{ fontWeight: "500" }}>Thông tin sản phẩm</div>
-                  <div style={{ fontWeight: "500" }} className={styles.pricee}>
-                    Đơn giá
-                  </div>
-                  <div style={{ fontWeight: "500" }}>Số lượng</div>
-                  <div style={{ fontWeight: "500" }}>Thành tiền</div>
+                <div className={styles.tableHeader}>
+                  <div className={styles.headerItem}>THÔNG TIN SẢN PHẨM</div>
+                  <div className={styles.headerItem}>ĐƠN GIÁ</div>
+                  <div className={styles.headerItem}>SỐ LƯỢNG</div>
+                  <div className={styles.headerItem}>THÀNH TIỀN</div>
                 </div>
-                {cartItems.map((item) => (
-                  <div key={item.id} className={styles.middle}>
-                    <div className={styles.middleRow}>
-                      <img
-                        className={styles.image}
-                        src={
-                          item.product.images?.[0] ||
-                          "https://via.placeholder.com/100" // Truy cập images trực tiếp
-                        }
-                        alt={item.product.name}
-                      />
-                    </div>
-                    <div className={styles.content}>
-                      <div className={styles.contentLeft}>
-                        <div className={styles.name}>
-                          {item.product.name || "Tên sản phẩm"}
-                        </div>
-                        <span className={styles.material}>
-                          {item.product.productDetails?.[0]?.color || "N/A"}
-                        </span>
-                        <a
-                          title="Xóa"
-                          className={styles.btn}
-                          onClick={() => showDeleteConfirm(item.id)}
-                        >
-                          Xóa
-                        </a>
-                      </div>
-                      <div className={styles.contentRight}>
-                        <div>
-                          <h4 className={styles.price}>
-                            {new Intl.NumberFormat("vi-VN").format(
-                              item.product.finalPrice ||
-                                item.product.originalPrice,
-                            )}
-                            <span className={styles.dong}>đ</span>
-                          </h4>
-                        </div>
-                        <div className={styles.quantityControl}>
-                          <button
-                            className={styles.quantityButton}
-                            onClick={() => handleDecrement(item.id)}
-                          >
-                            -
-                          </button>
-                          <span className={styles.quantity}>
-                            {item.quantity}
-                          </span>
-                          <button
-                            className={styles.quantityButton}
-                            onClick={() => handleIncrement(item.id)}
-                          >
-                            +
-                          </button>
-                        </div>
-                        <div>
-                          <h4 className={styles.price}>
-                            {new Intl.NumberFormat("vi-VN").format(
-                              (item.product.finalPrice ||
-                                item.product.originalPrice) * item.quantity,
-                            )}
-                            <span className={styles.dong}>đ</span>
-                          </h4>
+                {Object.keys(groupedItems).map((productId) => {
+                  const items = groupedItems[productId];
+                  const firstItem = items[0];
+
+                  const colors = [
+                    ...new Set(items.map((item) => item.selectedColor)),
+                  ].join(", ");
+                  const sizes = [
+                    ...new Set(items.map((item) => item.selectedSize)),
+                  ].join(", ");
+
+                  return (
+                    <div key={productId} className={styles.productGroup}>
+                      <div className={styles.productRow}>
+                        <div className={styles.productInfo}>
+                          <img
+                            className={styles.image}
+                            src={
+                              firstItem.product.images?.[0]?.fileUrl ||
+                              "https://via.placeholder.com/100"
+                            }
+                            alt={firstItem.product.name}
+                            onError={(e) => {
+                              console.log(
+                                "Error loading cart image:",
+                                firstItem.product.images?.[0]?.fileUrl,
+                              );
+                              e.target.src = "https://via.placeholder.com/100";
+                            }}
+                          />
+                          <div className={styles.productDetails}>
+                            <div className={styles.name}>
+                              {firstItem.product.name || "Tên sản phẩm"}
+                            </div>
+                            <div className={styles.material}>
+                              Màu sắc: {colors || "N/A"}
+                              {sizes && <span> | Kích thước: {sizes}</span>}
+                            </div>
+                          </div>
                         </div>
                       </div>
+                      {items.map((item) => {
+                        const itemKey = getItemKey(item);
+                        return (
+                          <div key={itemKey} className={styles.variantRow}>
+                            <div className={styles.variantInfo}>
+                              <span>
+                                {item.selectedColor} - {item.selectedSize}
+                              </span>
+                              <a
+                                title="Xóa"
+                                className={styles.removeBtn}
+                                onClick={() => showDeleteConfirm(itemKey)}
+                              >
+                                Xóa
+                              </a>
+                            </div>
+                            <div className={styles.price}>
+                              {new Intl.NumberFormat("vi-VN").format(
+                                item.product.finalPrice ||
+                                  item.product.originalPrice,
+                              )}
+                              <span className={styles.dong}>đ</span>
+                            </div>
+                            <div className={styles.quantityControl}>
+                              <button
+                                className={styles.quantityButton}
+                                onClick={() => handleDecrement(itemKey)}
+                              >
+                                -
+                              </button>
+                              <span className={styles.quantity}>
+                                {item.quantity}
+                              </span>
+                              <button
+                                className={styles.quantityButton}
+                                onClick={() => handleIncrement(itemKey)}
+                              >
+                                +
+                              </button>
+                            </div>
+                            <div className={styles.price}>
+                              {new Intl.NumberFormat("vi-VN").format(
+                                (item.product.finalPrice ||
+                                  item.product.originalPrice) * item.quantity,
+                              )}
+                              <span className={styles.dong}>đ</span>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
                 <Modal
                   title="Xác nhận xóa"
                   visible={isModalVisible}
@@ -220,7 +262,7 @@ const CartPage = () => {
                   </Link>
                   <div className={styles.subTotal}>
                     <div className={styles.cartSubTotal}>
-                      <div>TỔNG TIỀN: </div>
+                      <div>TỔNG TIỀN:</div>
                       <div>
                         <h4 className={styles.price}>
                           {new Intl.NumberFormat("vi-VN").format(totalAmount)}
