@@ -352,7 +352,6 @@ const PromotionList = () => {
     setModalVisible(true);
   };
 
-  // Xem chi tiết chương trình
   const handleViewDetails = async (promotion) => {
     try {
       const saleDetails = await getSaleById(promotion.id);
@@ -388,8 +387,6 @@ const PromotionList = () => {
             product: productsWithImages[index],
           }),
         );
-        console.log("saleDetails.productStrategySales:", saleDetails);
-
         setAllProducts([]);
       }
 
@@ -429,10 +426,15 @@ const PromotionList = () => {
 
   const handleRemoveProduct = async (productId) => {
     try {
-      console.log("productId", productId);
       await removeProductFromSale(currentPromotionId, productId);
       message.success("Xóa sản phẩm thành công!");
-      handleViewDetails(currentPromotion);
+      if (currentPromotion) {
+        handleViewDetails(currentPromotion);
+      } else {
+        console.warn("currentPromotion is null, cannot call handleViewDetails");
+        const saleDetails = await getSaleById(currentPromotionId);
+        handleViewDetails(saleDetails);
+      }
     } catch (error) {
       message.error(error.message || "Lỗi khi xóa sản phẩm!");
     }
@@ -464,17 +466,29 @@ const PromotionList = () => {
     }
   };
 
-  const handleRemoveCategory = async (categoryId) => {
-    try {
-      console.log("category", categoryId);
-      console.log("urrentPromotion.id", currentPromotion.id);
-      await removeCategoryFromSale(currentPromotion.id, categoryId);
-      message.success("Xóa danh mục thành công!");
-      handleViewDetails(currentPromotion);
-    } catch (error) {
-      message.error(error.message || "Lỗi khi xóa danh mục!");
-    }
-  };
+  const handleRemoveCategory = useCallback(
+    async (categoryId) => {
+      try {
+        if (!currentPromotionId) {
+          message.error("Không tìm thấy ID chương trình khuyến mãi!");
+          return;
+        }
+        await removeCategoryFromSale(currentPromotionId, categoryId);
+        message.success("Xóa danh mục thành công!");
+        if (!currentPromotion) {
+          console.warn("currentPromotion is null, fetching sale details...");
+          const saleDetails = await getSaleById(currentPromotionId);
+          setCurrentPromotion(saleDetails);
+          handleViewDetails(saleDetails);
+        } else {
+          handleViewDetails(currentPromotion);
+        }
+      } catch (error) {
+        message.error(error.message || "Lỗi khi xóa danh mục!");
+      }
+    },
+    [currentPromotion, currentPromotionId, handleViewDetails],
+  );
 
   // Tải sản phẩm cho modal
   const fetchProductsForModal = async () => {
@@ -615,7 +629,7 @@ const PromotionList = () => {
         width: 100,
       },
     ],
-    [],
+    [handleRemoveProduct],
   );
 
   const productModalColumns = useMemo(
@@ -672,7 +686,7 @@ const PromotionList = () => {
         width: 100,
       },
     ],
-    [],
+    [handleRemoveCategory],
   );
 
   // Columns cho modal thêm danh mục
