@@ -425,6 +425,7 @@ const PromotionList = () => {
 
   const handleRemoveProduct = async (productId) => {
     try {
+      console.log("productId",productId)
       await removeProductFromSale(currentPromotion.id, productId);
       message.success("Xóa sản phẩm thành công!");
       handleViewDetails(currentPromotion);
@@ -461,6 +462,8 @@ const PromotionList = () => {
 
   const handleRemoveCategory = async (categoryId) => {
     try {
+      console.log('category',categoryId)
+      console.log('urrentPromotion.id',currentPromotion.id)
       await removeCategoryFromSale(currentPromotion.id, categoryId);
       message.success("Xóa danh mục thành công!");
       handleViewDetails(currentPromotion);
