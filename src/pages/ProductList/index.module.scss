@@ -1,7 +1,6 @@
 .productListContainer {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 20px;
   font-family: "Poppins", sans-serif;
 
   .mainContent {
@@ -163,7 +162,7 @@
             position: relative;
             overflow: hidden;
             width: 100%;
-            padding-top: 100%; /* Tạo tỷ lệ 1:1 cho hình ảnh */
+            padding-top: 100%;
 
             .productImage {
               position: absolute;
@@ -171,8 +170,9 @@
               left: 0;
               width: 100%;
               height: 100%;
-              object-fit: cover; /* Đảm bảo hình ảnh full và không bị méo */
+              object-fit: cover;
               transition: transform 0.3s ease;
+              display: block;
 
               @media (max-width: 768px) {
                 height: 100%;
@@ -221,7 +221,8 @@
 
       .pagination {
         margin-top: 40px;
-        text-align: center;
+        display: flex;
+        justify-content: flex-end;
 
         .ant-pagination-item {
           border-radius: 8px;
