@@ -144,43 +144,36 @@ export const forgotPassword = async (email) => {
   }
 };
 
-// export const loginGoogle = async () => {
-//   console.log(123);
-
-//   try {
-//     console.log(456);
-
-//     const response = await axios.get(`${API_URL}/auth/google`);
-//     console.log("response", response);
-
-//     console.log(789);
-
-//     return response.data;
-//   } catch (error) {
-//     console.error("Error details:", error); // Thêm dòng này để ghi lại thông tin lỗi
-//     throw new Error(error.response?.data?.message || "Đăng nhập thất bại");
-//   }
-// };
 export const loginGoogle = async () => {
   try {
     const response = await axios.get(`${API_URL}/auth/google`, {
       withCredentials: true,
-      maxRedirects: 0, // Chặn tự động điều hướng để kiểm soát
+      maxRedirects: 0,
     });
 
     if (response.status === 302) {
       const authUrl = response.headers.location;
-      window.location.href = authUrl; // Điều hướng thủ công
+      window.location.href = authUrl;
     } else {
       return response.data;
     }
   } catch (error) {
     if (error.response && error.response.status === 302) {
       const authUrl = error.response.headers.location;
-      window.location.href = authUrl; // Điều hướng thủ công
+      window.location.href = authUrl; 
     } else {
       console.error("Error details:", error);
       throw new Error(error.response?.data?.message || "Đăng nhập thất bại");
     }
+  }
+};
+
+export const logOut = async () => {
+  try {
+    const response = await privateAxios.get(`/v1/auth/logout`);
+    return response.data || {};
+  } catch (error) {
+    console.error("Error logout:", error);
+    return { error: error.message };
   }
 };
