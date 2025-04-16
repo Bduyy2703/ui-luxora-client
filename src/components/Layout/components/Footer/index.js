@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom";
 import styles from "./Footer.module.scss";
 import {
   FacebookFilled,
@@ -8,19 +8,24 @@ import {
   YoutubeFilled,
 } from "@ant-design/icons";
 import { getAllBlogs } from "../../../../services/api/blogService";
+import { getInventoryList } from "../../../../services/api/inventoryService";
 
 function Footer() {
   const [blogs, setBlogs] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const navigate = useNavigate(); // Khởi tạo useNavigate
+  const [locations, setLocations] = useState([]);
+  const [blogLoading, setBlogLoading] = useState(true);
+  const [blogError, setBlogError] = useState(null);
+  const [locationLoading, setLocationLoading] = useState(true);
+  const [locationError, setLocationError] = useState(null);
+  const navigate = useNavigate();
 
+  // useEffect cho Blog
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
         const data = await getAllBlogs();
         if (data.error) {
-          setError(data.error);
+          setBlogError(data.error);
         } else {
           const formattedBlogs = data.blogs.slice(0, 4).map((blog) => ({
             id: blog.id,
@@ -35,16 +40,36 @@ function Footer() {
           setBlogs(formattedBlogs);
         }
       } catch (err) {
-        setError("Không thể tải bài viết. Vui lòng thử lại sau.");
+        setBlogError("Không thể tải bài viết. Vui lòng thử lại sau.");
       } finally {
-        setLoading(false);
+        setBlogLoading(false);
       }
     };
 
     fetchBlogs();
   }, []);
 
-  // Hàm xử lý khi nhấn vào tiêu đề bài viết
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const response = await getInventoryList();
+        const locationData = response.data.map((inventory) => ({
+          warehouseName: inventory.warehouseName,
+          location: inventory.location,
+        }));
+        setLocations(locationData);
+      } catch (err) {
+        setLocationError(
+          "Không thể tải danh sách cơ sở. Vui lòng thử lại sau.",
+        );
+      } finally {
+        setLocationLoading(false);
+      }
+    };
+
+    fetchLocations();
+  }, []);
+
   const handleBlogClick = (blogId) => {
     navigate(`/blog/${blogId}`);
   };
@@ -62,9 +87,15 @@ function Footer() {
         />
         <ul style={{ listStyle: "none" }}>
           <li>Địa chỉ:</li>
-          <li>CS1: 1 Đoàn Trần Nghiệp, HBT, Hà Nội</li>
-          <li>CS2: 191 Xã Đàn, Đống Đa, Hà Nội</li>
-          <li>CS3: 116 Trần Quang Diệu, P.14, Q.3, HCM</li>
+          {locations.map((loc, index) => (
+            <li key={index}>
+              {loc.warehouseName}: {loc.location}
+            </li>
+          ))}
+          {locations.length === 0 && locationLoading && (
+            <li>Đang tải danh sách cơ sở...</li>
+          )}
+          {locationError && <li>{locationError}</li>}
         </ul>
         <p>
           <strong>Điện thoại:</strong> 084 272 96 86
@@ -114,12 +145,12 @@ function Footer() {
       <div className={styles.newPost}>
         <div className={styles.new}>BÀI VIẾT MỚI</div>
 
-        {loading && <div>Đang tải bài viết...</div>}
+        {blogLoading && <div>Đang tải bài viết...</div>}
 
-        {error && <div>{error}</div>}
+        {blogError && <div>{blogError}</div>}
 
-        {!loading &&
-          !error &&
+        {!blogLoading &&
+          !blogError &&
           blogs.map((blog) => (
             <div className={styles.footerFlower} key={blog.id}>
               <div>

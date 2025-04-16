@@ -28,7 +28,7 @@ const CartPage = () => {
 
   const selectedProductDetailsId = useMemo(
     () => location.state?.selectedProductDetailsId,
-    [location.state?.selectedProductDetailsId]
+    [location.state?.selectedProductDetailsId],
   );
 
   const breadcrumbItems = [
@@ -47,7 +47,7 @@ const CartPage = () => {
           if (response && Array.isArray(response.cartItems)) {
             const filteredItems = selectedProductDetailsId
               ? response.cartItems.filter(
-                  (item) => item.productDetails.id === selectedProductDetailsId
+                  (item) => item.productDetails.id === selectedProductDetailsId,
                 )
               : response.cartItems;
             setCartItems(filteredItems);
@@ -90,7 +90,7 @@ const CartPage = () => {
         });
 
         const productResults = (await Promise.all(productPromises)).filter(
-          (result) => result !== null
+          (result) => result !== null,
         );
 
         setProductDetailsMap((prev) => ({
@@ -116,8 +116,9 @@ const CartPage = () => {
   }, [cartItems]);
 
   const getItemKey = useCallback(
-    (item) => `${item.id}-${item.productDetails.color}-${item.productDetails.size}`,
-    []
+    (item) =>
+      `${item.id}-${item.productDetails.color}-${item.productDetails.size}`,
+    [],
   );
 
   const debouncedUpdateCartItem = useMemo(
@@ -135,7 +136,7 @@ const CartPage = () => {
           });
         }
       }, 300),
-    []
+    [],
   );
 
   // Hủy debounce khi unmount
@@ -164,8 +165,8 @@ const CartPage = () => {
       setLoadingItems((prev) => ({ ...prev, [itemKey]: true }));
       setCartItems((prev) =>
         prev.map((i) =>
-          getItemKey(i) === itemKey ? { ...i, quantity: newQuantity } : i
-        )
+          getItemKey(i) === itemKey ? { ...i, quantity: newQuantity } : i,
+        ),
       );
 
       debouncedUpdateCartItem(item.id, newQuantity, (newCartItems) => {
@@ -173,7 +174,7 @@ const CartPage = () => {
         setLoadingItems((prev) => ({ ...prev, [itemKey]: false }));
       });
     },
-    [cartItems, debouncedUpdateCartItem, getItemKey]
+    [cartItems, debouncedUpdateCartItem, getItemKey],
   );
 
   const handleDecrement = useCallback(
@@ -186,8 +187,8 @@ const CartPage = () => {
       setLoadingItems((prev) => ({ ...prev, [itemKey]: true }));
       setCartItems((prev) =>
         prev.map((i) =>
-          getItemKey(i) === itemKey ? { ...i, quantity: newQuantity } : i
-        )
+          getItemKey(i) === itemKey ? { ...i, quantity: newQuantity } : i,
+        ),
       );
 
       debouncedUpdateCartItem(item.id, newQuantity, (newCartItems) => {
@@ -195,7 +196,7 @@ const CartPage = () => {
         setLoadingItems((prev) => ({ ...prev, [itemKey]: false }));
       });
     },
-    [cartItems, debouncedUpdateCartItem, getItemKey]
+    [cartItems, debouncedUpdateCartItem, getItemKey],
   );
 
   const showDeleteConfirm = useCallback((itemKey) => {
@@ -274,11 +275,11 @@ const CartPage = () => {
       cartItems.reduce((total, item) => {
         const productData = productDetailsMap[item.productDetails.product.id];
         const price = parseFloat(
-          productData?.finalPrice || item.productDetails.product.finalPrice
+          productData?.finalPrice || item.productDetails.product.finalPrice,
         );
         return total + price * item.quantity;
       }, 0),
-    [cartItems, productDetailsMap]
+    [cartItems, productDetailsMap],
   );
 
   const [paymentData, setPaymentData] = useState([]);
@@ -341,7 +342,10 @@ const CartPage = () => {
                     <div className={styles.skeletonPrice} />
                     <div className={styles.skeletonQuantity}>
                       <div className={styles.skeletonButton} />
-                      <div className={styles.skeletonText} style={{ width: "50px" }} />
+                      <div
+                        className={styles.skeletonText}
+                        style={{ width: "50px" }}
+                      />
                       <div className={styles.skeletonButton} />
                     </div>
                     <div className={styles.skeletonPrice} />
@@ -387,10 +391,14 @@ const CartPage = () => {
                           <img
                             className={styles.image}
                             src={
-                              productDetailsMap[firstItem.productDetails.product.id]
-                                ?.images?.[0]?.fileUrl || placeholderImage
+                              productDetailsMap[
+                                firstItem.productDetails.product.id
+                              ]?.images?.[0]?.fileUrl || placeholderImage
                             }
-                            alt={firstItem.productDetails.product.name || "Sản phẩm"}
+                            alt={
+                              firstItem.productDetails.product.name ||
+                              "Sản phẩm"
+                            }
                             onError={(e) => {
                               if (e.target.src !== placeholderImage) {
                                 e.target.src = placeholderImage;
@@ -432,8 +440,8 @@ const CartPage = () => {
                               {new Intl.NumberFormat("vi-VN").format(
                                 parseFloat(
                                   productData?.finalPrice ||
-                                    item.productDetails.product.finalPrice
-                                )
+                                    item.productDetails.product.finalPrice,
+                                ),
                               )}
                               <span className={styles.dong}>đ</span>
                             </div>
@@ -481,8 +489,8 @@ const CartPage = () => {
                               {new Intl.NumberFormat("vi-VN").format(
                                 parseFloat(
                                   productData?.finalPrice ||
-                                    item.productDetails.product.finalPrice
-                                ) * item.quantity
+                                    item.productDetails.product.finalPrice,
+                                ) * item.quantity,
                               )}
                               <span className={styles.dong}>đ</span>
                             </div>
@@ -520,7 +528,7 @@ const CartPage = () => {
                       <div>
                         <h4 className={styles.price}>
                           {new Intl.NumberFormat("vi-VN").format(totalAmount)}
-                          <span className={styles.dong}>đ</span>
+                          <span className={styles.totalMoney}>đ</span>
                         </h4>
                       </div>
                     </div>
