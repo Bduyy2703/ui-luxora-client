@@ -46,7 +46,7 @@ export default function Login() {
         localStorage.setItem("accessToken", accessToken);
         localStorage.setItem("decodedToken", decodedToken);
         localStorage.setItem("userId", userId);
-        localStorage.setItem("isVerified", isVerified.toString()); // Lưu trạng thái xác minh
+        localStorage.setItem("isVerified", isVerified.toString());
 
         if (decodedToken === "USER") {
           navigate("/");

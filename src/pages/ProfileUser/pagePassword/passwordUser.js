@@ -72,7 +72,7 @@ const PasswordUser = () => {
                 { required: true, message: "Vui lòng nhập mật khẩu cũ!" },
               ]}
             >
-              <Input.Password placeholder="Nhập mật khẩu cũ" />
+              <Input type="password" placeholder="Nhập mật khẩu cũ" />
             </Form.Item>
 
             <Form.Item
@@ -83,7 +83,7 @@ const PasswordUser = () => {
                 { min: 6, message: "Mật khẩu mới phải có ít nhất 6 ký tự!" },
               ]}
             >
-              <Input.Password placeholder="Nhập mật khẩu mới" />
+              <Input type="password" placeholder="Nhập mật khẩu mới" />
             </Form.Item>
 
             <Form.Item
@@ -104,7 +104,7 @@ const PasswordUser = () => {
                 }),
               ]}
             >
-              <Input.Password placeholder="Xác nhận lại mật khẩu" />
+              <Input type="password" placeholder="Xác nhận lại mật khẩu" />
             </Form.Item>
 
             <motion.div>
