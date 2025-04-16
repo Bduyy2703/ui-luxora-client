@@ -1,14 +1,16 @@
-import { notification } from "antd";
-import { useState } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Breadcrumb from "../../components/Breadcrumb";
 import {
   forgotPassword,
+  getGoogleAuthUrl,
   login,
   loginGoogle,
   sendOTP,
 } from "../../services/api/authService";
 import styles from "./Login.module.scss";
+import Breadcrumb from "../../components/Breadcrumb";
+import { notification } from "antd";
+import { getProfile } from "../../services/api/userService";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -31,10 +33,8 @@ export default function Login() {
       setPasswordError("");
     }
     try {
-      const { userEmail, accessToken, decodedToken, userId } = await login(
-        email,
-        password,
-      );
+      const { userEmail, accessToken, decodedToken, userId, isVerified } =
+        await login(email, password);
 
       if (accessToken) {
         notification.success({
@@ -46,6 +46,8 @@ export default function Login() {
         localStorage.setItem("accessToken", accessToken);
         localStorage.setItem("decodedToken", decodedToken);
         localStorage.setItem("userId", userId);
+        localStorage.setItem("isVerified", isVerified.toString()); // Lưu trạng thái xác minh
+
         if (decodedToken === "USER") {
           navigate("/");
         } else if (decodedToken === "ADMIN") {

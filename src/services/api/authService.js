@@ -45,7 +45,11 @@ export const login = async (email, password) => {
     const userEmail = jwtDecode(accessToken).email;
     const userId = jwtDecode(accessToken).userId;
 
-    return { accessToken, userEmail, decodedToken, userId };
+    const isVerified =
+      response.data.metadata?.message !==
+      "Email is not verified . Please check Email to verified";
+
+    return { accessToken, userEmail, decodedToken, userId, isVerified };
   } catch (error) {
     const errorMessage =
       error.response?.data || "Có lỗi xảy ra, vui lòng thử lại!";
