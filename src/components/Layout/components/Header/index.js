@@ -13,20 +13,29 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useState } from "react";
 import "tippy.js/dist/tippy.css";
-import { getAllCategories } from "../../../../services/api/categoryService"; // Chỉ import getAllCategories
-import { searchProducts } from "../../../../services/api/productService";
+import { getAllCategories } from "../../../../services/api/categoryService";
+import { getProductList } from "../../../../services/api/productService";
 import styles from "./Header.module.scss";
 import { Link, useNavigate } from "react-router-dom";
+
+const removeVietnameseTones = (str) => {
+  str = str.toLowerCase();
+  str = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  str = str.replace(/đ/g, "d").replace(/Đ/g, "D");
+  return str;
+};
 
 function Header() {
   const [cartCount, setCartCount] = useState(0);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showCartDropdown, setShowCartDropdown] = useState(false);
-  const [menuItems, setMenuItems] = useState([]); // Danh mục cha
+  const [menuItems, setMenuItems] = useState([]);
   const [keyword, setKeyword] = useState("");
-  const [products, setProducts] = useState([]);
-  const [page, setPage] = useState(1);
-  const limit = 16;
+  const [allProducts, setAllProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [page] = useState(1);
+  const limit = 100;
   const navigate = useNavigate();
   const accessToken = localStorage.getItem("accessToken");
   const [cartItems, setCartItems] = useState([]);
@@ -39,28 +48,48 @@ function Header() {
   }, []);
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      if (!keyword.trim()) {
-        setProducts([]);
-        return;
-      }
-
-      const result = await searchProducts(keyword, limit, page);
-      if (!result.error) {
-        setProducts(result.products);
+    const fetchAllProducts = async () => {
+      try {
+        const result = await getProductList(page, limit);
+        if (result.data) {
+          setAllProducts(result.data);
+          setFilteredProducts(result.data);
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
       }
     };
 
-    const debounceTimeout = setTimeout(fetchProducts, 300);
+    fetchAllProducts();
+  }, [page, limit]);
+
+  useEffect(() => {
+    const search = () => {
+      if (!keyword.trim()) {
+        setFilteredProducts(allProducts);
+        return;
+      }
+
+      const searchTerms = removeVietnameseTones(keyword)
+        .split(/\s+/)
+        .filter((term) => term);
+
+      const filtered = allProducts.filter((product) => {
+        const productName = removeVietnameseTones(product.name);
+        return searchTerms.every((term) => productName.includes(term));
+      });
+
+      setFilteredProducts(filtered);
+    };
+
+    const debounceTimeout = setTimeout(search, 300);
     return () => clearTimeout(debounceTimeout);
-  }, [keyword, page]);
+  }, [keyword, allProducts]);
 
   useEffect(() => {
     const fetchMenuItems = async () => {
       try {
         const response = await getAllCategories();
-        console.log("response", response);
-
         if (response) {
           setMenuItems(response);
         }
@@ -79,9 +108,13 @@ function Header() {
     });
   };
 
-  const handleInputChange = (value) => setKeyword(value);
+  const handleInputChange = (value) => {
+    setKeyword(value);
+  };
+
   const handleSearch = () => {
     if (keyword.trim()) {
+      setShowSuggestions(false);
       navigate(`/list-product?keyword=${encodeURIComponent(keyword.trim())}`);
     }
   };
@@ -97,6 +130,11 @@ function Header() {
       state: { isCategory: true, categoryId },
       replace: true,
     });
+  };
+
+  const handleProductClick = (productName) => {
+    setShowSuggestions(false);
+    navigate(`/list-product?keyword=${encodeURIComponent(productName)}`);
   };
 
   return (
@@ -118,6 +156,8 @@ function Header() {
             value={keyword}
             onChange={(e) => handleInputChange(e.target.value)}
             onKeyPress={handleKeyPress}
+            onFocus={() => setShowSuggestions(true)}
+            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
           />
           <FontAwesomeIcon
             className={styles.iconGlass}
@@ -125,6 +165,24 @@ function Header() {
             onClick={handleSearch}
             style={{ cursor: "pointer" }}
           />
+          {showSuggestions && filteredProducts.length > 0 && (
+            <div className={styles.suggestions}>
+              {filteredProducts.map((product) => (
+                <div
+                  key={product.id}
+                  className={styles.suggestionItem}
+                  onClick={() => handleProductClick(product.name)}
+                >
+                  <img
+                    src={product.images[0]}
+                    alt={product.name}
+                    className={styles.suggestionImage}
+                  />
+                  <span>{product.name}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className={styles.menu}>

@@ -18,6 +18,13 @@ import { FilterOutlined } from "@ant-design/icons";
 import styles from "./index.module.scss";
 import "./ProductList.css";
 
+const removeVietnameseTones = (str) => {
+  str = str.toLowerCase();
+  str = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  str = str.replace(/đ/g, "d").replace(/Đ/g, "D");
+  return str;
+};
+
 const { Panel } = Collapse;
 
 const ProductList = () => {
@@ -32,9 +39,9 @@ const ProductList = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [categories, setCategories] = useState([]);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  const [keyword, setKeyword] = useState("");
   const limit = 16;
 
-  // Filter state
   const [selectedFilters, setSelectedFilters] = useState({
     priceRanges: [],
     materials: [],
@@ -57,18 +64,24 @@ const ProductList = () => {
     16: { material: "Đá CZ", size: "Lớn" },
   };
 
-  // Đọc categoryId từ query parameter khi component mount
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const categoryId = searchParams.get("categoryId");
+    const urlKeyword = searchParams.get("keyword");
+
     if (categoryId) {
       setSelectedFilters((prev) => ({
         ...prev,
-        categoryId: parseInt(categoryId), // Chuyển thành số
+        categoryId: parseInt(categoryId),
       }));
     }
 
-    // Xử lý state từ location (nếu có, từ các nguồn khác như navigation)
+    if (urlKeyword) {
+      setKeyword(decodeURIComponent(urlKeyword));
+    } else {
+      setKeyword("");
+    }
+
     const { state } = location;
     if (state?.isCategory && state?.categoryId) {
       setSelectedFilters((prev) => ({
@@ -87,7 +100,6 @@ const ProductList = () => {
     setLoading(true);
     try {
       const response = await getProductList(currentPage, limit);
-      console.log("response", response);
       const productsData = response.data || [];
       const total = response.total || 0;
       const totalPagesData = response.totalPages || 1;
@@ -118,11 +130,19 @@ const ProductList = () => {
     fetchProductsData();
   }, [fetchProductsData]);
 
-  // Xử lý lọc sản phẩm
   const applyFilters = useCallback(() => {
     let filtered = [...products];
 
-    // Lọc theo danh mục
+    if (keyword.trim()) {
+      const searchTerms = removeVietnameseTones(keyword)
+        .split(/\s+/)
+        .filter((term) => term);
+      filtered = filtered.filter((product) => {
+        const productName = removeVietnameseTones(product.name);
+        return searchTerms.every((term) => productName.includes(term));
+      });
+    }
+
     if (selectedFilters.categoryId) {
       filtered = filtered.filter(
         (product) =>
@@ -131,7 +151,6 @@ const ProductList = () => {
       );
     }
 
-    // Lọc theo khoảng giá
     if (selectedFilters.priceRanges.length > 0) {
       filtered = filtered.filter((product) => {
         const price = parseFloat(product.finalPrice);
@@ -159,11 +178,11 @@ const ProductList = () => {
     setFilteredProducts(filtered);
     setTotalItems(filtered.length);
     setTotalPages(Math.ceil(filtered.length / limit));
-  }, [products, selectedFilters, limit]);
+  }, [products, selectedFilters, keyword, limit]);
 
   useEffect(() => {
     applyFilters();
-  }, [selectedFilters, applyFilters]);
+  }, [selectedFilters, keyword, applyFilters]);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -187,7 +206,6 @@ const ProductList = () => {
         : [...currentValues, value];
       return { ...prev, [type]: newValues };
     });
-    // Cập nhật URL khi thay đổi bộ lọc danh mục
     if (type === "categoryId") {
       const newCategoryId = selectedFilters.categoryId === value ? null : value;
       navigate(
@@ -201,7 +219,6 @@ const ProductList = () => {
 
   const handleCategoryClick = (categoryId) => {
     setSelectedFilters((prev) => ({ ...prev, categoryId }));
-    // Cập nhật URL khi chọn danh mục
     navigate(`/list-product${categoryId ? `?categoryId=${categoryId}` : ""}`, {
       replace: true,
     });
@@ -220,7 +237,7 @@ const ProductList = () => {
       sizes: [],
       categoryId: null,
     });
-    // Xóa query parameter khi xóa bộ lọc
+    setKeyword("");
     navigate("/list-product", { replace: true });
   };
 
@@ -345,52 +362,48 @@ const ProductList = () => {
             <p>Không có sản phẩm nào.</p>
           ) : (
             <div className={styles.productGrid}>
-              {filteredProducts.map((product) => {
-                console.log("productt:", product?.images);
-
-                return (
-                  <Card
-                    key={product.id}
-                    className={styles.productCard}
-                    hoverable
-                    cover={
-                      <div className={styles.imageWrapper}>
-                        <img
-                          src={product.images[0]}
-                          alt={product.name}
-                          className={styles.productImage}
-                          onClick={() => handleProductClick(product.id)}
-                          onError={(e) => {
-                            console.log(
-                              `Không thể tải hình ảnh cho sản phẩm ${product.name}`,
-                            );
-                            e.target.src = "/images/fallback.jpg";
-                          }}
-                        />
-                      </div>
-                    }
-                  >
-                    <div className={styles.productInfo}>
-                      <h3
-                        className={styles.productName}
+              {filteredProducts.map((product) => (
+                <Card
+                  key={product.id}
+                  className={styles.productCard}
+                  hoverable
+                  cover={
+                    <div className={styles.imageWrapper}>
+                      <img
+                        src={product.images[0]}
+                        alt={product.name}
+                        className={styles.productImage}
                         onClick={() => handleProductClick(product.id)}
-                      >
-                        {product.name}
-                      </h3>
-                      <div className={styles.priceContainer}>
-                        <span className={styles.productPrice}>
-                          {parsePrice(product.finalPrice)}đ
-                        </span>
-                        {product.finalPrice !== product.originalPrice && (
-                          <span className={styles.salePrice}>
-                            {parsePrice(product.originalPrice)}đ
-                          </span>
-                        )}
-                      </div>
+                        onError={(e) => {
+                          console.log(
+                            `Không thể tải hình ảnh cho sản phẩm ${product.name}`,
+                          );
+                          e.target.src = "/images/fallback.jpg";
+                        }}
+                      />
                     </div>
-                  </Card>
-                );
-              })}
+                  }
+                >
+                  <div className={styles.productInfo}>
+                    <h3
+                      className={styles.productName}
+                      onClick={() => handleProductClick(product.id)}
+                    >
+                      {product.name}
+                    </h3>
+                    <div className={styles.priceContainer}>
+                      <span className={styles.productPrice}>
+                        {parsePrice(product.finalPrice)}đ
+                      </span>
+                      {product.finalPrice !== product.originalPrice && (
+                        <span className={styles.salePrice}>
+                          {parsePrice(product.originalPrice)}đ
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              ))}
             </div>
           )}
 

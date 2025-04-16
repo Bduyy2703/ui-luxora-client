@@ -389,7 +389,7 @@ const AdminInventoryList = () => {
     <div className="wrapper">
       <header className="admin-header">
         <div className="container">
-          <h2>QUẢN LÝ KHO HÀNG</h2>
+          <h2>QUẢN LÝ CỬA HÀNG</h2>
         </div>
       </header>
       <main className="main">
