@@ -27,6 +27,16 @@ const removeVietnameseTones = (str) => {
   return str;
 };
 
+const categoryImages = {
+  Nhẫn: "https://bizweb.dktcdn.net/100/461/213/themes/870653/assets/mega-4-image-2.jpg?1744711547396",
+  "Vòng tay":
+    "https://bizweb.dktcdn.net/100/461/213/themes/870653/assets/mega-3-image-2.jpg?1744711547396",
+  "Hoa Tai":
+    "https://bizweb.dktcdn.net/100/461/213/themes/870653/assets/mega-2-image-2.jpg?1744711547396",
+  "Dây chuyền":
+    "https://bizweb.dktcdn.net/100/461/213/themes/870653/assets/mega-1-image-2.jpg?1744711547396",
+};
+
 function Header() {
   const [cartCount, setCartCount] = useState(0);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -240,7 +250,7 @@ function Header() {
                     {item.children && item.children.length > 0 ? (
                       <ul className={styles.ul1}>
                         <div className={styles.li1}>
-                          <li className={styles.headerli}>Danh mục con</li>
+                          <li className={styles.headerli}>Danh mục</li>
                           <div className={styles.subcategories}>
                             {item.children.map((sub) => (
                               <li
@@ -259,8 +269,11 @@ function Header() {
                     )}
                     <div className={styles.imageContainer}>
                       <img
-                        src="https://bizweb.dktcdn.net/100/461/213/themes/870653/assets/mega-1-image-2.jpg"
-                        alt="ảnh quà & đồ đôi"
+                        src={
+                          categoryImages[item.name] ||
+                          "https://bizweb.dktcdn.net/100/461/213/themes/870653/assets/mega-1-image-2.jpg"
+                        } // Sử dụng mapping, fallback về hình ảnh mặc định nếu không tìm thấy
+                        alt={`Ảnh ${item.name}`}
                       />
                     </div>
                   </div>
