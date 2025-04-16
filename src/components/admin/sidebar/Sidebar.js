@@ -1,23 +1,20 @@
-import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Menu } from "antd";
 import {
-  UserOutlined,
-  FileTextOutlined,
-  ShoppingOutlined,
-  TagsOutlined,
-  FileDoneOutlined,
-  DatabaseOutlined,
-  PercentageOutlined,
-  GiftOutlined,
-  StarOutlined,
   BarChartOutlined,
   LogoutOutlined,
+  PercentageOutlined,
+  ShoppingOutlined,
+  StarOutlined,
+  UserOutlined
 } from "@ant-design/icons";
+import { Menu } from "antd";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { logOut } from "../../../services/api/authService";
 import "./sidebar.css";
 
 const Sidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate(); 
   const lastPathSegment = location.pathname.split("/").pop();
 
   const [selectedKeys, setSelectedKeys] = useState([lastPathSegment]);
@@ -39,6 +36,15 @@ const Sidebar = () => {
 
   const handleOpenChange = (keys) => {
     setOpenKeys(keys);
+  };
+
+  const handleLogout = async () => {
+    const result = await logOut();
+    if (!result.error) {
+      navigate("/"); 
+    } else {
+      console.error("Logout failed:", result.error);
+    }
   };
 
   const items = [
@@ -118,10 +124,10 @@ const Sidebar = () => {
             alt="Caraluna"
           />
         </div>
-        <Link to="/">
+        <a href="#" onClick={handleLogout}>
           <LogoutOutlined style={{ marginRight: "8px" }} />
           Đăng xuất
-        </Link>
+        </a>
       </div>
       <Menu
         mode="inline"

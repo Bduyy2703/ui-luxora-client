@@ -17,6 +17,8 @@ import { getAllCategories } from "../../../../services/api/categoryService";
 import { getProductList } from "../../../../services/api/productService";
 import styles from "./Header.module.scss";
 import { Link, useNavigate } from "react-router-dom";
+import { message, notification } from "antd";
+import { logOut } from "../../../../services/api/authService";
 
 const removeVietnameseTones = (str) => {
   str = str.toLowerCase();
@@ -136,6 +138,26 @@ function Header() {
   const handleProductClick = (productName) => {
     setShowSuggestions(false);
     navigate(`/list-product?keyword=${encodeURIComponent(productName)}`);
+  };
+
+  const handleLogout = async () => {
+    const result = await logOut();
+    if (!result.error) {
+      localStorage.clear();
+      notification.success({
+        message: "Thông báo",
+        description: "Đăng xuất thành công",
+        duration: 3,
+      });
+      navigate("/");
+    } else {
+      notification.error({
+        message: "Thông báo",
+        description: "Đăng xuất thất bại",
+        duration: 3,
+      });
+      console.error("Logout failed:", result.error);
+    }
   };
 
   return (
@@ -275,10 +297,7 @@ function Header() {
                   </div>
                   <div
                     className={styles.dropdownItem}
-                    onClick={() => {
-                      localStorage.clear();
-                      navigate("/");
-                    }}
+                    onClick={handleLogout}
                     style={{ cursor: "pointer" }}
                   >
                     <LogoutOutlined style={{ marginRight: "10px" }} />
