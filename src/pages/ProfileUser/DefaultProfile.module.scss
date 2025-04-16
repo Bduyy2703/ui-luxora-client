@@ -1,26 +1,52 @@
-.container{
-    display: flex;
-    padding: 50px 125px 0px 125px;
-
-    .navbar{
-        margin-right: 100px;
-    }
-
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
+.container {
+  display: flex;
+  padding: 50px 125px;
+  flex: 1;
+}
 
-// .profile {
-//     display: flex;
-//     padding: 50px 125px 100px 125px;
+.navbar {
+  width: 218px;
+  margin-right: 50px;
+}
 
-//     .profileButton {
-//         margin-right: 200px;
-//     }
+.contentWrapper {
+  flex: 1;
+  height: 500px; /* Chiều cao cố định */
+  overflow-y: auto; /* Cho phép cuộn nếu nội dung vượt quá chiều cao */
+}
 
-//     .profileUser {
-//         .user{
-//             display: flex;
-//             flex-direction: column;
-//         }
-//     }
-// }
+.content {
+  background: #fff;
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  min-height: 100%; /* Đảm bảo nội dung chiếm toàn bộ chiều cao của contentWrapper */
+}
+
+.loginPrompt {
+  text-align: center;
+  padding: 20px;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+.loginButton {
+  margin-left: 10px;
+  padding: 8px 16px;
+  background-color: #4a4a4a;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.loginButton:hover {
+  background-color: #4a4a4a;
+}

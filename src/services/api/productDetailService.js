@@ -26,8 +26,6 @@ export const deleteProductDetails = async (id) => {
 export const getAllProductDetails = async (productId) => {
   try {
     const response = await privateAxios.get(`/v1/product-details/${productId}`);
-    console.log(productId, "productid");
-    console.log(response.data, "totalstock");
     return response.data || [];
   } catch (error) {
     console.error("Error deleting inventory:", error);
@@ -37,7 +35,9 @@ export const getAllProductDetails = async (productId) => {
 
 export const getProductDetailsByIdDetails = async (productId) => {
   try {
-    const response = await privateAxios.get(`/v1/product-details/detail/${productId}`);
+    const response = await privateAxios.get(
+      `/v1/product-details/detail/${productId}`,
+    );
     return response.data || [];
   } catch (error) {
     console.error("Error deleting inventory:", error);

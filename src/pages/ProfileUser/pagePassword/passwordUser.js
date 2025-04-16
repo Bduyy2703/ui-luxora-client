@@ -1,43 +1,20 @@
-import React, { useState } from "react";
-import { Form, Input, Button, notification } from "antd";
-import { changePassword } from "../../../services/api/userService";
+import { Button, Form, Input, notification, Card } from "antd";
+import { motion } from "framer-motion";
 import styles from "./PasswordUser.module.scss";
-import { combineReducers } from "redux";
+import { changePassword } from "../../../services/api/userService";
 
 const PasswordUser = () => {
-  const [oldPassword, setOldPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-  const email = localStorage.getItem("userEmail"); // Thay đổi email bằng cách thích hợp
+  const [form] = Form.useForm();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault(); // Ngăn chặn hành vi mặc định của form
-    setErrorMessage("");
-
-    //Kiểm tra độ dài mật khẩu mới
-    if (newPassword.length < 6) {
-      setErrorMessage("Mật khẩu mới phải có ít nhất 6 ký tự.");
-      return;
-    }
-
-    // Kiểm tra xem mật khẩu xác nhận có khớp không
-    if (newPassword !== confirmPassword) {
-      setErrorMessage("Mật khẩu xác nhận không khớp.");
-      return;
-    }
-
+  const onFinish = async (values) => {
     try {
-      const response = await changePassword(oldPassword, newPassword);
-      setOldPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
+      await changePassword(values.oldPassword, values.newPassword);
+      form.resetFields();
       notification.success({
         message: "Đặt lại mật khẩu thành công!",
         description: "Mật khẩu của bạn đã được cập nhật thành công.",
       });
     } catch (error) {
-      // setErrorMessage("Đặt lại mật khẩu thất bại. Vui lòng thử lại.");
       notification.error({
         message: "Đặt lại mật khẩu thất bại!",
         description: "Mật khẩu của bạn không thể cập nhật.",
@@ -48,66 +25,99 @@ const PasswordUser = () => {
 
   return (
     <div className={styles.profile}>
-      <div className={styles.profileUser}>
+      <motion.div
+        className={styles.profileUser}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        style={{ height: "100px" }}
+      >
         <span
           className={styles.changePassword}
-          style={{ fontSize: "24px", fontWeight: "300" }}
+          style={{
+            fontSize: "24px",
+            fontWeight: "300",
+            color: "#4a4a4a",
+          }}
         >
           ĐỔI MẬT KHẨU
         </span>
-        {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
-        <form
-          method="post"
-          action={`/account/changepassword/?_method=PUT`}
-          onSubmit={handleSubmit}
+
+        <Card
+          style={{
+            background: "#FFF",
+            borderRadius: "8px",
+            boxShadow: "0 4px 10px rgba(0, 0, 0, 0.05)",
+            padding: "20px",
+          }}
         >
           <span
-            style={{ fontSize: "14px", fontWeight: "400", color: "#0a0000" }}
+            style={{
+              fontSize: "14px",
+              fontWeight: "400",
+              color: "#4A4A4A",
+              display: "block",
+              marginBottom: "20px",
+            }}
           >
-            <strong>Lưu ý:</strong> Để đảm bảo tính bảo mật bạn vui lòng đặt lại
-            mật khẩu với ít nhất 6 kí tự
+            <strong>Lưu ý:</strong> Để đảm bảo tính bảo mật, bạn vui lòng đặt
+            lại mật khẩu với ít nhất 6 ký tự.
           </span>
-          <div style={{ marginBottom: "15px" }}>
-            <Form.Item>
-              Mật khẩu cũ *
-              <Input
-                type="password"
-                value={oldPassword}
-                onChange={(e) => setOldPassword(e.target.value)}
-                required
-                style={{ width: "100%", padding: "8px", marginTop: "5px" }}
-              />
+
+          <Form form={form} onFinish={onFinish} layout="vertical">
+            <Form.Item
+              label="Mật khẩu cũ"
+              name="oldPassword"
+              rules={[
+                { required: true, message: "Vui lòng nhập mật khẩu cũ!" },
+              ]}
+            >
+              <Input.Password placeholder="Nhập mật khẩu cũ" />
             </Form.Item>
-          </div>
-          <div style={{ marginBottom: "15px" }}>
-            <Form.Item>
-              Mật khẩu mới *
-              <Input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-                style={{ width: "100%", padding: "8px", marginTop: "5px" }}
-              />
+
+            <Form.Item
+              label="Mật khẩu mới"
+              name="newPassword"
+              rules={[
+                { required: true, message: "Vui lòng nhập mật khẩu mới!" },
+                { min: 6, message: "Mật khẩu mới phải có ít nhất 6 ký tự!" },
+              ]}
+            >
+              <Input.Password placeholder="Nhập mật khẩu mới" />
             </Form.Item>
-          </div>
-          <div style={{ marginBottom: "15px" }}>
-            <Form.Item>
-              Xác nhận lại mật khẩu *
-              <Input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                style={{ width: "100%", padding: "8px", marginTop: "5px" }}
-              />
+
+            <Form.Item
+              label="Xác nhận lại mật khẩu"
+              name="confirmPassword"
+              dependencies={["newPassword"]}
+              rules={[
+                { required: true, message: "Vui lòng xác nhận lại mật khẩu!" },
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    if (!value || getFieldValue("newPassword") === value) {
+                      return Promise.resolve();
+                    }
+                    return Promise.reject(
+                      new Error("Mật khẩu xác nhận không khớp!"),
+                    );
+                  },
+                }),
+              ]}
+            >
+              <Input.Password placeholder="Xác nhận lại mật khẩu" />
             </Form.Item>
-          </div>
-          <Button htmlType="submit" className={styles.resetPassword}>
-            Đặt lại mật khẩu
-          </Button>
-        </form>
-      </div>
+
+            <motion.div>
+              <div
+                onClick={() => form.submit()}
+                className={styles.resetPassword}
+              >
+                Đặt lại mật khẩu
+              </div>
+            </motion.div>
+          </Form>
+        </Card>
+      </motion.div>
     </div>
   );
 };

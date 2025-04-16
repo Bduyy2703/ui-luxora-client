@@ -1,30 +1,59 @@
 .wrapper {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.account {
+  font-size: 18px;
+  font-weight: 300;
+  color: #4a4a4a;
+  margin-bottom: 20px;
+  display: block;
+  padding: 10px 20px;
+}
+
+.navList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.navList li {
+  margin-bottom: 5px;
+}
+
+.navList a {
   display: flex;
-  // justify-content: center;
-  // align-items: center;
-  height: 80vh;
-  .account {
-    font-size: 24px;
-    font-weight: 300;
-    color: #212b25;
-    margin-bottom: 7px;
-    text-transform: uppercase;
-  }
+  align-items: center;
+  padding: 10px 20px;
+  color: #4a4a4a;
+  text-decoration: none;
+  font-size: 14px;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+  border-radius: 4px;
+}
 
-  .welcome {
-    font-weight: 700;
-    font-size: 14px;
-    line-height: 16px;
-    margin-bottom: 28px;
-    color: #212b25;
-    position: relative;
-  }
+.navList a:hover {
+  background-color: #f9fafb;
+  color: #1890ff;
+}
 
-  .profile {
-    font-weight: 400;
-    font-size: 15px;
-    color: #212b25;
-    margin-bottom: 15px;
-    display: block;
-  }
+.navList a.active {
+  background-color: #fff;
+  color: #1890ff; /* Màu xanh giống hình mẫu */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.icon {
+  margin-right: 10px;
+  font-size: 16px;
+  color: #4a4a4a;
+  transition: color 0.3s ease;
+}
+
+.activeIcon {
+  color: #1890ff;
 }

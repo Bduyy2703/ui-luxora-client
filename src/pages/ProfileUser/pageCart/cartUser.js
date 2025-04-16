@@ -1,21 +1,15 @@
-import React, { useEffect, useState } from "react";
-import { Form, Input, Checkbox, Button, Pagination, Tooltip } from "antd";
-import { login, getUserProfile } from "../../../services/api/api";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCheck } from "@fortawesome/free-solid-svg-icons";
-import PageWrapper from "../../../components/common/layout/PageWrapper";
-import useTranslate from "../../../components/hooks/useTranslate";
-import { commonMessage } from "../../../components/locales/intl";
-import { defineMessages } from "react-intl";
-import styles from "./CartUser.module.scss";
-import { getAllInvoices } from "../../../services/api/userService";
 import {
   CheckCircleOutlined,
   IssuesCloseOutlined,
   PayCircleOutlined,
 } from "@ant-design/icons";
+import { Pagination, Tooltip } from "antd";
+import { useEffect, useState } from "react";
+import { defineMessages } from "react-intl";
+import { useNavigate } from "react-router-dom";
 import { retryPayment } from "../../../services/api/checkoutService";
-import { useLocation, useNavigate } from "react-router-dom";
+import { getAllInvoices } from "../../../services/api/userService";
+import styles from "./CartUser.module.scss";
 
 const messages = defineMessages({
   jewelryTitle: {
