@@ -1,12 +1,18 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import styles from "./NavbarProfile.module.scss";
 import classNames from "classnames";
 import { jwtDecode } from "jwt-decode";
+import {
+  UserOutlined,
+  ShoppingCartOutlined,
+  LockOutlined,
+  EnvironmentOutlined,
+} from "@ant-design/icons";
 
 function NavbarProfile({ className }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const accessToken = localStorage.getItem("accessToken");
-  const decodedToken = localStorage.getItem("decodedToken");
 
   const isTokenValid = () => {
     if (!accessToken) return false;
@@ -20,9 +26,20 @@ function NavbarProfile({ className }) {
   };
 
   if (!isTokenValid()) {
-    // localStorage.clear();
-    navigate("/login"); 
+    navigate("/login");
   }
+
+  // Xác định tab đang chọn dựa trên pathname
+  const getActiveTab = () => {
+    const path = location.pathname;
+    if (path === "/account") return "account";
+    if (path === "/account/orders") return "orders";
+    if (path === "/account/changepassword") return "changepassword";
+    if (path === "/account/addresses") return "addresses";
+    return "";
+  };
+
+  const activeTab = getActiveTab();
 
   return (
     <div className={classNames(styles.wrapper, className)}>
@@ -30,21 +47,68 @@ function NavbarProfile({ className }) {
         {accessToken ? (
           <>
             <span className={styles.account}>TRANG TÀI KHOẢN</span>
-            <p className={styles.welcome}>
-              {/* Xin chào, <span>Huy Cường!</span> */}
-            </p>
-            <Link to="/account">
-              <div className={styles.profile}>Thông tin tài khoản</div>
-            </Link>
-            <Link to="/account/orders">
-              <div className={styles.profile}>Đơn hàng của bạn</div>
-            </Link>
-            <Link to="/account/changepassword">
-              <div className={styles.profile}>Đổi mật khẩu</div>
-            </Link>
-            <Link to="/account/addresses">
-              <div className={styles.profile}>Sổ địa chỉ</div>
-            </Link>
+            <ul className={styles.navList}>
+              <li>
+                <Link
+                  to="/account"
+                  className={classNames({
+                    [styles.active]: activeTab === "account",
+                  })}
+                >
+                  <UserOutlined
+                    className={classNames(styles.icon, {
+                      [styles.activeIcon]: activeTab === "account",
+                    })}
+                  />
+                  Thông tin tài khoản
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/account/orders"
+                  className={classNames({
+                    [styles.active]: activeTab === "orders",
+                  })}
+                >
+                  <ShoppingCartOutlined
+                    className={classNames(styles.icon, {
+                      [styles.activeIcon]: activeTab === "orders",
+                    })}
+                  />
+                  Đơn hàng của bạn
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/account/changepassword"
+                  className={classNames({
+                    [styles.active]: activeTab === "changepassword",
+                  })}
+                >
+                  <LockOutlined
+                    className={classNames(styles.icon, {
+                      [styles.activeIcon]: activeTab === "changepassword",
+                    })}
+                  />
+                  Đổi mật khẩu
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/account/addresses"
+                  className={classNames({
+                    [styles.active]: activeTab === "addresses",
+                  })}
+                >
+                  <EnvironmentOutlined
+                    className={classNames(styles.icon, {
+                      [styles.activeIcon]: activeTab === "addresses",
+                    })}
+                  />
+                  Sổ địa chỉ
+                </Link>
+              </li>
+            </ul>
           </>
         ) : (
           <div className={styles.loginPrompt}></div>

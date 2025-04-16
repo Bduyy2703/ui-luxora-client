@@ -1,23 +1,23 @@
-import React, { useEffect, useState } from "react";
+import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import {
-  Modal,
+  Input as AntdInput,
+  Button,
+  Checkbox,
   Form,
   Input,
-  Checkbox,
-  Button,
+  Modal,
   notification,
   Pagination,
-  Input as AntdInput,
 } from "antd";
-import styles from "./AddressesUser.module.scss";
+import { useEffect, useState } from "react";
 import {
-  getAddresses,
-  searchAddresses,
   addAddresses,
   deleteAddresses,
   editAddresses,
+  getAddresses,
+  searchAddresses,
 } from "../../../services/api/userService";
-import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import styles from "./AddressesUser.module.scss";
 
 const { confirm } = Modal;
 
