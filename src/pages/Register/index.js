@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import { notification } from "antd";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import Breadcrumb from "../../components/Breadcrumb";
 import { register } from "../../services/api/authService";
 import styles from "./register.module.scss";
-import Breadcrumb from "../../components/Breadcrumb";
-import { notification } from "antd";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -39,10 +39,9 @@ export default function Register() {
       const response = await register(data);
       notification.success({
         message: "Đăng ký thành công",
-        description:
-          "Vui lòng kiểm tra email để lấy mã OTP và xác minh tài khoản!",
+        description: "Bạn đã đăng ký thành công, vui lòng đăng nhập!",
       });
-      navigate("/otp");
+      navigate("/login"); // Chuyển hướng đến trang login sau khi đăng ký thành công
     } catch (error) {
       notification.error({
         message: "Đăng ký thất bại",

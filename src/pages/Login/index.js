@@ -1,16 +1,14 @@
-import React, { useState } from "react";
+import { notification } from "antd";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import Breadcrumb from "../../components/Breadcrumb";
 import {
   forgotPassword,
-  getGoogleAuthUrl,
   login,
   loginGoogle,
   sendOTP,
-} from "../../services/api/authService"; // Import các hàm từ service
-import styles from "./Login.module.scss"; // Import SCSS
-import Breadcrumb from "../../components/Breadcrumb";
-import { notification } from "antd";
-import { getProfile } from "../../services/api/userService";
+} from "../../services/api/authService";
+import styles from "./Login.module.scss";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -33,19 +31,10 @@ export default function Login() {
       setPasswordError("");
     }
     try {
-      const { userEmail, accessToken, decodedToken, userId, verifyUrl } =
-        await login(email, password);
-
-      if (verifyUrl) {
-        const urlParams = new URLSearchParams(verifyUrl.split("?")[1]);
-        const q = urlParams.get("q");
-        notification.warning({
-          message: "Tài khoản của bạn chưa được xác thực",
-          description: "OTP đã được gửi, vui lòng kiểm tra email",
-        });
-        navigate("/otp", { state: { q } });
-        return;
-      }
+      const { userEmail, accessToken, decodedToken, userId } = await login(
+        email,
+        password,
+      );
 
       if (accessToken) {
         notification.success({
