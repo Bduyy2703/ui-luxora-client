@@ -185,7 +185,7 @@ function Header() {
           {showDropdown && (
             <div className={styles.dropdownMenu}>
               {accessToken ? (
-                <>
+                <div style={{ zIndex: "10" }}>
                   <div
                     onClick={() => navigate("/account")}
                     className={styles.dropdownItem}
@@ -207,7 +207,7 @@ function Header() {
                     <LogoutOutlined style={{ marginRight: "10px" }} />
                     Đăng xuất
                   </div>
-                </>
+                </div>
               ) : (
                 <>
                   <Link to="/login" className={styles.dropdownItem}>

@@ -8,7 +8,6 @@ import {
   getProductList,
 } from "../../../src/services/api/productService";
 import { getAllBlogs } from "../../../src/services/api/blogService";
-import imageExample from "../../assets/images/daychuyen1/vyn13-t-1-1659674319051.webp";
 
 function Home() {
   const [products, setProducts] = useState([]);
@@ -170,36 +169,52 @@ function Home() {
       </div>
 
       <div className={styles.swiper}>
-        {saleProducts.slice(0, 4).map((product) => {
-          return (
-            <div
-              key={product.id}
-              className={styles.item}
-              onClick={() => handleProductClick(product.id)}
-            >
+        {saleProducts.slice(0, 4).map((product, index) => (
+          <div
+            key={product.id}
+            className={styles.item}
+            onClick={() => handleProductClick(product.id)}
+            style={{ animationDelay: `${index * 0.2}s` }}
+            role="button"
+            aria-label={`Xem chi tiết sản phẩm ${product.name}`}
+          >
+            <div className={styles.imageWrapper}>
+              {product.isHot && <span className={styles.badge}>Hot</span>}
               <img
-                style={{ cursor: "pointer" }}
+                loading="lazy"
                 className={styles.picture}
-                src={product?.images[0]}
+                style={{ cursor: "pointer" }}
+                src={
+                  product?.images?.[0] || "https://via.placeholder.com/303x305"
+                }
                 alt={product.name}
               />
-              <div>
-                <span className={styles.desc}>{product.name}</span>
-                <div className={styles.footerItem}>
-                  <div>
-                    <h4 className={styles.price}>
+            </div>
+            <div className={styles.content}>
+              <span style={{ cursor: "pointer" }} className={styles.desc}>
+                {product.name}
+              </span>
+              <div className={styles.footerItem}>
+                <div className={styles.priceWrapper}>
+                  <h4 className={styles.price}>
+                    {new Intl.NumberFormat("vi-VN").format(product.finalPrice)}{" "}
+                    <span className={styles.dong}>đ</span>
+                  </h4>
+                  {parseFloat(product.finalPrice) !==
+                    parseFloat(product.originalPrice) && (
+                    <span className={styles.originalPrice}>
                       {new Intl.NumberFormat("vi-VN").format(
-                        product.finalPrice,
+                        product.originalPrice,
                       )}{" "}
-                      <span className={styles.dong}>đ</span>
-                    </h4>
-                  </div>
-                  <div className={styles.sold}>Đã bán {product.sold}</div>
+                      đ
+                    </span>
+                  )}
                 </div>
+                <div className={styles.sold}>Đã bán {product.sold}</div>
               </div>
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
 
       <div className={styles.titleModules}>
@@ -210,38 +225,51 @@ function Home() {
       </div>
 
       <div className={styles.swiper}>
-        {products.slice(4, 8).map((product) => {
-          return (
-            <div
-              key={product.id}
-              className={styles.item}
-              onClick={() => handleProductClick(product.id)}
-            >
-              <div className={styles.ItemImg}>
-                <img
-                  style={{ cursor: "pointer" }}
-                  className={styles.picture}
-                  src={product?.images[0]}
-                  alt={product.name}
-                />
-              </div>
-              <div>
-                <span className={styles.desc}>{product.name}</span>
-                <div className={styles.footerItem}>
-                  <div>
-                    <h4 className={styles.price}>
+        {products.slice(4, 8).map((product, index) => (
+          <div
+            key={product.id}
+            className={styles.item}
+            onClick={() => handleProductClick(product.id)}
+            style={{ animationDelay: `${index * 0.2}s`, cursor: "pointer" }}
+            role="button"
+            aria-label={`Xem chi tiết sản phẩm ${product.name}`}
+          >
+            <div className={styles.imageWrapper}>
+              {product.isNew && <span className={styles.badge}>New</span>}
+              <img
+                loading="lazy"
+                className={styles.picture}
+                src={
+                  product?.images?.[0] || "https://via.placeholder.com/303x305"
+                }
+                alt={product.name}
+              />
+            </div>
+            <div className={styles.content}>
+              <span style={{ cursor: "pointer" }} className={styles.desc}>
+                {product.name}
+              </span>
+              <div className={styles.footerItem}>
+                <div className={styles.priceWrapper}>
+                  <h4 className={styles.price}>
+                    {new Intl.NumberFormat("vi-VN").format(product.finalPrice)}{" "}
+                    <span className={styles.dong}>đ</span>
+                  </h4>
+                  {parseFloat(product.finalPrice) !==
+                    parseFloat(product.originalPrice) && (
+                    <span className={styles.originalPrice}>
                       {new Intl.NumberFormat("vi-VN").format(
-                        product.finalPrice,
+                        product.originalPrice,
                       )}{" "}
-                      <span className={styles.dong}>đ</span>
-                    </h4>
-                  </div>
-                  <div className={styles.sold}>Đã bán {product.sold}</div>
+                      đ
+                    </span>
+                  )}
                 </div>
+                <div className={styles.sold}>Đã bán {product.sold}</div>
               </div>
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
 
       <div className={styles.banner}>
