@@ -174,7 +174,6 @@ function Header() {
               onClick={handleSearch}
               style={{ cursor: "pointer" }}
             />
-
             {showSuggestions && filteredProducts.length > 0 && (
               <div className={styles.suggestions}>
                 {filteredProducts.map((product) => (
@@ -194,16 +193,17 @@ function Header() {
               </div>
             )}
           </div>
-          <div style={{ marginLeft: "20px" }}>
+          <div className={styles.noticeWrapper}>
             {accessToken && !isVerified ? (
               <div className={styles.verificationNotice}>
                 <span>Tài khoản của bạn chưa được xác minh! </span>
               </div>
             ) : (
-              <div></div>
+              <div className={styles.verificationNotice}></div>
             )}
           </div>
         </div>
+
         <div className={styles.menu}>
           <ul>
             <li onClick={handleSaleClick} style={{ cursor: "pointer" }}>

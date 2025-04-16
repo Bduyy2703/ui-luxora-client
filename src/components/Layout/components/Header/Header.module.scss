@@ -232,12 +232,16 @@
       }
     }
 
-    // Style cho thông báo xác minh
+    .noticeWrapper {
+      margin-left: 20px;
+      width: 220px;
+      margin-top: 2px;
+    }
+
     .verificationNotice {
-      margin-top: 5px;
       font-size: 12px;
-      color: #d9534f; // Màu đỏ để nổi bật
-      text-align: center;
+      color: #d9534f;
+      white-space: nowrap;
 
       .verifyLink {
         color: #71bec2;
