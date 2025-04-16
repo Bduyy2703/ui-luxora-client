@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import styles from "./Footer.module.scss";
 import {
   FacebookFilled,
@@ -9,10 +10,12 @@ import {
 } from "@ant-design/icons";
 import { getAllBlogs } from "../../../../services/api/blogService";
 import { getInventoryList } from "../../../../services/api/inventoryService";
+import { getProductList } from "../../../../services/api/productService";
 
 function Footer() {
   const [blogs, setBlogs] = useState([]);
   const [locations, setLocations] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [blogLoading, setBlogLoading] = useState(true);
   const [blogError, setBlogError] = useState(null);
   const [locationLoading, setLocationLoading] = useState(true);
@@ -49,6 +52,7 @@ function Footer() {
     fetchBlogs();
   }, []);
 
+  // useEffect cho Locations
   useEffect(() => {
     const fetchLocations = async () => {
       try {
@@ -70,6 +74,38 @@ function Footer() {
     fetchLocations();
   }, []);
 
+  // useEffect cho Categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const productResponse = await getProductList(1, 100);
+        if (productResponse.error) {
+          console.error(
+            "Lỗi khi tải danh mục sản phẩm:",
+            productResponse.error,
+          );
+        } else {
+          const productsData = productResponse.data || [];
+          const uniqueCategories = [
+            ...new Map(
+              productsData
+                .filter((product) => product.category)
+                .map((product) => [
+                  product.category.id,
+                  { id: product.category.id, name: product.category.name },
+                ]),
+            ).values(),
+          ];
+          setCategories(uniqueCategories);
+        }
+      } catch (err) {
+        console.error("Lỗi khi tải danh mục sản phẩm:", err);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
   const handleBlogClick = (blogId) => {
     navigate(`/blog/${blogId}`);
   };
@@ -89,7 +125,7 @@ function Footer() {
           <li>Địa chỉ:</li>
           {locations.map((loc, index) => (
             <li key={index}>
-              {loc.warehouseName}: {loc.location}
+              Cơ sở: {loc.location}
             </li>
           ))}
           {locations.length === 0 && locationLoading && (
@@ -98,10 +134,10 @@ function Footer() {
           {locationError && <li>{locationError}</li>}
         </ul>
         <p>
-          <strong>Điện thoại:</strong> 084 272 96 86
+          <strong>Điện thoại:</strong> 0768800022
         </p>
         <p>
-          <strong>Email:</strong> info@caraluna.vn
+          <strong>Email:</strong> info@mrDC.vn
         </p>
         <div>
           <a
@@ -125,20 +161,6 @@ function Footer() {
           >
             <InstagramFilled />
           </a>
-        </div>
-        <div>
-          <img
-            src="https://bizweb.dktcdn.net/100/461/213/themes/870653/assets/bct.png?1728012064200"
-            alt="BCT Certification"
-            className="mt-4"
-            style={{ width: "100px", height: "auto" }}
-          />
-          <img
-            src="https://bizweb.dktcdn.net/100/461/213/files/logo-vnpay-qr-1.webp"
-            alt="VNPAY QR"
-            className="mt-4"
-            style={{ width: "100px", height: "auto", marginLeft: "10px" }}
-          />
         </div>
       </div>
 
@@ -181,11 +203,23 @@ function Footer() {
 
       <div className={styles.storeJewelry}>
         <span className={styles.store}>CỬA HÀNG TRANG SỨC</span>
-        <ul className={styles.list}>
-          <li>Earrings (Hoa tai)</li>
-          <li>Rings (Nhẫn)</li>
-          <li>Necklaces (Dây chuyền)</li>
-          <li>Bracelets (Vòng tay)</li>
+        <ul className={styles.list} style={{ cursor: "pointer" }}>
+          {categories.length > 0 ? (
+            categories.map((category) => (
+              <motion.li
+                key={category.id}
+                whileHover={{ scale: 1.05, color: "#e6ff83" }}
+                transition={{ duration: 0.3 }}
+                onClick={() =>
+                  navigate(`/list-product?categoryId=${category.id}`)
+                }
+              >
+                {category.name}
+              </motion.li>
+            ))
+          ) : (
+            <li>Không có danh mục nào.</li>
+          )}
         </ul>
       </div>
 
