@@ -38,6 +38,7 @@ function Header() {
   const limit = 100;
   const navigate = useNavigate();
   const accessToken = localStorage.getItem("accessToken");
+  const isVerified = localStorage.getItem("isVerified") === "true";
   const [cartItems, setCartItems] = useState([]);
 
   useEffect(() => {
@@ -149,42 +150,60 @@ function Header() {
       </Link>
 
       <div className={styles.center}>
-        <div className={styles.search}>
-          <input
-            className={styles.input}
-            placeholder="Tìm sản phẩm..."
-            value={keyword}
-            onChange={(e) => handleInputChange(e.target.value)}
-            onKeyPress={handleKeyPress}
-            onFocus={() => setShowSuggestions(true)}
-            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-          />
-          <FontAwesomeIcon
-            className={styles.iconGlass}
-            icon={faMagnifyingGlass}
-            onClick={handleSearch}
-            style={{ cursor: "pointer" }}
-          />
-          {showSuggestions && filteredProducts.length > 0 && (
-            <div className={styles.suggestions}>
-              {filteredProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className={styles.suggestionItem}
-                  onClick={() => handleProductClick(product.name)}
-                >
-                  <img
-                    src={product.images[0]}
-                    alt={product.name}
-                    className={styles.suggestionImage}
-                  />
-                  <span>{product.name}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            marginLeft: "200px",
+          }}
+        >
+          <div className={styles.search}>
+            <input
+              className={styles.input}
+              placeholder="Tìm sản phẩm..."
+              value={keyword}
+              onChange={(e) => handleInputChange(e.target.value)}
+              onKeyPress={handleKeyPress}
+              onFocus={() => setShowSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+            />
+            <FontAwesomeIcon
+              className={styles.iconGlass}
+              icon={faMagnifyingGlass}
+              onClick={handleSearch}
+              style={{ cursor: "pointer" }}
+            />
 
+            {showSuggestions && filteredProducts.length > 0 && (
+              <div className={styles.suggestions}>
+                {filteredProducts.map((product) => (
+                  <div
+                    key={product.id}
+                    className={styles.suggestionItem}
+                    onClick={() => handleProductClick(product.name)}
+                  >
+                    <img
+                      src={product.images[0]}
+                      alt={product.name}
+                      className={styles.suggestionImage}
+                    />
+                    <span>{product.name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div style={{ marginLeft: "20px" }}>
+            {accessToken && !isVerified ? (
+              <div className={styles.verificationNotice}>
+                <span>Tài khoản của bạn chưa được xác minh! </span>
+              </div>
+            ) : (
+              <div></div>
+            )}
+          </div>
+        </div>
         <div className={styles.menu}>
           <ul>
             <li onClick={handleSaleClick} style={{ cursor: "pointer" }}>

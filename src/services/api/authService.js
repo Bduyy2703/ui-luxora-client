@@ -32,9 +32,35 @@ export const register = async (data) => {
   }
 };
 
+export const login = async (email, password) => {
+  try {
+    const response = await publicAxios.post("/v1/auth/login", {
+      email,
+      password,
+    });
+
+    const accessToken =
+      response.data.metadata?.accessToken || response.data.token;
+    const decodedToken = jwtDecode(accessToken).roles;
+    const userEmail = jwtDecode(accessToken).email;
+    const userId = jwtDecode(accessToken).userId;
+
+    const isVerified =
+      response.data.metadata?.message !==
+      "Email is not verified . Please check Email to verified";
+
+    return { accessToken, userEmail, decodedToken, userId, isVerified };
+  } catch (error) {
+    const errorMessage =
+      error.response?.data || "Có lỗi xảy ra, vui lòng thử lại!";
+    console.error("Error:", errorMessage);
+    throw new Error(errorMessage.error || error.message);
+  }
+};
+
 // export const login = async (email, password) => {
 //   try {
-//     const response = await axios.post(`${API_URL}v1/auth/login`, {
+//     const response = await publicAxios.post("/v1/auth/login", {
 //       email,
 //       password,
 //     });
@@ -42,7 +68,7 @@ export const register = async (data) => {
 //     if (response.data.verifyUrl) {
 //       const verifyUrl = response.data.verifyUrl || null;
 //       const accessToken = response.data.token;
-//       const decodedToken = jwtDecode(accessToken).role;
+//       const decodedToken = jwtDecode(accessToken).roles;
 //       return { accessToken, decodedToken, verifyUrl };
 //     } else {
 //       if (
@@ -55,9 +81,9 @@ export const register = async (data) => {
 //       }
 
 //       const accessToken = response.data.metadata.accessToken;
-//       const decodedToken = jwtDecode(accessToken).role;
+//       const decodedToken = jwtDecode(accessToken).roles;
 //       const userEmail = jwtDecode(accessToken).email;
-//       const userId = jwtDecode(accessToken).userid;
+//       const userId = jwtDecode(accessToken).userId;
 //       return { accessToken, userEmail, decodedToken, userId };
 //     }
 //   } catch (error) {
@@ -67,42 +93,6 @@ export const register = async (data) => {
 //     throw new Error(errorMessage.error || error.message);
 //   }
 // };
-
-export const login = async (email, password) => {
-  try {
-    const response = await publicAxios.post("/v1/auth/login", {
-      email,
-      password,
-    });
-
-    if (response.data.verifyUrl) {
-      const verifyUrl = response.data.verifyUrl || null;
-      const accessToken = response.data.token;
-      const decodedToken = jwtDecode(accessToken).roles;
-      return { accessToken, decodedToken, verifyUrl };
-    } else {
-      if (
-        response.data.metadata.message ===
-        "Email is not verified . Please check Email to verified"
-      ) {
-        throw new Error(
-          "Email chưa được xác minh. Vui lòng kiểm tra email để xác minh.",
-        );
-      }
-
-      const accessToken = response.data.metadata.accessToken;
-      const decodedToken = jwtDecode(accessToken).roles;
-      const userEmail = jwtDecode(accessToken).email;
-      const userId = jwtDecode(accessToken).userId;
-      return { accessToken, userEmail, decodedToken, userId };
-    }
-  } catch (error) {
-    const errorMessage =
-      error.response?.data || "Có lỗi xảy ra, vui lòng thử lại!";
-    console.error("Error:", errorMessage);
-    throw new Error(errorMessage.error || error.message);
-  }
-};
 
 export const requestOTP = async (email) => {
   try {

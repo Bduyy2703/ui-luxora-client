@@ -6,8 +6,8 @@ import {
   login,
   loginGoogle,
   sendOTP,
-} from "../../services/api/authService"; // Import các hàm từ service
-import styles from "./Login.module.scss"; // Import SCSS
+} from "../../services/api/authService";
+import styles from "./Login.module.scss";
 import Breadcrumb from "../../components/Breadcrumb";
 import { notification } from "antd";
 import { getProfile } from "../../services/api/userService";
@@ -33,19 +33,8 @@ export default function Login() {
       setPasswordError("");
     }
     try {
-      const { userEmail, accessToken, decodedToken, userId, verifyUrl } =
+      const { userEmail, accessToken, decodedToken, userId, isVerified } =
         await login(email, password);
-
-      if (verifyUrl) {
-        const urlParams = new URLSearchParams(verifyUrl.split("?")[1]);
-        const q = urlParams.get("q");
-        notification.warning({
-          message: "Tài khoản của bạn chưa được xác thực",
-          description: "OTP đã được gửi, vui lòng kiểm tra email",
-        });
-        navigate("/otp", { state: { q } });
-        return;
-      }
 
       if (accessToken) {
         notification.success({
@@ -57,6 +46,8 @@ export default function Login() {
         localStorage.setItem("accessToken", accessToken);
         localStorage.setItem("decodedToken", decodedToken);
         localStorage.setItem("userId", userId);
+        localStorage.setItem("isVerified", isVerified.toString()); // Lưu trạng thái xác minh
+
         if (decodedToken === "USER") {
           navigate("/");
         } else if (decodedToken === "ADMIN") {
