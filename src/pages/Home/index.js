@@ -7,13 +7,17 @@ import {
   getProductbyCategory,
   getProductList,
 } from "../../../src/services/api/productService";
-
+import { getAllBlogs } from "../../../src/services/api/blogService";
 import imageExample from "../../assets/images/daychuyen1/vyn13-t-1-1659674319051.webp";
+
 function Home() {
   const [products, setProducts] = useState([]);
   const [saleProducts, setSaleProducts] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [cateProducts, setCateProducts] = useState([]);
+  const [news, setNews] = useState([]);
+  const [newsLoading, setNewsLoading] = useState(true);
+  const [newsError, setNewsError] = useState(null);
   const navigate = useNavigate();
 
   const limit = 1;
@@ -33,15 +37,48 @@ function Home() {
       }
     };
 
+    const fetchNews = async () => {
+      try {
+        setNewsLoading(true);
+        const data = await getAllBlogs();
+        if (data.error) {
+          setNewsError(data.error);
+        } else {
+          const formattedNews = data.blogs.slice(0, 3).map((blog) => ({
+            id: blog.id,
+            title: blog.title,
+            thumbnail: blog.thumbnail,
+            description: blog.description || "Chưa có mô tả",
+            date: new Date(blog.createAt).toLocaleDateString("vi-VN", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            }),
+          }));
+          setNews(formattedNews);
+        }
+      } catch (err) {
+        setNewsError("Không thể tải tin tức. Vui lòng thử lại sau.");
+      } finally {
+        setNewsLoading(false);
+      }
+    };
+
     getProducts();
     getSaleProductsData();
+    fetchNews();
   }, []);
+
   const handleCategoryClick = (categoryId) => {
     setSelectedCategory(categoryId);
   };
 
   const handleProductClick = (productId) => {
-    navigate(`/detail-product/${productId}`); 
+    navigate(`/detail-product/${productId}`);
+  };
+
+  const handleBlogClick = (blogId) => {
+    navigate(`/blog/${blogId}`);
   };
 
   return (
@@ -63,7 +100,7 @@ function Home() {
               className={styles.lazyLoad}
               src="//bizweb.dktcdn.net/100/461/213/themes/870653/assets/ser_1.png?1728012064200"
               data-src="//bizweb.dktcdn.net/100/461/213/themes/870653/assets/ser_1.png?1728012064200"
-              alt="Caraluna"
+              alt="Miễn phí vận chuyển"
               data-was-processed="true"
             ></img>
           </div>
@@ -80,7 +117,7 @@ function Home() {
               className={styles.lazyLoad}
               src="//bizweb.dktcdn.net/100/461/213/themes/870653/assets/ser_2.png?1728012064200"
               data-src="//bizweb.dktcdn.net/100/461/213/themes/870653/assets/ser_2.png?1728012064200"
-              alt="Caraluna"
+              alt="Đổi trả miễn phí"
               data-was-processed="true"
             ></img>
           </div>
@@ -96,8 +133,8 @@ function Home() {
               height="50"
               className={styles.lazyLoad}
               src="//bizweb.dktcdn.net/100/461/213/themes/870653/assets/ser_3.png?1728012064200"
-              data-src="//bizweb.dktcdn.net/100/461/213/themes/870653/assets/ser_3.png?1728012064200"
-              alt="Caraluna"
+              data-src="//bizweb.dktcdn.net/100/461/213/themes/870653/assets/ser_1.png?1728012064200"
+              alt="Dịch vụ bảo hành"
               data-was-processed="true"
             ></img>
           </div>
@@ -113,8 +150,8 @@ function Home() {
               height="50"
               className={styles.lazyLoad}
               src="//bizweb.dktcdn.net/100/461/213/themes/870653/assets/ser_4.png?1728012064200"
-              data-src="//bizweb.dktcdn.net/100/461/213/themes/870653/assets/ser_4.png?1728012064200"
-              alt="Caraluna"
+              data-src="//bizweb.dktcdn.net/100/461/213/themes/870653/assets/ser_1.png?1728012064200"
+              alt="Túi và hộp quà"
               data-was-processed="true"
             ></img>
           </div>
@@ -204,7 +241,7 @@ function Home() {
           <img
             className={styles.imgBanner}
             src="https://bizweb.dktcdn.net/100/461/213/themes/870653/assets/img_3banner_1.jpg?1728012064200"
-            alt="giftLove"
+            alt="Quà tặng tình yêu"
           />
         </div>
 
@@ -212,7 +249,7 @@ function Home() {
           <img
             className={styles.imgBanner}
             src="https://bizweb.dktcdn.net/100/461/213/themes/870653/assets/img_3banner_2.jpg?1728012064200"
-            alt="giftLove"
+            alt="Quà tặng tình yêu"
           />
         </div>
 
@@ -220,7 +257,7 @@ function Home() {
           <img
             className={styles.imgBanner}
             src="https://bizweb.dktcdn.net/100/461/213/themes/870653/assets/img_3banner_3.jpg?1728012064200"
-            alt="giftLove"
+            alt="Quà tặng tình yêu"
           />
         </div>
       </div>
@@ -229,7 +266,7 @@ function Home() {
         <img
           className={styles.imgProduct}
           src="//bizweb.dktcdn.net/100/461/213/themes/870653/assets/bg_banner_big.jpg?1728012064200"
-          alt="learnAbout"
+          alt="Tìm hiểu về Caraluna"
         />
       </div>
 
@@ -239,74 +276,77 @@ function Home() {
           <img
             className={styles.imgProduct}
             src="https://bizweb.dktcdn.net/thumb/grande/100/461/213/themes/870653/assets/img_brand_1.jpg?1728012064200"
-            alt="learnAbout"
+            alt="Hình ảnh thương hiệu Caraluna"
           />
           <img
             className={styles.imgProduct}
             src="https://bizweb.dktcdn.net/thumb/grande/100/461/213/themes/870653/assets/img_brand_2.jpg?1728012064200"
-            alt="learnAbout"
+            alt="Hình ảnh thương hiệu Caraluna"
           />
           <img
             className={styles.imgProduct}
             src="https://bizweb.dktcdn.net/thumb/grande/100/461/213/themes/870653/assets/img_brand_4.jpg?1728012064200"
-            alt="learnAbout"
+            alt="Hình ảnh thương hiệu Caraluna"
           />
           <img
             className={styles.imgProduct}
             src="https://bizweb.dktcdn.net/thumb/grande/100/461/213/themes/870653/assets/img_brand_6.jpg?1728012064200"
-            alt="learnAbout"
+            alt="Hình ảnh thương hiệu Caraluna"
           />
           <img
             className={styles.imgProduct}
             src="https://bizweb.dktcdn.net/thumb/grande/100/461/213/themes/870653/assets/img_brand_7.jpg?1728012064200"
-            alt="learnAbout"
+            alt="Hình ảnh thương hiệu Caraluna"
           />
         </div>
       </div>
 
       <div className={styles.titleModules}>
-        <a className={styles.bestSeller}>Tin tức mới nhất</a>
+        <h2 className={styles.bestSeller}>Tin tức mới nhất</h2>
       </div>
 
       <div className={styles.news}>
-        <div className={styles.card}>
-          <img
-            className={styles.imgNews}
-            src="https://bizweb.dktcdn.net/100/461/213/articles/tang-hoa-20-10-cho-nguoi-yeu.jpg?v=1712826606977"
-            alt="giftLove"
-          />
-          <div className={styles.overlay}>
-            <h3>Tặng Hoa 20/10 Cho Người Yêu Có Ý Nghĩa Gì?</h3>
-            <p>Chọn Hoa Nào?</p>
-            <span>Ngày đăng: 20/10</span>
+        {newsLoading && (
+          <div className={styles.loading}>Đang tải tin tức...</div>
+        )}
+        {newsError && <div className={styles.error}>{newsError}</div>}
+        {!newsLoading && !newsError && (
+          <div className={styles.newsGrid}>
+            {news.map((item, index) => (
+              <div
+                key={item.id}
+                className={styles.newsCard}
+                onClick={() => handleBlogClick(item.id)}
+                style={{ animationDelay: `${index * 0.2}s` }}
+                role="button"
+                aria-label={`Xem chi tiết bài viết ${item.title}`}
+              >
+                <div className={styles.cardImageWrapper}>
+                  <img
+                    className={styles.cardImage}
+                    src={item.thumbnail}
+                    alt={item.title}
+                  />
+                </div>
+                <div className={styles.cardContent}>
+                  <h3 className={styles.cardTitle}>
+                    {item.title.length > 50
+                      ? `${item.title.substring(0, 50)}...`
+                      : item.title}
+                  </h3>
+                  <p className={styles.cardDescription}>
+                    {item.description.length > 100
+                      ? `${item.description.substring(0, 100)}...`
+                      : item.description}
+                  </p>
+                  <span className={styles.cardDate}>
+                    Ngày đăng: {item.date}
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
-
-        <div className={styles.card}>
-          <img
-            className={styles.imgNews}
-            src="https://bizweb.dktcdn.net/100/461/213/articles/qua-tang-sinh-nhat-cho-ban-gai.jpg?v=1712302865133"
-            alt="giftLove"
-          />
-          <div className={styles.overlay}>
-            <h3>Tặng Quà Sinh Nhật Cho Bạn Gái</h3>
-            <p>Sắp đến ngày sinh nhật của bạn gái?</p>
-            <span>Ngày đăng: 19/10</span>
-          </div>
-        </div>
-
-        <div className={styles.card}>
-          <img
-            className={styles.imgNews}
-            src="https://bizweb.dktcdn.net/100/461/213/articles/day-chuyen-tang-ban-gai.jpg?v=1710990022057"
-            alt="giftLove"
-          />
-          <div className={styles.overlay}>
-            <h3>Đầy Chuyền Tặng Bạn Gái</h3>
-            <p>Gợi Ý Về Vòng Cổ Bạc</p>
-            <span>Ngày đăng: 18/10</span>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

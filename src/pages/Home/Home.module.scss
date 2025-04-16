@@ -10,11 +10,6 @@
   min-height: 3000px;
   overflow-x: hidden;
 
-  // .img {
-  //   object-fit: cover;
-  //   width: 1519px;
-  //   height: 632px;
-  // }
   .img {
     object-fit: cover;
     width: 100vw;
@@ -42,7 +37,6 @@
       background: #00577d !important;
       padding-top: 15px !important;
       padding-bottom: 15px !important;
-      //   text-align: center;
       -webkit-box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
       box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
       width: 300px;
@@ -155,7 +149,6 @@
         font-size: 14px;
         font-weight: 480;
         color: #0a0000;
-        // white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
 
@@ -299,7 +292,6 @@
           font-size: 14px;
           font-weight: 480;
           color: #0a0000;
-          // white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
 
@@ -355,46 +347,101 @@
   }
 
   .news {
-    display: flex;
-    justify-content: space-around;
-    margin: 35px 125px 35px 125px;
-  }
+    max-width: 1200px;
+    margin: 35px auto;
+    padding: 0 20px;
 
-  .card {
-    position: relative;
-    width: 30%;
-    overflow: hidden;
+    .loading,
+    .error {
+      text-align: center;
+      font-size: 1.2rem;
+      color: #555;
+      margin: 20px 0;
+      font-family: "Montserrat", sans-serif;
+    }
 
-    &:hover {
-      color: #71bec2;
+    .newsGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .newsCard {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      transition:
+        transform 0.3s ease,
+        box-shadow 0.3s ease;
       cursor: pointer;
+      opacity: 0;
+      animation: fadeIn 0.5s forwards;
+
+      &:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+
+        .cardImage {
+          transform: scale(1.05);
+        }
+
+        .cardTitle {
+          color: #71bec2;
+        }
+      }
+    }
+
+    .cardImageWrapper {
+      width: 100%;
+      height: 200px;
+      overflow: hidden;
+    }
+
+    .cardImage {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+
+    .cardContent {
+      padding: 20px;
+    }
+
+    .cardTitle {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: #333;
+      transition: color 0.3s ease;
+      font-family: "Montserrat", sans-serif;
+    }
+
+    .cardDescription {
+      font-size: 0.95rem;
+      color: #666;
+      margin-bottom: 10px;
+      line-height: 1.5;
+      font-family: "Montserrat", sans-serif;
+    }
+
+    .cardDate {
+      font-size: 0.85rem;
+      color: #999;
+      font-style: italic;
+      font-family: "Montserrat", sans-serif;
     }
   }
 
-  .imgNews {
-    width: 100%;
-    height: auto;
-  }
-
-  .overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.4);
-    color: white;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding: 10px;
-    opacity: 0;
-    transition: opacity 0.1s;
-  }
-
-  .card:hover .overlay {
-    opacity: 1;
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }

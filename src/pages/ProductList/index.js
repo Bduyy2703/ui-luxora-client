@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate, useLocation } from "react-router-dom"; // Thêm useLocation
+import { useNavigate, useLocation } from "react-router-dom";
 import { getProductList } from "../../services/api/productService";
 import {
   Image,
@@ -57,7 +57,18 @@ const ProductList = () => {
     16: { material: "Đá CZ", size: "Lớn" },
   };
 
+  // Đọc categoryId từ query parameter khi component mount
   useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const categoryId = searchParams.get("categoryId");
+    if (categoryId) {
+      setSelectedFilters((prev) => ({
+        ...prev,
+        categoryId: parseInt(categoryId), // Chuyển thành số
+      }));
+    }
+
+    // Xử lý state từ location (nếu có, từ các nguồn khác như navigation)
     const { state } = location;
     if (state?.isCategory && state?.categoryId) {
       setSelectedFilters((prev) => ({
@@ -114,7 +125,9 @@ const ProductList = () => {
     // Lọc theo danh mục
     if (selectedFilters.categoryId) {
       filtered = filtered.filter(
-        (product) => product.category.id === selectedFilters.categoryId,
+        (product) =>
+          product.category &&
+          product.category.id === selectedFilters.categoryId,
       );
     }
 
@@ -174,10 +187,24 @@ const ProductList = () => {
         : [...currentValues, value];
       return { ...prev, [type]: newValues };
     });
+    // Cập nhật URL khi thay đổi bộ lọc danh mục
+    if (type === "categoryId") {
+      const newCategoryId = selectedFilters.categoryId === value ? null : value;
+      navigate(
+        `/list-product${newCategoryId ? `?categoryId=${newCategoryId}` : ""}`,
+        {
+          replace: true,
+        },
+      );
+    }
   };
 
   const handleCategoryClick = (categoryId) => {
     setSelectedFilters((prev) => ({ ...prev, categoryId }));
+    // Cập nhật URL khi chọn danh mục
+    navigate(`/list-product${categoryId ? `?categoryId=${categoryId}` : ""}`, {
+      replace: true,
+    });
   };
 
   const handleFilter = () => {
@@ -193,6 +220,8 @@ const ProductList = () => {
       sizes: [],
       categoryId: null,
     });
+    // Xóa query parameter khi xóa bộ lọc
+    navigate("/list-product", { replace: true });
   };
 
   const parsePrice = (price) => {

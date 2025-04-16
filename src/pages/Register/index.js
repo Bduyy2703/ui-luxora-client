@@ -57,7 +57,7 @@ export default function Register() {
       <div className={styles["register-container"]}>
         <h1>ĐĂNG KÝ</h1>
         <p className={styles["login-link"]}>
-          Đã có tài khoản, đăng nhập <Link to="/">tại đây</Link>
+          Đã có tài khoản, đăng nhập <Link to="/login">tại đây</Link>
         </p>
         <form className={styles["register-form"]} onSubmit={handleSubmit}>
           <input

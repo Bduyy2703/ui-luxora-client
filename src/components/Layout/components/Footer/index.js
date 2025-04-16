@@ -137,8 +137,8 @@ function Footer() {
               <div className={styles.footerNote}>
                 <span
                   className={styles.blogLink}
-                  onClick={() => handleBlogClick(blog.id)} // Sử dụng onClick thay vì Link
-                  style={{ cursor: "pointer" }} // Thêm style để biểu thị có thể nhấn
+                  onClick={() => handleBlogClick(blog.id)}
+                  style={{ cursor: "pointer" }}
                 >
                   {blog.title}
                 </span>
