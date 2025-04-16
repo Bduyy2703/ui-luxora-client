@@ -170,32 +170,36 @@ function Home() {
       </div>
 
       <div className={styles.swiper}>
-        {saleProducts.slice(0, 4).map((product) => (
-          <div
-            key={product.id}
-            className={styles.item}
-            onClick={() => handleProductClick(product.id)}
-          >
-            <img
-              style={{ cursor: "pointer" }}
-              className={styles.picture}
-              src={imageExample}
-              alt={product.name}
-            />
-            <div>
-              <span className={styles.desc}>{product.name}</span>
-              <div className={styles.footerItem}>
-                <div>
-                  <h4 className={styles.price}>
-                    {new Intl.NumberFormat("vi-VN").format(product.finalPrice)}{" "}
-                    <span className={styles.dong}>đ</span>
-                  </h4>
+        {saleProducts.slice(0, 4).map((product) => {
+          return (
+            <div
+              key={product.id}
+              className={styles.item}
+              onClick={() => handleProductClick(product.id)}
+            >
+              <img
+                style={{ cursor: "pointer" }}
+                className={styles.picture}
+                src={product?.images[0]}
+                alt={product.name}
+              />
+              <div>
+                <span className={styles.desc}>{product.name}</span>
+                <div className={styles.footerItem}>
+                  <div>
+                    <h4 className={styles.price}>
+                      {new Intl.NumberFormat("vi-VN").format(
+                        product.finalPrice,
+                      )}{" "}
+                      <span className={styles.dong}>đ</span>
+                    </h4>
+                  </div>
+                  <div className={styles.sold}>Đã bán {product.sold}</div>
                 </div>
-                <div className={styles.sold}>Đã bán {product.sold}</div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className={styles.titleModules}>
@@ -206,34 +210,38 @@ function Home() {
       </div>
 
       <div className={styles.swiper}>
-        {products.slice(4, 8).map((product) => (
-          <div
-            key={product.id}
-            className={styles.item}
-            onClick={() => handleProductClick(product.id)}
-          >
-            <div className={styles.ItemImg}>
-              <img
-                style={{ cursor: "pointer" }}
-                className={styles.picture}
-                src={imageExample}
-                alt={product.name}
-              />
-            </div>
-            <div>
-              <span className={styles.desc}>{product.name}</span>
-              <div className={styles.footerItem}>
-                <div>
-                  <h4 className={styles.price}>
-                    {new Intl.NumberFormat("vi-VN").format(product.finalPrice)}{" "}
-                    <span className={styles.dong}>đ</span>
-                  </h4>
+        {products.slice(4, 8).map((product) => {
+          return (
+            <div
+              key={product.id}
+              className={styles.item}
+              onClick={() => handleProductClick(product.id)}
+            >
+              <div className={styles.ItemImg}>
+                <img
+                  style={{ cursor: "pointer" }}
+                  className={styles.picture}
+                  src={product?.images[0]}
+                  alt={product.name}
+                />
+              </div>
+              <div>
+                <span className={styles.desc}>{product.name}</span>
+                <div className={styles.footerItem}>
+                  <div>
+                    <h4 className={styles.price}>
+                      {new Intl.NumberFormat("vi-VN").format(
+                        product.finalPrice,
+                      )}{" "}
+                      <span className={styles.dong}>đ</span>
+                    </h4>
+                  </div>
+                  <div className={styles.sold}>Đã bán {product.sold}</div>
                 </div>
-                <div className={styles.sold}>Đã bán {product.sold}</div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className={styles.banner}>
