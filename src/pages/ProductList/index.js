@@ -283,7 +283,7 @@ const ProductList = () => {
           ))}
         </Panel>
 
-        <Panel header="Kích thước" key="sizes">
+        {/* <Panel header="Kích thước" key="sizes">
           {sizes.map((size, index) => (
             <div key={index} className={styles.checkboxItem}>
               <Checkbox
@@ -294,7 +294,7 @@ const ProductList = () => {
               </Checkbox>
             </div>
           ))}
-        </Panel>
+        </Panel> */}
       </Collapse>
 
       <div className={styles.filterButtonContainer}>
