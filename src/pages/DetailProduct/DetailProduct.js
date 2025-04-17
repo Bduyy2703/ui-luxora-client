@@ -460,9 +460,7 @@ export const DescProduct = ({ product, activeTab, setActiveTab }) => {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <h3 className={styles.specTitle}>
-              THÔNG SỐ THIẾT KẾ - {product?.id || "N/A"}
-            </h3>
+            <h3 className={styles.specTitle}>THÔNG SỐ THIẾT KẾ</h3>
             <table>
               <tbody>
                 <tr>

@@ -105,7 +105,11 @@ const AdminStatis = () => {
 
     try {
       // Lấy KPI: Doanh Thu và Tổng Đơn Hàng
-      const revenueRes = await getInvoiceRevenue(startDate, endDate, onlyPaidRevenue);
+      const revenueRes = await getInvoiceRevenue(
+        startDate,
+        endDate,
+        onlyPaidRevenue,
+      );
       setRevenue(revenueRes.revenue || 0);
       setTotalInvoice(revenueRes.totalInvoice || 0);
 
@@ -123,13 +127,23 @@ const AdminStatis = () => {
       });
       setStatusData(statusDataMapped);
 
-      const paidOrders = statusDataMapped.find(item => item.name === "PAID")?.value || 0;
-      const totalOrders = statusDataMapped.reduce((sum, item) => sum + item.value, 0);
-      const calculatedConversionRate = totalOrders > 0 ? (paidOrders / totalOrders * 100).toFixed(2) : 0;
+      const paidOrders =
+        statusDataMapped.find((item) => item.name === "PAID")?.value || 0;
+      const totalOrders = statusDataMapped.reduce(
+        (sum, item) => sum + item.value,
+        0,
+      );
+      const calculatedConversionRate =
+        totalOrders > 0 ? ((paidOrders / totalOrders) * 100).toFixed(2) : 0;
       setConversionRate(calculatedConversionRate);
 
       // Lấy top sản phẩm
-      const topProductsRes = await getTopProducts(startDate, endDate, topProductLimit, onlyPaidTopProducts);
+      const topProductsRes = await getTopProducts(
+        startDate,
+        endDate,
+        topProductLimit,
+        onlyPaidTopProducts,
+      );
       console.log("Top Products Data:", topProductsRes); // Debug dữ liệu
       const mappedTopProducts = topProductsRes.map((item) => ({
         name: `${item.productName} (ID: ${item.productDetailId})`,
@@ -144,11 +158,15 @@ const AdminStatis = () => {
         const productDetailId = idMatch ? parseInt(idMatch[1]) : null;
         if (productDetailId) {
           try {
-            const productData = await getProductDetailsByIdDetails(productDetailId);
+            const productData =
+              await getProductDetailsByIdDetails(productDetailId);
             const imageUrl = productData?.images?.[0]?.fileUrl || "";
             return { productDetailId, imageUrl };
           } catch (error) {
-            console.error(`Error fetching image for product ID ${productDetailId}:`, error);
+            console.error(
+              `Error fetching image for product ID ${productDetailId}:`,
+              error,
+            );
             return { productDetailId, imageUrl: "" };
           }
         }
@@ -163,7 +181,12 @@ const AdminStatis = () => {
       setProductImages(imageMap);
 
       // Lấy top khách hàng
-      const topCustomersRes = await getTopCustomers(startDate, endDate, topCustomerLimit, onlyPaidTopCustomers);
+      const topCustomersRes = await getTopCustomers(
+        startDate,
+        endDate,
+        topCustomerLimit,
+        onlyPaidTopCustomers,
+      );
       console.log("Top Customers Data:", topCustomersRes); // Debug dữ liệu
       const mappedTopCustomers = topCustomersRes.map((item) => ({
         name: item.username || "Unknown",
@@ -172,20 +195,35 @@ const AdminStatis = () => {
       setTopCustomers(mappedTopCustomers);
 
       // Lấy doanh thu theo phương thức thanh toán
-      const paymentRes = await getPaymentMethodStatistics(startDate, endDate, onlyPaidPaymentMethods);
+      const paymentRes = await getPaymentMethodStatistics(
+        startDate,
+        endDate,
+        onlyPaidPaymentMethods,
+      );
       const paymentData = paymentRes.reduce((acc, item) => {
-        const existing = acc.find((d) => d.paymentMethod === item.paymentMethod);
+        const existing = acc.find(
+          (d) => d.paymentMethod === item.paymentMethod,
+        );
         if (existing) {
           existing[item.status] = item.totalRevenue;
         } else {
-          acc.push({ paymentMethod: item.paymentMethod, [item.status]: item.totalRevenue });
+          acc.push({
+            paymentMethod: item.paymentMethod,
+            [item.status]: item.totalRevenue,
+          });
         }
         return acc;
       }, []);
       setPaymentMethods(paymentData);
 
       const total = paymentData.reduce((sum, item) => {
-        return sum + (item.PAID || 0) + (item.PENDING || 0) + (item.CANCELLED || 0) + (item.FAILED || 0);
+        return (
+          sum +
+          (item.PAID || 0) +
+          (item.PENDING || 0) +
+          (item.CANCELLED || 0) +
+          (item.FAILED || 0)
+        );
       }, 0);
       setTotalRevenue(total);
 
@@ -193,19 +231,31 @@ const AdminStatis = () => {
       const invoiceCountRes = await getInvoiceCountStatistics(
         invoiceCountType,
         selectedYear,
-        invoiceCountType === "daily" ? selectedMonth : undefined
+        invoiceCountType === "daily" ? selectedMonth : undefined,
       );
-      setInvoiceCount(invoiceCountRes.map((item) => ({
-        period: item.period,
-        count: item.count,
-      })));
+      setInvoiceCount(
+        invoiceCountRes.map((item) => ({
+          period: item.period,
+          count: item.count,
+        })),
+      );
 
       // Tính doanh thu theo tháng
       const monthlyRevenue = [];
       for (let month = 0; month < 12; month++) {
-        const monthStart = moment(`${selectedYear}-${month + 1}-01`, "YYYY-MM-DD").startOf("month");
-        const monthEnd = moment(`${selectedYear}-${month + 1}-01`, "YYYY-MM-DD").endOf("month");
-        const monthRevenueRes = await getInvoiceRevenue(monthStart, monthEnd, onlyPaidRevenue);
+        const monthStart = moment(
+          `${selectedYear}-${month + 1}-01`,
+          "YYYY-MM-DD",
+        ).startOf("month");
+        const monthEnd = moment(
+          `${selectedYear}-${month + 1}-01`,
+          "YYYY-MM-DD",
+        ).endOf("month");
+        const monthRevenueRes = await getInvoiceRevenue(
+          monthStart,
+          monthEnd,
+          onlyPaidRevenue,
+        );
         monthlyRevenue.push({
           month: moment().month(month).format("MMM"),
           revenue: monthRevenueRes.revenue || 0,
@@ -215,11 +265,17 @@ const AdminStatis = () => {
 
       // Tính tỷ lệ tăng trưởng dựa trên 2 tháng gần nhất
       if (monthlyRevenue.length >= 2) {
-        const lastMonthRevenue = monthlyRevenue[monthlyRevenue.length - 1].revenue;
-        const prevMonthRevenue = monthlyRevenue[monthlyRevenue.length - 2].revenue;
-        const calculatedGrowthRate = prevMonthRevenue > 0
-          ? ((lastMonthRevenue - prevMonthRevenue) / prevMonthRevenue * 100).toFixed(2)
-          : 0;
+        const lastMonthRevenue =
+          monthlyRevenue[monthlyRevenue.length - 1].revenue;
+        const prevMonthRevenue =
+          monthlyRevenue[monthlyRevenue.length - 2].revenue;
+        const calculatedGrowthRate =
+          prevMonthRevenue > 0
+            ? (
+                ((lastMonthRevenue - prevMonthRevenue) / prevMonthRevenue) *
+                100
+              ).toFixed(2)
+            : 0;
         setGrowthRate(calculatedGrowthRate);
       } else {
         setGrowthRate(0);
@@ -247,14 +303,26 @@ const AdminStatis = () => {
   ]);
 
   // Tính phần trăm cho từng trạng thái thanh toán
-  const enhancedPaymentData = paymentMethods.map(item => {
-    const totalForMethod = (item.PAID || 0) + (item.PENDING || 0) + (item.CANCELLED || 0) + (item.FAILED || 0);
+  const enhancedPaymentData = paymentMethods.map((item) => {
+    const totalForMethod =
+      (item.PAID || 0) +
+      (item.PENDING || 0) +
+      (item.CANCELLED || 0) +
+      (item.FAILED || 0);
     return {
       ...item,
-      PAID_PERCENT: totalRevenue ? ((item.PAID || 0) / totalRevenue * 100).toFixed(1) : 0,
-      PENDING_PERCENT: totalRevenue ? ((item.PENDING || 0) / totalRevenue * 100).toFixed(1) : 0,
-      CANCELLED_PERCENT: totalRevenue ? ((item.CANCELLED || 0) / totalRevenue * 100).toFixed(1) : 0,
-      FAILED_PERCENT: totalRevenue ? ((item.FAILED || 0) / totalRevenue * 100).toFixed(1) : 0,
+      PAID_PERCENT: totalRevenue
+        ? (((item.PAID || 0) / totalRevenue) * 100).toFixed(1)
+        : 0,
+      PENDING_PERCENT: totalRevenue
+        ? (((item.PENDING || 0) / totalRevenue) * 100).toFixed(1)
+        : 0,
+      CANCELLED_PERCENT: totalRevenue
+        ? (((item.CANCELLED || 0) / totalRevenue) * 100).toFixed(1)
+        : 0,
+      FAILED_PERCENT: totalRevenue
+        ? (((item.FAILED || 0) / totalRevenue) * 100).toFixed(1)
+        : 0,
     };
   });
 
@@ -269,7 +337,7 @@ const AdminStatis = () => {
     const idMatch = product.name.match(/ID: (\d+)/);
     const productDetailId = idMatch ? parseInt(idMatch[1]) : null;
     const imageUrl = productDetailId ? productImages[productDetailId] : "";
-    
+
     if (!imageUrl) return null;
 
     return (
@@ -295,19 +363,40 @@ const AdminStatis = () => {
           </Title>
         </div>
         <Menu theme="dark" mode="inline" defaultSelectedKeys={["5"]}>
-          <Menu.Item key="1" icon={<LogoutOutlined />}>Đăng xuất</Menu.Item>
-          <Menu.Item key="2" icon={<UserOutlined />}>Quản lý người dùng</Menu.Item>
-          <Menu.Item key="3" icon={<ShoppingCartOutlined />}>Quản lý sản phẩm</Menu.Item>
-          <Menu.Item key="4" icon={<PercentageOutlined />}>Quản lý giảm giá</Menu.Item>
-          <Menu.Item key="5" icon={<BarChartOutlined />}>Thống kê</Menu.Item>
-          <Menu.Item key="6" icon={<StarOutlined />}>Đánh giá</Menu.Item>
+          <Menu.Item key="1" icon={<LogoutOutlined />}>
+            Đăng xuất
+          </Menu.Item>
+          <Menu.Item key="2" icon={<UserOutlined />}>
+            Quản lý người dùng
+          </Menu.Item>
+          <Menu.Item key="3" icon={<ShoppingCartOutlined />}>
+            Quản lý sản phẩm
+          </Menu.Item>
+          <Menu.Item key="4" icon={<PercentageOutlined />}>
+            Quản lý giảm giá
+          </Menu.Item>
+          <Menu.Item key="5" icon={<BarChartOutlined />}>
+            Thống kê
+          </Menu.Item>
+          <Menu.Item key="6" icon={<StarOutlined />}>
+            Đánh giá
+          </Menu.Item>
         </Menu>
       </Sider>
 
       <Layout>
         <Header className={styles.header}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <Title level={3} style={{ color: "#1A1A1A", margin: 0 }}>Tổng Quan</Title>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              paddingLeft: "50px",
+            }}
+          >
+            <Title level={3} style={{ color: "#1A1A1A", margin: 0 }}>
+              Tổng Quan
+            </Title>
             <RangePicker
               value={dateRange}
               onChange={(dates) => setDateRange(dates)}
@@ -318,7 +407,10 @@ const AdminStatis = () => {
         </Header>
 
         <Content className={styles.content}>
-          <Spin spinning={loading} indicator={<div className={styles.spinner} />}>
+          <Spin
+            spinning={loading}
+            indicator={<div className={styles.spinner} />}
+          >
             <Row gutter={[16, 16]}>
               <Col xs={24} md={6}>
                 <motion.div
@@ -331,7 +423,9 @@ const AdminStatis = () => {
                       title={<span className={styles.kpiTitle}>Doanh Thu</span>}
                       value={revenue}
                       precision={0}
-                      formatter={(value) => `${(value / 1000000).toFixed(1)}M VNĐ`}
+                      formatter={(value) =>
+                        `${(value / 1000000).toFixed(1)}M VNĐ`
+                      }
                       valueStyle={{ color: "#6B5BFF", fontSize: "24px" }}
                     />
                   </Card>
@@ -345,7 +439,9 @@ const AdminStatis = () => {
                 >
                   <Card className={styles.kpiCard}>
                     <Statistic
-                      title={<span className={styles.kpiTitle}>Tổng Đơn Hàng</span>}
+                      title={
+                        <span className={styles.kpiTitle}>Tổng Đơn Hàng</span>
+                      }
                       value={totalInvoice}
                       precision={0}
                       valueStyle={{ color: "#6B5BFF", fontSize: "24px" }}
@@ -361,10 +457,16 @@ const AdminStatis = () => {
                 >
                   <Card className={styles.kpiCard}>
                     <Statistic
-                      title={<span className={styles.kpiTitle}>Lợi Nhuận Gộp 75%</span>}
+                      title={
+                        <span className={styles.kpiTitle}>
+                          Lợi Nhuận Gộp 75%
+                        </span>
+                      }
                       value={revenue * 0.75}
                       precision={0}
-                      formatter={(value) => `${(value / 1000000).toFixed(1)}M VNĐ`}
+                      formatter={(value) =>
+                        `${(value / 1000000).toFixed(1)}M VNĐ`
+                      }
                       valueStyle={{ color: "#6B5BFF", fontSize: "24px" }}
                     />
                   </Card>
@@ -378,7 +480,11 @@ const AdminStatis = () => {
                 >
                   <Card className={styles.kpiCard}>
                     <Statistic
-                      title={<span className={styles.kpiTitle}>Tỷ Lệ Chuyển Đổi</span>}
+                      title={
+                        <span className={styles.kpiTitle}>
+                          Tỷ Lệ Chuyển Đổi
+                        </span>
+                      }
                       value={conversionRate}
                       precision={2}
                       suffix="%"
@@ -394,10 +500,19 @@ const AdminStatis = () => {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.5, type: "spring", delay: 0.4 }}
                 >
-                  <Card title={<span className={styles.chartTitle}>Trạng Thái Hóa Đơn</span>} className={styles.card}>
+                  <Card
+                    title={
+                      <span className={styles.chartTitle}>
+                        Trạng Thái Hóa Đơn
+                      </span>
+                    }
+                    className={styles.card}
+                  >
                     <div className={styles.chartContainer}>
                       {statusData.every((item) => item.value === 0) ? (
-                        <Text className={styles.statText}>Không có dữ liệu</Text>
+                        <Text className={styles.statText}>
+                          Không có dữ liệu
+                        </Text>
                       ) : (
                         <ResponsiveContainer width="100%" height={250}>
                           <PieChart>
@@ -414,11 +529,19 @@ const AdminStatis = () => {
                               animationDuration={800}
                             >
                               {statusData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={COLORS[entry.name]} />
+                                <Cell
+                                  key={`cell-${index}`}
+                                  fill={COLORS[entry.name]}
+                                />
                               ))}
                             </Pie>
-                            <Tooltip formatter={(value) => `${value} hóa đơn`} wrapperClassName={styles.chartTooltip} />
-                            <Legend wrapperStyle={{ className: styles.chartLegend }} />
+                            <Tooltip
+                              formatter={(value) => `${value} hóa đơn`}
+                              wrapperClassName={styles.chartTooltip}
+                            />
+                            <Legend
+                              wrapperStyle={{ className: styles.chartLegend }}
+                            />
                           </PieChart>
                         </ResponsiveContainer>
                       )}
@@ -433,17 +556,50 @@ const AdminStatis = () => {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.5, type: "spring", delay: 0.6 }}
                 >
-                  <Card title={<span className={styles.chartTitle}>Doanh Thu Theo Tháng</span>} className={styles.card}>
+                  <Card
+                    title={
+                      <span className={styles.chartTitle}>
+                        Doanh Thu Theo Tháng
+                      </span>
+                    }
+                    className={styles.card}
+                  >
                     <div className={styles.chartContainer}>
                       {revenueByMonth.length === 0 ? (
-                        <Text className={styles.statText}>Không có dữ liệu</Text>
+                        <Text className={styles.statText}>
+                          Không có dữ liệu
+                        </Text>
                       ) : (
                         <ResponsiveContainer width="100%" height={300}>
-                          <LineChart data={revenueByMonth} margin={{ top: 10, right: 30, left: 20, bottom: 10 }}>
-                            <CartesianGrid strokeDasharray="3 3" className={styles.chartGrid} />
-                            <XAxis dataKey="month" className={styles.chartAxis} />
-                            <YAxis tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`} className={styles.chartAxis} />
-                            <Tooltip formatter={(value) => `${(value / 1000000).toFixed(1)}M VNĐ`} wrapperClassName={styles.chartTooltip} />
+                          <LineChart
+                            data={revenueByMonth}
+                            margin={{
+                              top: 10,
+                              right: 30,
+                              left: 20,
+                              bottom: 10,
+                            }}
+                          >
+                            <CartesianGrid
+                              strokeDasharray="3 3"
+                              className={styles.chartGrid}
+                            />
+                            <XAxis
+                              dataKey="month"
+                              className={styles.chartAxis}
+                            />
+                            <YAxis
+                              tickFormatter={(value) =>
+                                `${(value / 1000000).toFixed(1)}M`
+                              }
+                              className={styles.chartAxis}
+                            />
+                            <Tooltip
+                              formatter={(value) =>
+                                `${(value / 1000000).toFixed(1)}M VNĐ`
+                              }
+                              wrapperClassName={styles.chartTooltip}
+                            />
                             <Line
                               type="monotone"
                               dataKey="revenue"
@@ -463,7 +619,11 @@ const AdminStatis = () => {
                                   fill="#6B5BFF"
                                   initial={{ scale: 0 }}
                                   animate={{ scale: [1, 1.5, 1] }}
-                                  transition={{ repeat: Infinity, duration: 2, delay: index * 0.2 }}
+                                  transition={{
+                                    repeat: Infinity,
+                                    duration: 2,
+                                    delay: index * 0.2,
+                                  }}
                                 />
                               ))}
                             </Line>
@@ -482,7 +642,13 @@ const AdminStatis = () => {
                   transition={{ duration: 0.5, type: "spring", delay: 0.8 }}
                 >
                   <Card
-                    title={<span className={styles.chartTitle}>{showTopProducts ? "Top Sản Phẩm Bán Chạy" : "Top Khách Hàng Chi Tiêu"}</span>}
+                    title={
+                      <span className={styles.chartTitle}>
+                        {showTopProducts
+                          ? "Top Sản Phẩm Bán Chạy"
+                          : "Top Khách Hàng Chi Tiêu"}
+                      </span>
+                    }
                     className={styles.card}
                     extra={
                       <Button
@@ -490,27 +656,50 @@ const AdminStatis = () => {
                         onClick={() => setShowTopProducts(!showTopProducts)}
                         className={styles.switchButton}
                       >
-                        {showTopProducts ? "Xem Top Người Dùng" : "Xem Top Sản Phẩm"}
+                        {showTopProducts
+                          ? "Xem Top Người Dùng"
+                          : "Xem Top Sản Phẩm"}
                       </Button>
                     }
                   >
-                    <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+                    <Row
+                      justify="space-between"
+                      align="middle"
+                      style={{ marginBottom: 16 }}
+                    >
                       <Col>
-                        <Text strong className={styles.statText}>Chỉ tính hóa đơn PAID: </Text>
+                        <Text strong className={styles.statText}>
+                          Chỉ tính hóa đơn PAID:{" "}
+                        </Text>
                         <Switch
-                          checked={showTopProducts ? onlyPaidTopProducts : onlyPaidTopCustomers}
-                          onChange={(checked) => showTopProducts ? setOnlyPaidTopProducts(checked) : setOnlyPaidTopCustomers(checked)}
+                          checked={
+                            showTopProducts
+                              ? onlyPaidTopProducts
+                              : onlyPaidTopCustomers
+                          }
+                          onChange={(checked) =>
+                            showTopProducts
+                              ? setOnlyPaidTopProducts(checked)
+                              : setOnlyPaidTopCustomers(checked)
+                          }
                         />
                       </Col>
                       <Col>
                         <Text strong className={styles.statText}>
-                          Số lượng {showTopProducts ? "Top Sản Phẩm" : "Top Khách Hàng"}: 
+                          Số lượng{" "}
+                          {showTopProducts ? "Top Sản Phẩm" : "Top Khách Hàng"}:
                         </Text>
                         <InputNumber
                           min={1}
                           max={20}
-                          value={showTopProducts ? topProductLimit : topCustomerLimit}
-                          onChange={(value) => showTopProducts ? setTopProductLimit(value) : setTopCustomerLimit(value)}
+                          value={
+                            showTopProducts ? topProductLimit : topCustomerLimit
+                          }
+                          onChange={(value) =>
+                            showTopProducts
+                              ? setTopProductLimit(value)
+                              : setTopCustomerLimit(value)
+                          }
                         />
                       </Col>
                     </Row>
@@ -523,25 +712,54 @@ const AdminStatis = () => {
                           exit={{ rotateY: -90, opacity: 0 }}
                           transition={{ duration: 0.5 }}
                         >
-                          {(showTopProducts ? topProducts : topCustomers).length === 0 ? (
-                            <Text className={styles.statText}>Không có dữ liệu</Text>
+                          {(showTopProducts ? topProducts : topCustomers)
+                            .length === 0 ? (
+                            <Text className={styles.statText}>
+                              Không có dữ liệu
+                            </Text>
                           ) : (
                             <ResponsiveContainer width="100%" height={350}>
                               <BarChart
-                                data={showTopProducts ? topProducts : topCustomers}
+                                data={
+                                  showTopProducts ? topProducts : topCustomers
+                                }
                                 layout="horizontal"
-                                margin={{ top: 40, right: 30, left: 20, bottom: 10 }}
+                                margin={{
+                                  top: 40,
+                                  right: 30,
+                                  left: 20,
+                                  bottom: 10,
+                                }}
                               >
                                 <defs>
-                                  <linearGradient id="productGradient" x1="0" y1="0" x2="1" y2="0">
-                                    <stop offset="0%" stopColor={COLORS.PRODUCT[0]} />
-                                    <stop offset="100%" stopColor={COLORS.PRODUCT[1]} />
+                                  <linearGradient
+                                    id="productGradient"
+                                    x1="0"
+                                    y1="0"
+                                    x2="1"
+                                    y2="0"
+                                  >
+                                    <stop
+                                      offset="0%"
+                                      stopColor={COLORS.PRODUCT[0]}
+                                    />
+                                    <stop
+                                      offset="100%"
+                                      stopColor={COLORS.PRODUCT[1]}
+                                    />
                                   </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="3 3" className={styles.chartGrid} />
+                                <CartesianGrid
+                                  strokeDasharray="3 3"
+                                  className={styles.chartGrid}
+                                />
                                 <XAxis
-                                  dataKey={showTopProducts ? "revenue" : "totalSpent"}
-                                  tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`}
+                                  dataKey={
+                                    showTopProducts ? "revenue" : "totalSpent"
+                                  }
+                                  tickFormatter={(value) =>
+                                    `${(value / 1000000).toFixed(1)}M`
+                                  }
                                   className={styles.chartAxis}
                                 />
                                 <YAxis
@@ -551,11 +769,15 @@ const AdminStatis = () => {
                                   className={styles.chartAxis}
                                 />
                                 <Tooltip
-                                  formatter={(value) => `${(value / 1000000).toFixed(1)}M VNĐ`}
+                                  formatter={(value) =>
+                                    `${(value / 1000000).toFixed(1)}M VNĐ`
+                                  }
                                   wrapperClassName={styles.chartTooltip}
                                 />
                                 <Bar
-                                  dataKey={showTopProducts ? "revenue" : "totalSpent"}
+                                  dataKey={
+                                    showTopProducts ? "revenue" : "totalSpent"
+                                  }
                                   fill="url(#productGradient)"
                                   barSize={20}
                                   onClick={handleBarClick}
@@ -582,31 +804,75 @@ const AdminStatis = () => {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.5, type: "spring", delay: 1 }}
                 >
-                  <Card title={<span className={styles.chartTitle}>Doanh Thu Theo Phương Thức Thanh Toán</span>} className={styles.card}>
-                    <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+                  <Card
+                    title={
+                      <span className={styles.chartTitle}>
+                        Doanh Thu Theo Phương Thức Thanh Toán
+                      </span>
+                    }
+                    className={styles.card}
+                  >
+                    <Row
+                      justify="space-between"
+                      align="middle"
+                      style={{ marginBottom: 16 }}
+                    >
                       <Col>
-                        <Text strong className={styles.statText}>Chỉ tính hóa đơn PAID: </Text>
-                        <Switch checked={onlyPaidPaymentMethods} onChange={(checked) => setOnlyPaidPaymentMethods(checked)} />
+                        <Text strong className={styles.statText}>
+                          Chỉ tính hóa đơn PAID:{" "}
+                        </Text>
+                        <Switch
+                          checked={onlyPaidPaymentMethods}
+                          onChange={(checked) =>
+                            setOnlyPaidPaymentMethods(checked)
+                          }
+                        />
                       </Col>
                     </Row>
                     <div className={styles.chartContainer}>
                       {paymentMethods.length === 0 ? (
-                        <Text className={styles.statText}>Không có dữ liệu</Text>
+                        <Text className={styles.statText}>
+                          Không có dữ liệu
+                        </Text>
                       ) : (
                         <>
                           <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
                             <Col span={12}>
-                              <Text className={styles.statText}>Tổng Doanh Thu: {(totalRevenue / 1000000).toFixed(1)}M VNĐ</Text>
+                              <Text className={styles.statText}>
+                                Tổng Doanh Thu:{" "}
+                                {(totalRevenue / 1000000).toFixed(1)}M VNĐ
+                              </Text>
                             </Col>
                             <Col span={12}>
-                              <Text className={styles.statText}>Tăng trưởng: {growthRate}%</Text>
+                              <Text className={styles.statText}>
+                                Tăng trưởng: {growthRate}%
+                              </Text>
                             </Col>
                           </Row>
                           <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={enhancedPaymentData} margin={{ top: 10, right: 30, left: 20, bottom: 10 }}>
-                              <CartesianGrid strokeDasharray="3 3" className={styles.chartGrid} />
-                              <XAxis dataKey="paymentMethod" className={styles.chartAxis} />
-                              <YAxis tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`} className={styles.chartAxis} />
+                            <BarChart
+                              data={enhancedPaymentData}
+                              margin={{
+                                top: 10,
+                                right: 30,
+                                left: 20,
+                                bottom: 10,
+                              }}
+                            >
+                              <CartesianGrid
+                                strokeDasharray="3 3"
+                                className={styles.chartGrid}
+                              />
+                              <XAxis
+                                dataKey="paymentMethod"
+                                className={styles.chartAxis}
+                              />
+                              <YAxis
+                                tickFormatter={(value) =>
+                                  `${(value / 1000000).toFixed(1)}M`
+                                }
+                                className={styles.chartAxis}
+                              />
                               <Tooltip
                                 formatter={(value, name, props) => {
                                   const percentKey = `${name}_PERCENT`;
@@ -617,52 +883,102 @@ const AdminStatis = () => {
                                 }}
                                 wrapperClassName={styles.chartTooltip}
                               />
-                              <Legend wrapperStyle={{ className: styles.chartLegend }} />
-                              <Bar dataKey="PAID" stackId="a" fill={COLORS.PAID} barSize={40} onClick={handleBarClick}>
+                              <Legend
+                                wrapperStyle={{ className: styles.chartLegend }}
+                              />
+                              <Bar
+                                dataKey="PAID"
+                                stackId="a"
+                                fill={COLORS.PAID}
+                                barSize={40}
+                                onClick={handleBarClick}
+                              >
                                 {enhancedPaymentData.map((entry, index) => (
                                   <motion.g
                                     key={`bar-paid-${index}`}
                                     initial={{ scaleY: 0 }}
                                     animate={{ scaleY: 1 }}
-                                    transition={{ duration: 1, delay: index * 0.2 }}
+                                    transition={{
+                                      duration: 1,
+                                      delay: index * 0.2,
+                                    }}
                                   >
-                                    <Bar className={styles.chartBar} style={{ transform: "rotateX(45deg)" }} />
+                                    <Bar
+                                      className={styles.chartBar}
+                                      style={{ transform: "rotateX(45deg)" }}
+                                    />
                                   </motion.g>
                                 ))}
                               </Bar>
-                              <Bar dataKey="PENDING" stackId="a" fill={COLORS.PENDING} barSize={40} onClick={handleBarClick}>
+                              <Bar
+                                dataKey="PENDING"
+                                stackId="a"
+                                fill={COLORS.PENDING}
+                                barSize={40}
+                                onClick={handleBarClick}
+                              >
                                 {enhancedPaymentData.map((entry, index) => (
                                   <motion.g
                                     key={`bar-pending-${index}`}
                                     initial={{ scaleY: 0 }}
                                     animate={{ scaleY: 1 }}
-                                    transition={{ duration: 1, delay: index * 0.2 + 0.1 }}
+                                    transition={{
+                                      duration: 1,
+                                      delay: index * 0.2 + 0.1,
+                                    }}
                                   >
-                                    <Bar className={styles.chartBar} style={{ transform: "rotateX(45deg)" }} />
+                                    <Bar
+                                      className={styles.chartBar}
+                                      style={{ transform: "rotateX(45deg)" }}
+                                    />
                                   </motion.g>
                                 ))}
                               </Bar>
-                              <Bar dataKey="CANCELLED" stackId="a" fill={COLORS.CANCELLED} barSize={40} onClick={handleBarClick}>
+                              <Bar
+                                dataKey="CANCELLED"
+                                stackId="a"
+                                fill={COLORS.CANCELLED}
+                                barSize={40}
+                                onClick={handleBarClick}
+                              >
                                 {enhancedPaymentData.map((entry, index) => (
                                   <motion.g
                                     key={`bar-cancelled-${index}`}
                                     initial={{ scaleY: 0 }}
                                     animate={{ scaleY: 1 }}
-                                    transition={{ duration: 1, delay: index * 0.2 + 0.2 }}
+                                    transition={{
+                                      duration: 1,
+                                      delay: index * 0.2 + 0.2,
+                                    }}
                                   >
-                                    <Bar className={styles.chartBar} style={{ transform: "rotateX(45deg)" }} />
+                                    <Bar
+                                      className={styles.chartBar}
+                                      style={{ transform: "rotateX(45deg)" }}
+                                    />
                                   </motion.g>
                                 ))}
                               </Bar>
-                              <Bar dataKey="FAILED" stackId="a" fill={COLORS.FAILED} barSize={40} onClick={handleBarClick}>
+                              <Bar
+                                dataKey="FAILED"
+                                stackId="a"
+                                fill={COLORS.FAILED}
+                                barSize={40}
+                                onClick={handleBarClick}
+                              >
                                 {enhancedPaymentData.map((entry, index) => (
                                   <motion.g
                                     key={`bar-failed-${index}`}
                                     initial={{ scaleY: 0 }}
                                     animate={{ scaleY: 1 }}
-                                    transition={{ duration: 1, delay: index * 0.2 + 0.3 }}
+                                    transition={{
+                                      duration: 1,
+                                      delay: index * 0.2 + 0.3,
+                                    }}
                                   >
-                                    <Bar className={styles.chartBar} style={{ transform: "rotateX(45deg)" }} />
+                                    <Bar
+                                      className={styles.chartBar}
+                                      style={{ transform: "rotateX(45deg)" }}
+                                    />
                                   </motion.g>
                                 ))}
                               </Bar>
@@ -681,40 +997,98 @@ const AdminStatis = () => {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.5, type: "spring", delay: 1.2 }}
                 >
-                  <Card title={<span className={styles.chartTitle}>Số Lượng Hóa Đơn</span>} className={styles.card}>
-                    <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+                  <Card
+                    title={
+                      <span className={styles.chartTitle}>
+                        Số Lượng Hóa Đơn
+                      </span>
+                    }
+                    className={styles.card}
+                  >
+                    <Row
+                      justify="space-between"
+                      align="middle"
+                      style={{ marginBottom: 16 }}
+                    >
                       <Col>
-                        <Text strong className={styles.statText}>Loại thống kê: </Text>
-                        <Select value={invoiceCountType} onChange={(value) => setInvoiceCountType(value)} style={{ width: 120 }}>
+                        <Text strong className={styles.statText}>
+                          Loại thống kê:{" "}
+                        </Text>
+                        <Select
+                          value={invoiceCountType}
+                          onChange={(value) => setInvoiceCountType(value)}
+                          style={{ width: 120 }}
+                        >
                           <Option value="monthly">Theo tháng</Option>
                           <Option value="daily">Theo ngày</Option>
                         </Select>
                       </Col>
                       <Col>
-                        <Text strong className={styles.statText}>Năm: </Text>
-                        <InputNumber min={2000} max={moment().year() + 1} value={selectedYear} onChange={(value) => setSelectedYear(value)} />
+                        <Text strong className={styles.statText}>
+                          Năm:{" "}
+                        </Text>
+                        <InputNumber
+                          min={2000}
+                          max={moment().year() + 1}
+                          value={selectedYear}
+                          onChange={(value) => setSelectedYear(value)}
+                        />
                       </Col>
                       {invoiceCountType === "daily" && (
                         <Col>
-                          <Text strong className={styles.statText}>Tháng: </Text>
-                          <Select value={selectedMonth} onChange={(value) => setSelectedMonth(value)} style={{ width: 120 }} placeholder="Chọn tháng">
-                            {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
-                              <Option key={month} value={month}>Tháng {month}</Option>
-                            ))}
+                          <Text strong className={styles.statText}>
+                            Tháng:{" "}
+                          </Text>
+                          <Select
+                            value={selectedMonth}
+                            onChange={(value) => setSelectedMonth(value)}
+                            style={{ width: 120 }}
+                            placeholder="Chọn tháng"
+                          >
+                            {Array.from({ length: 12 }, (_, i) => i + 1).map(
+                              (month) => (
+                                <Option key={month} value={month}>
+                                  Tháng {month}
+                                </Option>
+                              ),
+                            )}
                           </Select>
                         </Col>
                       )}
                     </Row>
                     <div className={styles.chartContainer}>
                       {invoiceCount.length === 0 ? (
-                        <Text className={styles.statText}>Không có dữ liệu</Text>
+                        <Text className={styles.statText}>
+                          Không có dữ liệu
+                        </Text>
                       ) : (
                         <ResponsiveContainer width="100%" height={350}>
-                          <LineChart data={invoiceCount} margin={{ top: 10, right: 30, left: 20, bottom: 10 }}>
-                            <CartesianGrid strokeDasharray="3 3" className={styles.chartGrid} />
-                            <XAxis dataKey="period" interval={0} angle={-45} textAnchor="end" height={60} className={styles.chartAxis} />
+                          <LineChart
+                            data={invoiceCount}
+                            margin={{
+                              top: 10,
+                              right: 30,
+                              left: 20,
+                              bottom: 10,
+                            }}
+                          >
+                            <CartesianGrid
+                              strokeDasharray="3 3"
+                              className={styles.chartGrid}
+                            />
+                            <XAxis
+                              dataKey="period"
+                              interval={0}
+                              angle={-45}
+                              textAnchor="end"
+                              height={60}
+                              className={styles.chartAxis}
+                            />
                             <YAxis className={styles.chartAxis} />
-                            <Tooltip formatter={(value) => `${value} hóa đơn`} wrapperClassName={styles.chartTooltip} />
+                            <Tooltip
+                              formatter={(value) => `${value} hóa đơn`}
+                              wrapperClassName={styles.chartTooltip}
+                            />
                             <Line
                               type="monotone"
                               dataKey="count"
@@ -734,7 +1108,11 @@ const AdminStatis = () => {
                                   fill="#6B5BFF"
                                   initial={{ scale: 0 }}
                                   animate={{ scale: [1, 1.5, 1] }}
-                                  transition={{ repeat: Infinity, duration: 2, delay: index * 0.2 }}
+                                  transition={{
+                                    repeat: Infinity,
+                                    duration: 2,
+                                    delay: index * 0.2,
+                                  }}
                                 />
                               ))}
                             </Line>

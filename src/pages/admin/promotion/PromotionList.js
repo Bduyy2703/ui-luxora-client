@@ -722,7 +722,10 @@ const PromotionList = () => {
                         data={data}
                         validData={validData}
                         setValidData={setValidData}
-                        standardSort={standardSort}
+                        standardSort={[
+                          { name: "Tên chương trình", type: "name" },
+                          { name: "Giảm giá (%)", type: "discountAmount" },
+                        ]}
                         searchFields={[
                           {
                             key: "name",
