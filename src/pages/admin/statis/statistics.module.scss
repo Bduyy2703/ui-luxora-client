@@ -1,5 +1,5 @@
 .sider {
-  background: #1A1A1A;
+  background: #1a1a1a;
   .logo {
     padding: 16px;
     text-align: center;
@@ -7,15 +7,15 @@
 }
 
 .header {
-  background: #FFFFFF;
+  background: #ffffff;
   padding: 0 24px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
 .content {
-  margin: 24px 16px 24px 32px; /* Tăng margin-left từ 16px lên 32px để tạo khoảng cách với sidebar */
-  padding: 24px;
-  background: #FFFFFF;
+  margin: 24px 16px 24px 32px;
+  padding: 24px 24px 24px 50px;
+  background: #ffffff;
   min-height: 280px;
   overflow-y: auto;
   scroll-behavior: smooth;
@@ -24,7 +24,7 @@
 .kpiCard {
   border-radius: 12px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  background: linear-gradient(135deg, #D8C8FF, #C8EFFF);
+  background: linear-gradient(135deg, #d8c8ff, #c8efff);
   transition: all 0.3s;
   padding: 16px;
   &:hover {
@@ -36,7 +36,7 @@
 .card {
   border-radius: 12px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  background: linear-gradient(135deg, #D8C8FF, #C8EFFF);
+  background: linear-gradient(135deg, #d8c8ff, #c8efff);
   transition: all 0.3s;
   &:hover {
     transform: scale(1.02);
@@ -47,22 +47,22 @@
 .datePicker {
   margin-left: 16px;
   border-radius: 8px;
-  border: 1px solid #6B5BFF;
+  border: 1px solid #6b5bff;
   &:hover {
-    border-color: #00C4FF;
+    border-color: #00c4ff;
   }
 }
 
 .chartContainer {
   padding: 16px;
-  background: #FFFFFF;
+  background: #ffffff;
   border-radius: 12px;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
   position: relative;
   overflow: hidden;
   transition: all 0.3s;
   &:hover {
-    background: #F8FAFF;
+    background: #f8faff;
   }
 }
 
@@ -70,19 +70,19 @@
   font-family: "Inter", sans-serif;
   font-size: 18px;
   font-weight: 600;
-  color: #1A1A1A;
+  color: #1a1a1a;
   margin-bottom: 16px;
 }
 
 .chartTooltip {
-  background: #FFFFFF;
-  border: 1px solid #6B5BFF;
+  background: #ffffff;
+  border: 1px solid #6b5bff;
   border-radius: 8px;
   padding: 8px 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   font-family: "Inter", sans-serif;
   font-size: 14px;
-  color: #4A4A4A;
+  color: #4a4a4a;
   p {
     margin: 0;
     line-height: 1.5;
@@ -93,20 +93,20 @@
   font-family: "Inter", sans-serif;
   font-size: 12px;
   font-weight: 500;
-  fill: #4A4A4A;
+  fill: #4a4a4a;
 }
 
 .chartGrid {
-  stroke: #E5E7EB;
-  strokeDasharray: 3 3;
+  stroke: #e5e7eb;
+  strokedasharray: 3 3;
 }
 
 .chartAxis {
   font-family: "Inter", sans-serif;
   font-size: 12px;
-  fill: #4A4A4A;
+  fill: #4a4a4a;
   .tickLine {
-    stroke: #E5E7EB;
+    stroke: #e5e7eb;
   }
 }
 
@@ -124,40 +124,40 @@
   font-family: "Inter", sans-serif;
   font-size: 12px;
   font-weight: 600;
-  fill: #1A1A1A;
+  fill: #1a1a1a;
 }
 
 .chartLegend {
   font-family: "Inter", sans-serif;
   font-size: 12px;
-  color: #4A4A4A;
+  color: #4a4a4a;
   margin-top: 8px;
 }
 
 .statText {
-  color: #4A4A4A;
+  color: #4a4a4a;
   font-family: "Inter", sans-serif;
 }
 
 .kpiTitle {
-  color: #4A4A4A;
+  color: #4a4a4a;
   font-family: "Inter", sans-serif;
   font-size: 14px;
   font-weight: 500;
 }
 
 .switchButton {
-  background: linear-gradient(135deg, #6B5BFF, #00C4FF);
+  background: linear-gradient(135deg, #6b5bff, #00c4ff);
   border: none;
   &:hover {
-    background: linear-gradient(135deg, #00C4FF, #6B5BFF);
+    background: linear-gradient(135deg, #00c4ff, #6b5bff);
   }
 }
 
 .spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid #6B5BFF;
+  border: 4px solid #6b5bff;
   border-top: 4px solid transparent;
   border-radius: 50%;
   animation: spin 1s linear infinite;
@@ -165,6 +165,10 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }

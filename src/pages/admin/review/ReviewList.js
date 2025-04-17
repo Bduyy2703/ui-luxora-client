@@ -411,12 +411,10 @@ const AdminReviewList = () => {
                         data={data}
                         validData={validData}
                         setValidData={setValidData}
-                        standardSort={standardSort}
+                        standardSort={[
+                          { name: "Bình luận", type: "comment" },
+                        ]}
                         searchFields={[
-                          {
-                            key: "product.name",
-                            placeholder: "Tìm kiếm theo bình luận",
-                          },
                           {
                             key: "comment",
                             placeholder: "Tìm kiếm theo bình luận",
