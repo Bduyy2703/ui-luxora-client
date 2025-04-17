@@ -14,6 +14,7 @@ function Home() {
   const [flashSaleProducts, setFlashSaleProducts] = useState([]);
   const [flashSaleLoading, setFlashSaleLoading] = useState(true);
   const [flashSaleEndTime, setFlashSaleEndTime] = useState(null);
+  const [allProducts, setAllProducts] = useState([]); // State để lưu toàn bộ sản phẩm từ getProductList
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [cateProducts, setCateProducts] = useState([]);
   const [news, setNews] = useState([]);
@@ -60,16 +61,22 @@ function Home() {
             })),
           ];
         } else {
-          const products = sale.productStrategySales.map((item) => ({
-            ...item.product,
-            saleId: sale.id,
-            saleName: sale.name,
-            discountPercent: parseFloat(sale.discountAmount) || 0,
-            finalPrice: (
-              (parseFloat(item.product.originalPrice) || 0) *
-              (1 - (parseFloat(sale.discountAmount) || 0) / 100)
-            ).toFixed(2),
-          }));
+          const products = sale.productStrategySales.map((item) => {
+            const productFromList = allProducts.find(
+              (p) => p.id === item.product.id,
+            );
+            return {
+              ...item.product,
+              saleId: sale.id,
+              saleName: sale.name,
+              discountPercent: parseFloat(sale.discountAmount) || 0,
+              finalPrice: (
+                (parseFloat(item.product.originalPrice) || 0) *
+                (1 - (parseFloat(sale.discountAmount) || 0) / 100)
+              ).toFixed(2),
+              images: productFromList?.images,
+            };
+          });
           allFlashSaleProducts = [...allFlashSaleProducts, ...products];
         }
       }
@@ -105,11 +112,10 @@ function Home() {
         return;
       }
 
-      // Sửa cách tính giờ, phút, giây để tính tổng thời gian còn lại
-      const totalSeconds = Math.floor(distance / 1000); // Tổng số giây còn lại
-      const hours = Math.floor(totalSeconds / (60 * 60)); // Tổng số giờ
-      const minutes = Math.floor((totalSeconds % (60 * 60)) / 60); // Phút còn lại
-      const seconds = Math.floor(totalSeconds % 60); // Giây còn lại
+      const totalSeconds = Math.floor(distance / 1000);
+      const hours = Math.floor(totalSeconds / (60 * 60));
+      const minutes = Math.floor((totalSeconds % (60 * 60)) / 60);
+      const seconds = Math.floor(totalSeconds % 60);
 
       setTimeLeft({ hours, minutes, seconds });
     };
@@ -121,6 +127,18 @@ function Home() {
   }, [flashSaleEndTime]);
 
   useEffect(() => {
+    const getAllProducts = async () => {
+      try {
+        const productsResponse = await getProductList(1, 1000);
+        console.log("productsResponse:", productsResponse);
+        const products = productsResponse?.data || [];
+        setAllProducts(products);
+      } catch (error) {
+        console.error("Lỗi khi lấy toàn bộ sản phẩm:", error);
+        setAllProducts([]);
+      }
+    };
+
     const getProducts = async () => {
       try {
         setProductsLoading(true);
@@ -176,11 +194,17 @@ function Home() {
       }
     };
 
+    getAllProducts();
     getProducts();
     getSaleProductsData();
     fetchNews();
-    getFlashSaleData();
   }, []);
+
+  useEffect(() => {
+    if (allProducts.length > 0) {
+      getFlashSaleData();
+    }
+  }, [allProducts]);
 
   const handleCategoryClick = (categoryId) => {
     setSelectedCategory(categoryId);
