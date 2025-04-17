@@ -8,8 +8,11 @@ import { Badge, Button } from "antd";
 
 function Home() {
   const [products, setProducts] = useState([]);
+  const [productsLoading, setProductsLoading] = useState(true);
   const [saleProducts, setSaleProducts] = useState([]);
+  const [saleProductsLoading, setSaleProductsLoading] = useState(true);
   const [flashSaleProducts, setFlashSaleProducts] = useState([]);
+  const [flashSaleLoading, setFlashSaleLoading] = useState(true);
   const [flashSaleEndTime, setFlashSaleEndTime] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [cateProducts, setCateProducts] = useState([]);
@@ -22,6 +25,7 @@ function Home() {
 
   const getFlashSaleData = async () => {
     try {
+      setFlashSaleLoading(true);
       const salesResponse = await getAllSales({ page: 1, limit: 1000 });
       const activeSales = salesResponse.filter((sale) => sale.isActive);
 
@@ -75,6 +79,8 @@ function Home() {
       console.error("Lỗi khi lấy dữ liệu Flash Sale:", error);
       setFlashSaleProducts([]);
       setFlashSaleEndTime(null);
+    } finally {
+      setFlashSaleLoading(false);
     }
   };
 
@@ -99,11 +105,11 @@ function Home() {
         return;
       }
 
-      const hours = Math.floor(
-        (distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
-      );
-      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+      // Sửa cách tính giờ, phút, giây để tính tổng thời gian còn lại
+      const totalSeconds = Math.floor(distance / 1000); // Tổng số giây còn lại
+      const hours = Math.floor(totalSeconds / (60 * 60)); // Tổng số giờ
+      const minutes = Math.floor((totalSeconds % (60 * 60)) / 60); // Phút còn lại
+      const seconds = Math.floor(totalSeconds % 60); // Giây còn lại
 
       setTimeLeft({ hours, minutes, seconds });
     };
@@ -116,16 +122,30 @@ function Home() {
 
   useEffect(() => {
     const getProducts = async () => {
-      const data = await getProductList(limit, 10);
-      if (data && data.data) {
-        setProducts(data.data);
+      try {
+        setProductsLoading(true);
+        const data = await getProductList(limit, 10);
+        if (data && data.data) {
+          setProducts(data.data);
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy dữ liệu sản phẩm:", error);
+      } finally {
+        setProductsLoading(false);
       }
     };
 
     const getSaleProductsData = async () => {
-      const data = await getProductList(limit, 10);
-      if (data && data.data) {
-        setSaleProducts(data.data);
+      try {
+        setSaleProductsLoading(true);
+        const data = await getProductList(limit, 10);
+        if (data && data.data) {
+          setSaleProducts(data.data);
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy dữ liệu sản phẩm sale:", error);
+      } finally {
+        setSaleProductsLoading(false);
       }
     };
 
@@ -255,7 +275,11 @@ function Home() {
         </div>
       </div>
 
-      {flashSaleProducts.length > 0 && (
+      {flashSaleLoading ? (
+        <div className={styles.loadingSpinnerContainer}>
+          <div className={styles.loadingSpinner}></div>
+        </div>
+      ) : flashSaleProducts.length > 0 ? (
         <div className={styles.flashSaleSection}>
           <div className={styles.flashSaleHeader}>
             <h2 className={styles.flashSaleTitle}>
@@ -266,9 +290,6 @@ function Home() {
                 {String(timeLeft.seconds).padStart(2, "0")}
               </span>
             </h2>
-            <Button type="link" onClick={() => navigate("/flash-sale")}>
-              Xem tất cả
-            </Button>
           </div>
           <div className={styles.flashSaleSwiper}>
             {flashSaleProducts.map((product, index) => (
@@ -283,7 +304,7 @@ function Home() {
                 <div className={styles.flashSaleImageWrapper}>
                   <Badge.Ribbon
                     text={`-${product.discountPercent}%`}
-                    color="red"
+                    color="#ff4d4f"
                   >
                     <img
                       loading="lazy"
@@ -321,7 +342,7 @@ function Home() {
             ))}
           </div>
         </div>
-      )}
+      ) : null}
 
       <div className={styles.titleModules}>
         <a className={styles.bestSeller}>
@@ -330,54 +351,63 @@ function Home() {
         </a>
       </div>
 
-      <div className={styles.swiper}>
-        {saleProducts.slice(0, 4).map((product, index) => (
-          <div
-            key={product.id}
-            className={styles.item}
-            onClick={() => handleProductClick(product.id)}
-            style={{ animationDelay: `${index * 0.2}s` }}
-            role="button"
-            aria-label={`Xem chi tiết sản phẩm ${product.name}`}
-          >
-            <div className={styles.imageWrapper}>
-              {product.isHot && <span className={styles.badge}>Hot</span>}
-              <img
-                loading="lazy"
-                className={styles.picture}
-                style={{ cursor: "pointer" }}
-                src={
-                  product?.images?.[0] || "https://via.placeholder.com/303x305"
-                }
-                alt={product.name}
-              />
-            </div>
-            <div className={styles.content}>
-              <span style={{ cursor: "pointer" }} className={styles.desc}>
-                {product.name}
-              </span>
-              <div className={styles.footerItem}>
-                <div className={styles.priceWrapper}>
-                  <h4 className={styles.price}>
-                    {new Intl.NumberFormat("vi-VN").format(product.finalPrice)}{" "}
-                    <span className={styles.dong}>đ</span>
-                  </h4>
-                  {parseFloat(product.finalPrice) !==
-                    parseFloat(product.originalPrice) && (
-                    <span className={styles.originalPrice}>
+      {saleProductsLoading ? (
+        <div className={styles.loadingSpinnerContainer}>
+          <div className={styles.loadingSpinner}></div>
+        </div>
+      ) : (
+        <div className={styles.swiper}>
+          {saleProducts.slice(0, 4).map((product, index) => (
+            <div
+              key={product.id}
+              className={styles.item}
+              onClick={() => handleProductClick(product.id)}
+              style={{ animationDelay: `${index * 0.2}s` }}
+              role="button"
+              aria-label={`Xem chi tiết sản phẩm ${product.name}`}
+            >
+              <div className={styles.imageWrapper}>
+                {product.isHot && <span className={styles.badge}>Hot</span>}
+                <img
+                  loading="lazy"
+                  className={styles.picture}
+                  style={{ cursor: "pointer" }}
+                  src={
+                    product?.images?.[0] ||
+                    "https://via.placeholder.com/303x305"
+                  }
+                  alt={product.name}
+                />
+              </div>
+              <div className={styles.content}>
+                <span style={{ cursor: "pointer" }} className={styles.desc}>
+                  {product.name}
+                </span>
+                <div className={styles.footerItem}>
+                  <div className={styles.priceWrapper}>
+                    <h4 className={styles.price}>
                       {new Intl.NumberFormat("vi-VN").format(
-                        product.originalPrice,
+                        product.finalPrice,
                       )}{" "}
-                      đ
-                    </span>
-                  )}
+                      <span className={styles.dong}>đ</span>
+                    </h4>
+                    {parseFloat(product.finalPrice) !==
+                      parseFloat(product.originalPrice) && (
+                      <span className={styles.originalPrice}>
+                        {new Intl.NumberFormat("vi-VN").format(
+                          product.originalPrice,
+                        )}{" "}
+                        đ
+                      </span>
+                    )}
+                  </div>
+                  <div className={styles.sold}>Đã bán {product.sold}</div>
                 </div>
-                <div className={styles.sold}>Đã bán {product.sold}</div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       <div className={styles.titleModules}>
         <a className={styles.bestSeller}>
@@ -386,53 +416,62 @@ function Home() {
         </a>
       </div>
 
-      <div className={styles.swiper}>
-        {products.slice(4, 8).map((product, index) => (
-          <div
-            key={product.id}
-            className={styles.item}
-            onClick={() => handleProductClick(product.id)}
-            style={{ animationDelay: `${index * 0.2}s`, cursor: "pointer" }}
-            role="button"
-            aria-label={`Xem chi tiết sản phẩm ${product.name}`}
-          >
-            <div className={styles.imageWrapper}>
-              {product.isNew && <span className={styles.badge}>New</span>}
-              <img
-                loading="lazy"
-                className={styles.picture}
-                src={
-                  product?.images?.[0] || "https://via.placeholder.com/303x305"
-                }
-                alt={product.name}
-              />
-            </div>
-            <div className={styles.content}>
-              <span style={{ cursor: "pointer" }} className={styles.desc}>
-                {product.name}
-              </span>
-              <div className={styles.footerItem}>
-                <div className={styles.priceWrapper}>
-                  <h4 className={styles.price}>
-                    {new Intl.NumberFormat("vi-VN").format(product.finalPrice)}{" "}
-                    <span className={styles.dong}>đ</span>
-                  </h4>
-                  {parseFloat(product.finalPrice) !==
-                    parseFloat(product.originalPrice) && (
-                    <span className={styles.originalPrice}>
+      {productsLoading ? (
+        <div className={styles.loadingSpinnerContainer}>
+          <div className={styles.loadingSpinner}></div>
+        </div>
+      ) : (
+        <div className={styles.swiper}>
+          {products.slice(4, 8).map((product, index) => (
+            <div
+              key={product.id}
+              className={styles.item}
+              onClick={() => handleProductClick(product.id)}
+              style={{ animationDelay: `${index * 0.2}s`, cursor: "pointer" }}
+              role="button"
+              aria-label={`Xem chi tiết sản phẩm ${product.name}`}
+            >
+              <div className={styles.imageWrapper}>
+                {product.isNew && <span className={styles.badge}>New</span>}
+                <img
+                  loading="lazy"
+                  className={styles.picture}
+                  src={
+                    product?.images?.[0] ||
+                    "https://via.placeholder.com/303x305"
+                  }
+                  alt={product.name}
+                />
+              </div>
+              <div className={styles.content}>
+                <span style={{ cursor: "pointer" }} className={styles.desc}>
+                  {product.name}
+                </span>
+                <div className={styles.footerItem}>
+                  <div className={styles.priceWrapper}>
+                    <h4 className={styles.price}>
                       {new Intl.NumberFormat("vi-VN").format(
-                        product.originalPrice,
+                        product.finalPrice,
                       )}{" "}
-                      đ
-                    </span>
-                  )}
+                      <span className={styles.dong}>đ</span>
+                    </h4>
+                    {parseFloat(product.finalPrice) !==
+                      parseFloat(product.originalPrice) && (
+                      <span className={styles.originalPrice}>
+                        {new Intl.NumberFormat("vi-VN").format(
+                          product.originalPrice,
+                        )}{" "}
+                        đ
+                      </span>
+                    )}
+                  </div>
+                  <div className={styles.sold}>Đã bán {product.sold}</div>
                 </div>
-                <div className={styles.sold}>Đã bán {product.sold}</div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       <div className={styles.banner}>
         <div>
@@ -504,11 +543,13 @@ function Home() {
       </div>
 
       <div className={styles.news}>
-        {newsLoading && (
-          <div className={styles.loading}>Đang tải tin tức...</div>
-        )}
-        {newsError && <div className={styles.error}>{newsError}</div>}
-        {!newsLoading && !newsError && (
+        {newsLoading ? (
+          <div className={styles.loadingSpinnerContainer}>
+            <div className={styles.loadingSpinner}></div>
+          </div>
+        ) : newsError ? (
+          <div className={styles.error}>{newsError}</div>
+        ) : (
           <div className={styles.newsGrid}>
             {news.map((item, index) => (
               <div
