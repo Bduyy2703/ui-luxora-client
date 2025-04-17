@@ -238,13 +238,18 @@ function Header() {
 
         <div className={styles.menu}>
           <ul>
-            <li onClick={handleSaleClick} style={{ cursor: "pointer" }}>
+            <li
+              onClick={handleSaleClick}
+              style={{ cursor: "pointer", fontWeight: "600" }}
+            >
               SALE
               <FontAwesomeIcon className={styles.iconFire} icon={faFire} />
             </li>
             {menuItems.map((item) => (
               <li key={item.id}>
-                {item.name.toUpperCase()}
+                <div style={{ fontWeight: "600", fontSize: "16px" }}>
+                  {item.name.toUpperCase()}
+                </div>
                 <div className={styles.submenu}>
                   <div className={styles.menu1}>
                     {item.children && item.children.length > 0 ? (
