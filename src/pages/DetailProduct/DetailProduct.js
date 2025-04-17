@@ -18,6 +18,7 @@ export const DetailProduct = () => {
   const [quantity, setQuantity] = useState(1);
   const [product, setProduct] = useState({});
   const [selectedColor, setSelectedColor] = useState(null);
+  const [selectedSize, setSelectedSize] = useState("");
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -38,6 +39,7 @@ export const DetailProduct = () => {
         setProduct(data);
         if (data.productDetails && data.productDetails.length > 0) {
           setSelectedColor(data.productDetails[0].color);
+          setSelectedSize(data.productDetails[0].size); // Đặt kích thước mặc định
         }
       } catch (error) {
         console.error("Error fetching product:", error);
@@ -57,56 +59,6 @@ export const DetailProduct = () => {
     return !!(accessToken && email);
   };
 
-  // const handleAddToCart = () => {
-  //   if (!checkLoginStatus()) {
-  //     notification.error({
-  //       message: "Thông báo",
-  //       description: "Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng",
-  //       duration: 3,
-  //     });
-  //     navigate("/login");
-  //     return;
-  //   }
-
-  //   const cartItems = JSON.parse(localStorage.getItem("cartItems")) || [];
-  //   // Kiểm tra dựa trên id, selectedColor và selectedSize
-  //   const existingProductIndex = cartItems.findIndex(
-  //     (item) =>
-  //       item.id === id &&
-  //       item.selectedColor === selectedColor &&
-  //       item.selectedSize ===
-  //         product.productDetails?.find(
-  //           (detail) => detail.color === selectedColor,
-  //         )?.size,
-  //   );
-
-  //   if (existingProductIndex !== -1) {
-  //     // Nếu đã tồn tại cùng id, color và size, tăng số lượng
-  //     cartItems[existingProductIndex].quantity += quantity;
-  //   } else {
-  //     // Nếu khác color hoặc size, tạo mục mới
-  //     cartItems.push({
-  //       id: id,
-  //       product: product,
-  //       quantity: quantity,
-  //       selectedColor: selectedColor,
-  //       selectedSize: product.productDetails?.find(
-  //         (detail) => detail.color === selectedColor,
-  //       )?.size,
-  //     });
-  //   }
-
-  //   localStorage.setItem("cartItems", JSON.stringify(cartItems));
-
-  //   notification.success({
-  //     message: "Thông báo",
-  //     description: "Thêm vào giỏ hàng thành công",
-  //     duration: 3,
-  //   });
-
-  //   navigate(`/cart/gio-hang-cua-ban`);
-  // };
-
   const handleAddToCart = async () => {
     if (!checkLoginStatus()) {
       notification.error({
@@ -120,7 +72,8 @@ export const DetailProduct = () => {
 
     try {
       const selectedDetail = product.productDetails?.find(
-        (detail) => detail.color === selectedColor
+        (detail) =>
+          detail.color === selectedColor && detail.size === selectedSize,
       );
 
       if (!selectedDetail) {
@@ -141,7 +94,7 @@ export const DetailProduct = () => {
         return;
       }
 
-      setLoading(true); // Thêm state loading
+      setLoading(true);
       const cartData = {
         productDetailsId: selectedDetail.id,
         quantity: quantity,
@@ -165,13 +118,27 @@ export const DetailProduct = () => {
       setLoading(false);
     }
   };
+
   const colorOptions = [
     ...new Set(product.productDetails?.map((detail) => detail.color) || []),
   ];
 
-  const selectedSize = product.productDetails?.find(
-    (detail) => detail.color === selectedColor,
-  )?.size;
+  const sizeOptions =
+    product.productDetails
+      ?.filter((detail) => detail.color === selectedColor)
+      ?.map((detail) => detail.size) || [];
+
+  const handleColorChange = (color) => {
+    setSelectedColor(color);
+    const defaultSize =
+      product.productDetails?.find((detail) => detail.color === color)?.size ||
+      "";
+    setSelectedSize(defaultSize);
+  };
+
+  const handleSizeChange = (e) => {
+    setSelectedSize(e.target.value);
+  };
 
   return (
     <>
@@ -227,7 +194,7 @@ export const DetailProduct = () => {
                             name="color"
                             value={color}
                             checked={selectedColor === color}
-                            onChange={() => setSelectedColor(color)}
+                            onChange={() => handleColorChange(color)}
                           />
                           <span>{color}</span>
                         </label>
@@ -237,7 +204,22 @@ export const DetailProduct = () => {
                   {selectedColor && (
                     <div className={styles.size}>
                       <div>Kích thước: </div>
-                      <div>{selectedSize || "N/A"}</div>
+                      <select
+                        value={selectedSize}
+                        onChange={handleSizeChange}
+                        className={styles.sizeDropdown}
+                        disabled={sizeOptions.length === 0}
+                      >
+                        {sizeOptions.length === 0 ? (
+                          <option value="">Không có kích thước</option>
+                        ) : (
+                          sizeOptions.map((size) => (
+                            <option key={size} value={size}>
+                              {size}
+                            </option>
+                          ))
+                        )}
+                      </select>
                     </div>
                   )}
                   <div className={styles.quantity}>
