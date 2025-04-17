@@ -1,17 +1,16 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import styles from "./Home.module.scss";
-import {
-  fetchProducts,
-  getSaleProducts,
-  getProductbyCategory,
-  getProductList,
-} from "../../../src/services/api/productService";
 import { getAllBlogs } from "../../../src/services/api/blogService";
+import { getProductList } from "../../../src/services/api/productService";
+import { getAllSales } from "../../../src/services/api/promotionService"; // Thêm API getAllSales
+import styles from "./Home.module.scss";
+import { Badge, Button, Card } from "antd"; // Thêm các component từ Ant Design
 
 function Home() {
   const [products, setProducts] = useState([]);
   const [saleProducts, setSaleProducts] = useState([]);
+  const [flashSaleProducts, setFlashSaleProducts] = useState([]); // State cho Flash Sale
+  const [flashSaleEndTime, setFlashSaleEndTime] = useState(null); // Thời gian kết thúc Flash Sale
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [cateProducts, setCateProducts] = useState([]);
   const [news, setNews] = useState([]);
@@ -20,6 +19,133 @@ function Home() {
   const navigate = useNavigate();
 
   const limit = 1;
+
+  // Hàm tính mức giảm giá cao nhất cho một sản phẩm
+  const getHighestDiscountForProduct = async (productId, sales) => {
+    let highestDiscount = 0;
+    let selectedSale = null;
+
+    sales.forEach((sale) => {
+      if (
+        sale.isActive &&
+        (sale.isGlobalSale ||
+          sale.productStrategySales.some(
+            (item) => item.productId === productId,
+          ))
+      ) {
+        const discount = parseFloat(sale.discountAmount) || 0;
+        if (discount > highestDiscount) {
+          highestDiscount = discount;
+          selectedSale = sale;
+        }
+      }
+    });
+
+    return { highestDiscount, selectedSale };
+  };
+
+  // Hàm lấy dữ liệu Flash Sale
+  const getFlashSaleData = async () => {
+    try {
+      const salesResponse = await getAllSales({ page: 1, limit: 1000 });
+      const activeSales = salesResponse.filter((sale) => sale.isActive);
+
+      if (activeSales.length === 0) {
+        setFlashSaleProducts([]);
+        setFlashSaleEndTime(null);
+        return;
+      }
+
+      // Lấy thời gian kết thúc sớm nhất
+      const endTimes = activeSales.map((sale) =>
+        new Date(sale.endDate).getTime(),
+      );
+      const earliestEndTime = Math.min(...endTimes);
+      setFlashSaleEndTime(new Date(earliestEndTime));
+
+      // Lấy danh sách sản phẩm tham gia Flash Sale
+      let allFlashSaleProducts = [];
+      for (const sale of activeSales) {
+        if (sale.isGlobalSale) {
+          const productsResponse = await getProductList(1, 1000);
+          const products = productsResponse?.data || [];
+          allFlashSaleProducts = [...allFlashSaleProducts, ...products];
+        } else {
+          const products = sale.productStrategySales.map((item) => ({
+            ...item.product,
+            saleId: sale.id,
+          }));
+          allFlashSaleProducts = [...allFlashSaleProducts, ...products];
+        }
+      }
+
+      // Loại bỏ sản phẩm trùng lặp và tính giá sau giảm
+      const uniqueProducts = [];
+      const seenProductIds = new Set();
+
+      for (const product of allFlashSaleProducts) {
+        if (!seenProductIds.has(product.id)) {
+          seenProductIds.add(product.id);
+          const { highestDiscount } = await getHighestDiscountForProduct(
+            product.id,
+            activeSales,
+          );
+          const originalPrice = parseFloat(product.originalPrice) || 0;
+          const finalPrice =
+            originalPrice - (originalPrice * highestDiscount) / 100;
+
+          uniqueProducts.push({
+            ...product,
+            finalPrice: finalPrice.toFixed(2),
+            discountPercent: highestDiscount,
+          });
+        }
+      }
+
+      setFlashSaleProducts(uniqueProducts.slice(0, 6)); // Giới hạn 6 sản phẩm
+    } catch (error) {
+      console.error("Lỗi khi lấy dữ liệu Flash Sale:", error);
+      setFlashSaleProducts([]);
+      setFlashSaleEndTime(null);
+    }
+  };
+
+  // Đồng hồ đếm ngược
+  const [timeLeft, setTimeLeft] = useState({
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
+
+  useEffect(() => {
+    const updateTimer = () => {
+      if (!flashSaleEndTime) return;
+
+      const now = new Date().getTime();
+      const end = flashSaleEndTime.getTime();
+      const distance = end - now;
+
+      if (distance <= 0) {
+        setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
+        setFlashSaleProducts([]);
+        setFlashSaleEndTime(null);
+        return;
+      }
+
+      const hours = Math.floor(
+        (distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+      );
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      setTimeLeft({ hours, minutes, seconds });
+    };
+
+    updateTimer();
+    const timer = setInterval(updateTimer, 1000);
+
+    return () => clearInterval(timer);
+  }, [flashSaleEndTime]);
 
   useEffect(() => {
     const getProducts = async () => {
@@ -66,6 +192,7 @@ function Home() {
     getProducts();
     getSaleProductsData();
     fetchNews();
+    getFlashSaleData(); // Thêm hàm lấy dữ liệu Flash Sale
   }, []);
 
   const handleCategoryClick = (categoryId) => {
@@ -87,7 +214,7 @@ function Home() {
           className={styles.img}
           src="https://bizweb.dktcdn.net/100/461/213/themes/870653/assets/slider_1.jpg?1728012064200"
           alt="Bộ Sưu Tập Resort ' 2024"
-        ></img>
+        />
       </div>
 
       <div className={styles.section}>
@@ -97,11 +224,11 @@ function Home() {
               width="50"
               height="50"
               className={styles.lazyLoad}
-              src="//bizweb.dktcdn.net/100/461/213/themes/870653/assets/ser_1.png?1728012064200"
+              src="https://bizweb.dktcdn.net/100/461/213/themes/870653/assets/ser_1.png?1744711547396"
               data-src="//bizweb.dktcdn.net/100/461/213/themes/870653/assets/ser_1.png?1728012064200"
               alt="Miễn phí vận chuyển"
               data-was-processed="true"
-            ></img>
+            />
           </div>
           <div className={styles.info}>
             <span>MIỄN PHÍ vận chuyển</span>
@@ -118,7 +245,7 @@ function Home() {
               data-src="//bizweb.dktcdn.net/100/461/213/themes/870653/assets/ser_2.png?1728012064200"
               alt="Đổi trả miễn phí"
               data-was-processed="true"
-            ></img>
+            />
           </div>
           <div className={styles.info}>
             <span>Đổi trả MIỄN PHÍ</span>
@@ -135,7 +262,7 @@ function Home() {
               data-src="//bizweb.dktcdn.net/100/461/213/themes/870653/assets/ser_1.png?1728012064200"
               alt="Dịch vụ bảo hành"
               data-was-processed="true"
-            ></img>
+            />
           </div>
           <div className={styles.info}>
             <span>Dịch vụ BẢO HÀNH</span>
@@ -152,7 +279,7 @@ function Home() {
               data-src="//bizweb.dktcdn.net/100/461/213/themes/870653/assets/ser_1.png?1728012064200"
               alt="Túi và hộp quà"
               data-was-processed="true"
-            ></img>
+            />
           </div>
           <div className={styles.info}>
             <span>Túi & hộp TRANG NHÃ</span>
@@ -160,6 +287,69 @@ function Home() {
           </div>
         </div>
       </div>
+
+      {/* Thêm mục Flash Sale */}
+      {flashSaleProducts.length > 0 && (
+        <div className={styles.flashSaleSection}>
+          <div className={styles.flashSaleHeader}>
+            <h2 className={styles.flashSaleTitle}>
+              <span style={{ color: "#ff4d4f" }}>FLASH SALE</span>
+              <span style={{ marginLeft: 10 }}>
+                {String(timeLeft.hours).padStart(2, "0")}:
+                {String(timeLeft.minutes).padStart(2, "0")}:
+                {String(timeLeft.seconds).padStart(2, "0")}
+              </span>
+            </h2>
+          </div>
+          <div className={styles.flashSaleSwiper}>
+            {flashSaleProducts.map((product, index) => (
+              <div
+                key={product.id}
+                className={styles.flashSaleItem}
+                onClick={() => handleProductClick(product.id)}
+                style={{ animationDelay: `${index * 0.2}s` }}
+                role="button"
+                aria-label={`Xem chi tiết sản phẩm ${product.name}`}
+              >
+                <div className={styles.flashSaleImageWrapper}>
+                  <Badge.Ribbon
+                    text={`-${product.discountPercent}%`}
+                    color="red"
+                  >
+                    <img
+                      loading="lazy"
+                      className={styles.flashSalePicture}
+                      src={
+                        product?.images?.[0] ||
+                        "https://via.placeholder.com/200x200"
+                      }
+                      alt={product.name}
+                    />
+                  </Badge.Ribbon>
+                </div>
+                <div className={styles.flashSaleContent}>
+                  <span className={styles.flashSaleDesc}>{product.name}</span>
+                  <div className={styles.flashSalePriceWrapper}>
+                    <h4 className={styles.flashSalePrice}>
+                      {new Intl.NumberFormat("vi-VN").format(
+                        product.finalPrice,
+                      )}{" "}
+                      <span className={styles.dong}>đ</span>
+                    </h4>
+                    <span className={styles.flashSaleOriginalPrice}>
+                      {new Intl.NumberFormat("vi-VN").format(
+                        product.originalPrice,
+                      )}{" "}
+                      đ
+                    </span>
+                  </div>
+                  <div className={styles.flashSaleStatus}>ĐANG BÁN CHẠY</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className={styles.titleModules}>
         <a className={styles.bestSeller}>
