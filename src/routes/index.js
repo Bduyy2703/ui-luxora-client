@@ -17,10 +17,10 @@ import ProductList from "../pages/ProductList";
 import VerifyOTP from "../pages/VerifyRegister";
 import ResetPassword from "../pages/ResetPassword";
 import Checkout from "../pages/Checkout";
-import PaymentSuccess from "../pages/PaymentSuccess";
 import InvoiceDetail from "../pages/invoiceDetail";
-import ThankYou from "../pages/PaymentSuccess";
+import ThankYou from "../pages/ConfirmSuccess";
 import BlogsListPage from "../pages/blogs";
+import PaymentSuccess from "../pages/PaymentSuccess";
 
 function requireAuth(to, from, next) {
   const token = localStorage.getItem("decodedToken");
@@ -61,7 +61,8 @@ const publicRoutes = [
   { path: "/blog/:id", component: BlogsListPage },
   { path: "/reset-password", component: ResetPassword },
   { path: "/checkout", component: Checkout, layout: null },
-  { path: "/payment-success", component: ThankYou, layout: null },
+  { path: "/confirm-success", component: ThankYou, layout: null },
+  { path: "/payment-success", component: PaymentSuccess, layout: null },
 ];
 
 // ví dụ phải đăng nhập mới xem được
