@@ -181,7 +181,7 @@
         position: absolute;
         top: 12px;
         right: 12px;
-        background: #ff4d4f;
+        // background: #ff4d4f;
         color: #fff;
         padding: 6px 12px;
         border-radius: 14px;
@@ -754,12 +754,13 @@
     }
   }
 }
+
 .flashSaleSection {
   margin: 40px 125px;
   padding: 20px;
   background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 12px; // Bo góc mềm mại hơn
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); // Bóng đổ tinh tế hơn
 }
 
 .flashSaleHeader {
@@ -772,16 +773,38 @@
 .flashSaleTitle {
   font-size: 24px;
   font-weight: bold;
+  display: flex;
+  align-items: center;
 
   span {
     margin-right: 10px;
+  }
+
+  // Hiệu ứng nhấp nháy cho đồng hồ đếm ngược
+  & > span:last-child {
+    background: #ff4d4f;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 4px;
+    animation: blink 2s infinite;
+  }
+}
+
+// Keyframes cho hiệu ứng nhấp nháy
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
   }
 }
 
 .flashSaleSwiper {
   display: flex;
   overflow-x: auto;
-  gap: 15px;
+  gap: 20px; // Tăng khoảng cách giữa các sản phẩm
   padding-bottom: 10px;
 
   &::-webkit-scrollbar {
@@ -801,12 +824,33 @@
   border-radius: 8px;
   padding: 10px;
   cursor: pointer;
-  transition: transform 0.3s;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease; // Hiệu ứng mượt mà
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   min-height: 320px;
   width: 270px;
+
+  // Hiệu ứng khi hover
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2); // Bóng đổ lớn hơn khi hover
+  }
+
+  // Hiệu ứng animation khi xuất hiện
+  opacity: 0;
+  transform: translateY(20px);
+  animation: slideIn 0.5s ease forwards;
+}
+
+// Keyframes cho hiệu ứng slide-in
+@keyframes slideIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .flashSaleImageWrapper {
@@ -817,7 +861,10 @@
   .ant-badge {
     .ant-ribbon {
       font-size: 12px;
-      padding: 2px 6px;
+      padding: 4px 8px; // Tăng padding cho ribbon
+      background: #ff4d4f;
+      color: #fff;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); // Bóng đổ cho ribbon
     }
   }
 }
@@ -827,6 +874,11 @@
   height: 180px;
   object-fit: cover;
   border-radius: 4px;
+  transition: transform 0.3s ease; // Hiệu ứng phóng to ảnh khi hover
+
+  .flashSaleItem:hover & {
+    transform: scale(1.05); // Phóng to ảnh nhẹ khi hover
+  }
 }
 
 .flashSaleContent {
@@ -842,6 +894,7 @@
   display: block;
   font-size: 14px;
   color: #333;
+  font-weight: 500; // Tăng độ đậm cho tên sản phẩm
   margin-bottom: 5px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -852,19 +905,20 @@
 .flashSaleProgram {
   display: block;
   font-size: 12px;
-  color: #666;
+  color: #888;
   margin-bottom: 5px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 100%;
+  font-style: italic;
 }
 
 .flashSalePriceWrapper {
   display: flex;
   justify-content: center;
   align-items: baseline;
-  gap: 5px;
+  gap: 8px;
 }
 
 .flashSalePrice {
@@ -887,8 +941,9 @@
   margin-top: 5px;
   font-size: 12px;
   color: #fff;
-  background: #ff4d4f;
-  padding: 2px 8px;
+  background: linear-gradient(90deg, #ff4d4f, #ff7875);
+  padding: 3px 10px;
   border-radius: 12px;
   display: inline-block;
+  font-weight: 500;
 }

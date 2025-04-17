@@ -266,9 +266,6 @@ function Home() {
                 {String(timeLeft.seconds).padStart(2, "0")}
               </span>
             </h2>
-            <Button type="link" onClick={() => navigate("/flash-sale")}>
-              Xem tất cả
-            </Button>
           </div>
           <div className={styles.flashSaleSwiper}>
             {flashSaleProducts.map((product, index) => (
