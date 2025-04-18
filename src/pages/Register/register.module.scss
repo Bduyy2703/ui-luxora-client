@@ -1,87 +1,176 @@
-.register-container {
-  max-width: 400px;
-  margin: 0 auto;
+.registerContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
   padding: 20px;
-  font-family: Arial, sans-serif;
-  background: rgba(255, 255, 255, 0.98);
-  border-radius: 10px;
-  margin-top: 20px;
-  margin-bottom: 20px;
+  background: url("https://bizweb.dktcdn.net/100/461/213/themes/870653/assets/slider_3.jpg?1744711547396")
+    no-repeat center/cover;
+  image-rendering: auto; /* Tăng độ nét */
+}
+
+.formWrapper {
+  width: 100%;
+  max-width: 400px;
+  background: rgba(255, 255, 255, 0.8); /* Nền mờ ảo */
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.5s ease-in-out;
+  backdrop-filter: blur(5px); /* Hiệu ứng mờ hiện đại */
 }
 
 h1 {
-  color: #006699;
+  color: #1a3c5e;
   text-align: center;
-  margin-bottom: 10px;
+  margin-bottom: 24px;
+  font-size: 24px;
+  font-weight: 600;
 }
 
-.login-link {
+.loginLink {
   text-align: center;
   margin-bottom: 20px;
   font-size: 14px;
 
   a {
-    color: #006699;
+    color: #007bff;
     text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
   }
 }
 
-.register-form {
+.registerForm {
   display: flex;
   flex-direction: column;
+  gap: 16px;
+}
+
+.inputGroup {
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
 input {
-  margin-bottom: 10px;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 15px;
+  transition: all 0.3s ease;
 }
 
-.register-button {
-  background-color: #006699;
-  color: white;
-  padding: 10px;
+input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  outline: none;
+  transform: scale(1.02);
+}
+
+.errorText {
+  color: #e63946;
+  font-size: 13px;
+  margin-top: -8px;
+  animation: fadeInError 0.3s ease;
+}
+
+button {
+  padding: 12px;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
-  font-weight: bold;
-  margin-top: 10px;
+  font-weight: 600;
+  font-size: 15px;
+  transition: all 0.3s ease;
 }
 
-.social-login {
+.registerButton {
+  background: linear-gradient(90deg, #007bff, #0056b3);
+  color: white;
+}
+
+.registerButton:hover {
+  background: linear-gradient(90deg, #0056b3, #003d80);
+  transform: scale(1.05);
+}
+
+.socialLogin {
   margin-top: 20px;
   text-align: center;
 
   p {
     font-size: 14px;
-    margin-bottom: 10px;
+    color: #666;
+    margin-bottom: 12px;
   }
 }
 
-.social-buttons {
+.socialButtons {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
+}
 
-  .facebook-button,
-  .google-button {
-    flex: 1;
-    padding: 10px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    color: white;
-    font-weight: bold;
+.googleButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #db4437;
+  color: white;
+  padding: 12px;
+  width: 100%;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.googleButton:hover {
+  background: #c1351d;
+  transform: scale(1.05);
+}
+
+.socialIcon {
+  font-size: 18px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInError {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .formWrapper {
+    padding: 20px;
+  }
+
+  h1 {
+    font-size: 20px;
+  }
+
+  input,
+  button {
     font-size: 14px;
-  }
-
-  .facebook-button {
-    background-color: #3b5998;
-    margin-right: 5px;
-  }
-
-  .google-button {
-    background-color: #db4437;
-    margin-left: 5px;
   }
 }

@@ -1,72 +1,145 @@
 .loginContainer {
-  width: 400px;
-  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
   padding: 20px;
-  font-family: Arial, sans-serif;
-  margin-top: 20px;
-  margin-bottom: 20px;
-  background: rgba(255, 255, 255, 0.98);
-  border-radius: 10px;
+  background: url("https://bizweb.dktcdn.net/100/461/213/themes/870653/assets/slider_3.jpg?1744711547396")
+    no-repeat center/cover;
+  image-rendering: auto; /* Tăng độ nét */
+}
+
+.formWrapper {
+  width: 100%;
+  max-width: 400px;
+  background: rgba(255, 255, 255, 0.8); /* Nền mờ ảo */
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.5s ease-in-out;
+  backdrop-filter: blur(5px); /* Hiệu ứng mờ hiện đại */
 }
 
 h1 {
-  color: #006699;
+  color: #1a3c5e;
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  font-size: 24px;
+  font-weight: 600;
 }
 
 .loginForm,
 .forgotPasswordForm {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 16px;
+}
+
+.inputGroup {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.inputIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%); /* Căn giữa icon */
+  color: #999;
+  font-size: 18px;
+  z-index: 1; /* Đảm bảo icon không bị che */
 }
 
 input {
-  padding: 10px;
-  border: 1px solid #ccc !important;
-  border-radius: 4px;
-  font-size: 1rem;
+  width: 100%;
+  padding: 12px 12px 12px 48px; /* Padding trái đủ lớn */
+  border: 1px solid #ddd;
+  border-radius: 8px;
   font-size: 15px;
+  transition: all 0.3s ease;
 }
 
 input:focus {
-  border-color: #006699;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
   outline: none;
+  transform: scale(1.02);
+}
+
+input:focus + .inputIcon {
+  color: #007bff; /* Icon đổi màu khi focus */
+}
+
+.errorText {
+  color: #e63946;
+  font-size: 13px;
+  margin-top: -8px;
+  animation: fadeInError 0.3s ease;
 }
 
 button {
-  padding: 10px;
+  padding: 12px;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
-  color: white;
-  font-weight: bold;
+  font-weight: 600;
+  font-size: 15px;
+  transition: all 0.3s ease;
 }
 
 .loginButton,
 .resetPasswordButton {
-  background-color: #006699;
+  background: linear-gradient(90deg, #007bff, #0056b3);
+  color: white;
 }
 
 .loginButton:hover,
 .resetPasswordButton:hover {
-  background-color: #005580;
+  background: linear-gradient(90deg, #0056b3, #003d80);
+  transform: scale(1.05);
+}
+
+.cancelButton {
+  background: #f1f3f5;
+  color: #333;
+}
+
+.cancelButton:hover {
+  background: #e2e6ea;
+  transform: scale(1.05);
 }
 
 .forgotPasswordRegister {
   display: flex;
   justify-content: space-between;
-  margin-top: 10px;
+  margin-top: 12px;
+  font-size: 14px;
 }
 
-.forgotPasswordRegister a {
-  color: #006699;
+.forgotPassword,
+.registerLink {
+  color: #007bff;
   text-decoration: none;
 }
 
-.forgotPasswordRegister a:hover {
+.forgotPassword:hover,
+.registerLink:hover {
   text-decoration: underline;
+}
+
+.forgotPasswordForm {
+  margin-top: 20px;
+  animation: slideIn 0.3s ease;
+}
+
+.forgotPasswordButtons {
+  display: flex;
+  gap: 12px;
+}
+
+.forgotPasswordButtons button {
+  flex: 1;
 }
 
 .socialLogin {
@@ -74,34 +147,84 @@ button {
   text-align: center;
 }
 
+.socialLogin p {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 12px;
+}
+
 .socialButtons {
   display: flex;
-  justify-content: space-between;
-  margin-top: 10px;
-}
-
-.facebookButton,
-.googleButton {
-  flex: 1;
-  padding: 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.facebookButton {
-  background-color: #3b5998;
-  margin-right: 5px;
+  justify-content: center;
 }
 
 .googleButton {
-  background-color: #db4437;
-  margin-left: 5px;
-}
-
-.forgotPasswordForm {
-  margin-top: 15px;
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #db4437;
+  color: white;
+  padding: 12px;
+  width: 100%;
+}
+
+.googleButton:hover {
+  background: #c1351d;
+  transform: scale(1.05);
+}
+
+.socialIcon {
+  font-size: 18px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInError {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .formWrapper {
+    padding: 20px;
+  }
+
+  h1 {
+    font-size: 20px;
+  }
+
+  input,
+  button {
+    font-size: 14px;
+  }
+
+  .forgotPasswordButtons {
+    flex-direction: column;
+    gap: 8px;
+  }
 }
