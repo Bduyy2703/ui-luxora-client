@@ -33,9 +33,9 @@ function requireAuth(to, from, next) {
 
 const publicRoutes = [
   { path: "/", component: Home },
-  { path: "/register", component: Register },
+  { path: "/register", component: Register, layout: null },
   { path: "/verifyRegister", component: VerifyRegister },
-  { path: "/login", component: Login },
+  { path: "/login", component: Login, layout: null },
   { path: "/search", component: Search, layout: null },
   { path: "/upload", component: Upload, layout: HeaderOnly },
   // {

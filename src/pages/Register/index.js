@@ -1,24 +1,18 @@
-import { notification } from "antd";
-import { useState } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Breadcrumb from "../../components/Breadcrumb";
 import { register } from "../../services/api/authService";
 import styles from "./register.module.scss";
+import { notification } from "antd";
+import { GoogleOutlined } from "@ant-design/icons";
 
 export default function Register() {
   const navigate = useNavigate();
-  const [firstName, setFirstName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [phoneError, setPhoneError] = useState("");
-
-  const breadcrumbItems = [
-    { label: "Trang chủ", path: "/" },
-    { label: "Đăng ký" },
-  ];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -41,7 +35,7 @@ export default function Register() {
         message: "Đăng ký thành công",
         description: "Bạn đã đăng ký thành công, vui lòng đăng nhập!",
       });
-      navigate("/login"); // Chuyển hướng đến trang login sau khi đăng ký thành công
+      navigate("/login");
     } catch (error) {
       notification.error({
         message: "Đăng ký thất bại",
@@ -50,63 +44,80 @@ export default function Register() {
     }
   };
 
+  const loginGg = async () => {
+    // Tạm dùng loginGoogle từ Login, cần API riêng cho Register nếu có
+    try {
+      const authUrl = await import("../../services/api/authService").then(
+        (module) => module.loginGoogle(),
+      );
+      window.location.href = authUrl;
+    } catch (error) {
+      notification.error({
+        message: "Yêu cầu xác thực thất bại",
+        description: error.message,
+      });
+    }
+  };
+
   return (
-    <>
-      <Breadcrumb items={breadcrumbItems} />
-      <div className={styles["register-container"]}>
+    <div className={styles.registerContainer}>
+      <div className={styles.formWrapper}>
         <h1>ĐĂNG KÝ</h1>
-        <p className={styles["login-link"]}>
+        <p className={styles.loginLink}>
           Đã có tài khoản, đăng nhập <Link to="/login">tại đây</Link>
         </p>
-        <form className={styles["register-form"]} onSubmit={handleSubmit}>
-          <input
-            type="text"
-            placeholder="Họ và tên"
-            required
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-          <input
-            type="email"
-            placeholder="Email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <input
-            type="tel"
-            placeholder="Số điện thoại"
-            required
-            value={phoneNumber}
-            onChange={(e) => setPhone(e.target.value)}
-          />
-          {phoneError && (
-            <p style={{ marginBottom: "7px", color: "red" }}>{phoneError}</p>
-          )}
-          <input
-            type="password"
-            placeholder="Mật khẩu"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          {passwordError && <p style={{ color: "red" }}>{passwordError}</p>}
-          <button type="submit" className={styles["register-button"]}>
+        <form className={styles.registerForm} onSubmit={handleSubmit}>
+          <div className={styles.inputGroup}>
+            <input
+              type="text"
+              placeholder="Họ và tên"
+              required
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+          </div>
+          <div className={styles.inputGroup}>
+            <input
+              type="email"
+              placeholder="Email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          <div className={styles.inputGroup}>
+            <input
+              type="tel"
+              placeholder="Số điện thoại"
+              required
+              value={phoneNumber}
+              onChange={(e) => setPhone(e.target.value)}
+            />
+          </div>
+          {phoneError && <p className={styles.errorText}>{phoneError}</p>}
+          <div className={styles.inputGroup}>
+            <input
+              type="password"
+              placeholder="Mật khẩu"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          {passwordError && <p className={styles.errorText}>{passwordError}</p>}
+          <button type="submit" className={styles.registerButton}>
             ĐĂNG KÝ
           </button>
         </form>
-        <div className={styles["social-login"]}>
-          <p>Hoặc đăng nhập bằng</p>
-          <div className={styles["social-buttons"]}>
-            <button className={styles["facebook-button"]}>
-              <i className="fab fa-facebook-f"></i> Facebook
-            </button>
-            <button className={styles["google-button"]}>
-              <i className="fab fa-google"></i> Google
+        <div className={styles.socialLogin}>
+          <p>Hoặc đăng ký qua</p>
+          <div className={styles.socialButtons}>
+            <button onClick={loginGg} className={styles.googleButton}>
+              <GoogleOutlined className={styles.socialIcon} /> Google
             </button>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
