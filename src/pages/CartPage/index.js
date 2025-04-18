@@ -511,17 +511,13 @@ const CartPage = () => {
                   <p>Bạn có chắc chắn muốn xóa không?</p>
                 </Modal>
                 <div className={styles.bottom}>
-                  <Link to="/" className={styles.goOn}>
+                  <Link
+                    to="/"
+                    className={styles.goOn}
+                    style={{ color: "#71bec2" }}
+                  >
                     Tiếp tục mua hàng
                   </Link>
-                  {cartItems.length > 0 && (
-                    <button
-                      className={styles.clearCartBtn}
-                      onClick={handleClearCart}
-                    >
-                      Xóa toàn bộ giỏ hàng
-                    </button>
-                  )}
                   <div className={styles.subTotal}>
                     <div className={styles.cartSubTotal}>
                       <div>TỔNG TIỀN:</div>
@@ -538,6 +534,14 @@ const CartPage = () => {
                     >
                       Thanh toán
                     </div>
+                    {cartItems.length > 0 && (
+                      <div
+                        className={styles.btnDeleteAll}
+                        onClick={handleClearCart}
+                      >
+                        Xóa
+                      </div>
+                    )}
                   </div>
                 </div>
               </>
