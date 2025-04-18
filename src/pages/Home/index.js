@@ -14,7 +14,7 @@ function Home() {
   const [flashSaleProducts, setFlashSaleProducts] = useState([]);
   const [flashSaleLoading, setFlashSaleLoading] = useState(true);
   const [flashSaleEndTime, setFlashSaleEndTime] = useState(null);
-  const [allProducts, setAllProducts] = useState([]); // State để lưu toàn bộ sản phẩm từ getProductList
+  const [allProducts, setAllProducts] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [cateProducts, setCateProducts] = useState([]);
   const [news, setNews] = useState([]);

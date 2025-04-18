@@ -10,6 +10,52 @@ export const getCart = async () => {
   }
 };
 
+export const checkOutProduct = async ({ selectedItems }) => {
+  try {
+    const response = await privateAxios.post("/v1/cart/checkout", {
+      selectedItems,
+    });
+    return response.data || {};
+  } catch (error) {
+    console.error("Error processing checkout:", error);
+    throw error;
+  }
+};
+
+export const calculateShipping = async ({
+  checkoutItems,
+  totalAmount,
+  address,
+}) => {
+  try {
+    const response = await privateAxios.post("/v1/shipping/calculate", {
+      checkoutItems,
+      totalAmount,
+      address,
+    });
+    return response.data || {};
+  } catch (error) {
+    console.error("Error calculating shipping fee:", error);
+    throw error;
+  }
+};
+
+export const getAvailableDiscounts = async ({ totalAmount, shippingFee }) => {
+  try {
+    const response = await privateAxios.post(
+      "/v1/shipping/available-discounts",
+      {
+        totalAmount,
+        shippingFee,
+      },
+    );
+    return response.data || {};
+  } catch (error) {
+    console.error("Error fetching available discounts:", error);
+    throw error;
+  }
+};
+
 export const deleteCart = async () => {
   try {
     const response = await privateAxios.delete("/v1/cart");

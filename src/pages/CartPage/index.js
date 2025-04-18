@@ -11,6 +11,7 @@ import {
   updateCartItem,
   deleteCartItem,
   deleteCart,
+  checkOutProduct,
 } from "../../services/api/cartService";
 import { getByIdProduct } from "../../services/api/productService";
 import { Modal, notification, Tooltip } from "antd";
@@ -20,6 +21,7 @@ const CartPage = () => {
   const [cartItems, setCartItems] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentItemKey, setCurrentItemKey] = useState(null);
+  const [selectedItems, setSelectedItems] = useState([]);
   const [loadingItems, setLoadingItems] = useState({});
   const [productDetailsMap, setProductDetailsMap] = useState({});
   const [isLoadingCart, setIsLoadingCart] = useState(false);
@@ -120,6 +122,22 @@ const CartPage = () => {
       `${item.id}-${item.productDetails.color}-${item.productDetails.size}`,
     [],
   );
+
+  const handleSelectItem = useCallback((itemKey) => {
+    setSelectedItems((prev) =>
+      prev.includes(itemKey)
+        ? prev.filter((key) => key !== itemKey)
+        : [...prev, itemKey],
+    );
+  }, []);
+
+  const handleSelectAll = useCallback(() => {
+    if (selectedItems.length === cartItems.length) {
+      setSelectedItems([]);
+    } else {
+      setSelectedItems(cartItems.map((item) => getItemKey(item)));
+    }
+  }, [cartItems, selectedItems, getItemKey]);
 
   const debouncedUpdateCartItem = useMemo(
     () =>
@@ -273,13 +291,14 @@ const CartPage = () => {
   const totalAmount = useMemo(
     () =>
       cartItems.reduce((total, item) => {
+        if (!selectedItems.includes(getItemKey(item))) return total;
         const productData = productDetailsMap[item.productDetails.product.id];
         const price = parseFloat(
           productData?.finalPrice || item.productDetails.product.finalPrice,
         );
         return total + price * item.quantity;
       }, 0),
-    [cartItems, productDetailsMap],
+    [cartItems, productDetailsMap, selectedItems, getItemKey],
   );
 
   const [paymentData, setPaymentData] = useState([]);
@@ -288,16 +307,28 @@ const CartPage = () => {
   localStorage.setItem("discount_id", discount_id);
 
   const handleCheckout = useCallback(async () => {
-    try {
-      const emailtoken = localStorage.getItem("userEmail");
-      const items = cartItems.map((item) => ({
-        product_id: item.productDetails.product.id,
-        quantity: item.quantity,
-        color: item.productDetails.color,
-        size: item.productDetails.size,
-      }));
+    if (selectedItems.length === 0) {
+      notification.error({
+        message: "Thông báo",
+        description: "Vui lòng chọn ít nhất một sản phẩm để thanh toán",
+        duration: 3,
+      });
+      return;
+    }
 
-      const response = await fetchPayment({ emailtoken, items, discount_id });
+    console.log("cartItems", cartItems);
+
+    try {
+      const selectedItemsData = cartItems
+        .filter((item) => selectedItems.includes(getItemKey(item)))
+        .map((item) => ({
+          productId: item.productDetails.id,
+          quantity: item.quantity,
+        }));
+
+      const response = await checkOutProduct({
+        selectedItems: selectedItemsData,
+      });
 
       if (response.error) {
         console.error("Lỗi khi lấy dữ liệu thanh toán:", response.error);
@@ -311,7 +342,13 @@ const CartPage = () => {
       setPaymentData(response);
 
       navigate("/checkout", {
-        state: { cartItems, emailtoken, paymentData: response },
+        state: {
+          cartItems: cartItems.filter((item) =>
+            selectedItems.includes(getItemKey(item)),
+          ),
+          emailtoken: localStorage.getItem("userEmail"),
+          paymentData: response,
+        },
       });
     } catch (error) {
       console.error("Lỗi không mong muốn:", error);
@@ -321,7 +358,7 @@ const CartPage = () => {
         duration: 3,
       });
     }
-  }, [cartItems, discount_id, navigate]);
+  }, [cartItems, selectedItems, navigate, getItemKey]);
 
   return (
     <>
@@ -368,7 +405,16 @@ const CartPage = () => {
             ) : (
               <>
                 <div className={styles.tableHeader}>
-                  <div className={styles.headerItem}>THÔNG TIN SẢN PHẨM</div>
+                  <div className={styles.headerItem}>
+                    <input
+                      type="checkbox"
+                      checked={selectedItems.length === cartItems.length}
+                      onChange={handleSelectAll}
+                    />
+                    <span style={{ marginLeft: "10px" }}>
+                      THÔNG TIN SẢN PHẨM
+                    </span>
+                  </div>
                   <div className={styles.headerItem}>ĐƠN GIÁ</div>
                   <div className={styles.headerItem}>SỐ LƯỢNG</div>
                   <div className={styles.headerItem}>THÀNH TIỀN</div>
@@ -424,6 +470,11 @@ const CartPage = () => {
                         return (
                           <div key={itemKey} className={styles.variantRow}>
                             <div className={styles.variantInfo}>
+                              <input
+                                type="checkbox"
+                                checked={selectedItems.includes(itemKey)}
+                                onChange={() => handleSelectItem(itemKey)}
+                              />
                               <span>
                                 {item.productDetails.color} -{" "}
                                 {item.productDetails.size}
