@@ -332,19 +332,19 @@ const AdminStatis = () => {
 
   // Custom label để hiển thị hình ảnh phía trên cột
   const CustomBarLabel = (props) => {
-    const { x, y, width, height, value, index } = props;
+    const { x, y, width, height, index } = props;
     const product = (showTopProducts ? topProducts : topCustomers)[index];
     const idMatch = product.name.match(/ID: (\d+)/);
     const productDetailId = idMatch ? parseInt(idMatch[1]) : null;
     const imageUrl = productDetailId ? productImages[productDetailId] : "";
 
-    if (!imageUrl) return null;
+    if (!imageUrl || !showTopProducts) return null; // Chỉ hiển thị hình ảnh cho top sản phẩm
 
     return (
       <g>
         <image
-          x={x + width / 2 - 12} // Căn giữa hình ảnh trên cột
-          y={y - 30} // Đặt phía trên cột
+          x={x + width - 12} // Căn giữa hình ảnh ở cuối cột
+          y={y - 36} // Đặt cao hơn cột để tránh che khuất
           width={24}
           height={24}
           href={imageUrl}
@@ -723,7 +723,7 @@ const AdminStatis = () => {
                                 data={
                                   showTopProducts ? topProducts : topCustomers
                                 }
-                                layout="horizontal"
+                                layout="vertical"
                                 margin={{
                                   top: 40,
                                   right: 30,
@@ -754,13 +754,12 @@ const AdminStatis = () => {
                                   className={styles.chartGrid}
                                 />
                                 <XAxis
-                                  dataKey={
-                                    showTopProducts ? "revenue" : "totalSpent"
-                                  }
+                                  type="number"
                                   tickFormatter={(value) =>
                                     `${(value / 1000000).toFixed(1)}M`
                                   }
                                   className={styles.chartAxis}
+                                  domain={[0, "dataMax + 1000000"]}
                                 />
                                 <YAxis
                                   dataKey="name"
@@ -779,11 +778,14 @@ const AdminStatis = () => {
                                     showTopProducts ? "revenue" : "totalSpent"
                                   }
                                   fill="url(#productGradient)"
-                                  barSize={20}
+                                  barSize={30}
                                   onClick={handleBarClick}
+                                  radius={[4, 4, 0, 0]}
                                 >
                                   <LabelList
-                                    dataKey="revenue"
+                                    dataKey={
+                                      showTopProducts ? "revenue" : "totalSpent"
+                                    }
                                     position="top"
                                     content={CustomBarLabel}
                                   />

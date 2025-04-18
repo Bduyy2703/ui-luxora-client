@@ -110,6 +110,16 @@
   }
 }
 
+// .chartBar {
+//   transition: all 0.3s;
+//   cursor: pointer;
+//   &:hover {
+//     transform: scale(1.05);
+//     filter: brightness(1.1);
+//     box-shadow: 0 0 10px rgba(107, 91, 255, 0.3);
+//   }
+// }
+
 .chartBar {
   transition: all 0.3s;
   cursor: pointer;
@@ -118,6 +128,42 @@
     filter: brightness(1.1);
     box-shadow: 0 0 10px rgba(107, 91, 255, 0.3);
   }
+  // Đảm bảo cột luôn hiển thị
+  opacity: 1 !important;
+  min-height: 30px; // Đảm bảo cột có chiều cao tối thiểu
+}
+
+// Tùy chỉnh cho BarChart của top sản phẩm
+.recharts-bar-rectangle {
+  stroke: none; // Loại bỏ viền
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1)); // Thêm bóng
+}
+
+// Tùy chỉnh lưới và trục
+.chartGrid {
+  stroke: #e5e7eb;
+  stroke-dasharray: 3 3;
+}
+
+.chartAxis {
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  fill: #4a4a4a;
+  .tickLine {
+    stroke: #e5e7eb;
+  }
+}
+
+// Tùy chỉnh tooltip
+.chartTooltip {
+  background: #ffffff;
+  border: 1px solid #6b5bff;
+  border-radius: 8px;
+  padding: 8px 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  color: #4a4a4a;
 }
 
 .chartPieLabel {
