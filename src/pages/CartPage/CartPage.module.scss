@@ -242,7 +242,7 @@
 .subTotal {
   display: flex;
   align-items: center;
-  gap: 30px;
+  gap: 12px;
 }
 
 .cartSubTotal {
@@ -274,6 +274,26 @@
 
   &:hover {
     background-color: #15324d;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.btnDeleteAll {
+  background-color: #ff0000;
+  color: #fff;
+  padding: 12px 30px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.3s ease,
+    transform 0.2s ease,
+    box-shadow 0.3s ease;
+
+  &:hover {
+    background-color: #bb4949;
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   }
