@@ -1,44 +1,46 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
-  Modal,
-  Button,
-  Pagination,
   Table as AntTable,
-  Switch,
-  Select,
-  DatePicker,
-  Input,
-  Form,
-  message,
-  Tag,
-  Tabs,
+  Button,
   Card,
+  DatePicker,
+  Form,
+  Image,
+  Input,
   InputNumber,
   List,
-  Image,
+  message,
+  Modal,
+  Pagination,
+  Select,
+  Switch,
+  Tabs,
+  Tag,
 } from "antd";
-import Swal from "sweetalert2";
 import moment from "moment";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import Swal from "sweetalert2";
 import Filter from "../../../components/admin/filter/Filter";
 import config from "../../../config";
-import styles from "./index.module.scss";
-import {
-  getAllSales,
-  getSaleById,
-  createSale,
-  updateSale,
-  deleteSale,
-  addProductToSale,
-  removeProductFromSale,
-  addCategoryToSale,
-  removeCategoryFromSale,
-  getSaleActive,
-  getSaleProduct,
-  getSaleCategories,
-} from "../../../services/api/promotionService";
-import { getByIdProduct } from "../../../services/api/productService";
-import { getProductList } from "../../../services/api/productService";
 import { getAllCategories } from "../../../services/api/categoryService";
+import {
+  getByIdProduct,
+  getProductList,
+} from "../../../services/api/productService";
+import {
+  addCategoryToSale,
+  addProductToSale,
+  createSale,
+  deleteSale,
+  getAllSales,
+  getSaleActive,
+  getSaleById,
+  getSaleCategories,
+  getSaleProduct,
+  removeCategoryFromSale,
+  removeProductFromSale,
+  updateSale,
+} from "../../../services/api/promotionService";
+import styles from "./index.module.scss";
 
 const { Option, OptGroup } = Select;
 const { TabPane } = Tabs;
@@ -518,11 +520,19 @@ const PromotionList = () => {
       const existingCategoryIds = (
         currentPromotion?.categoryStrategySales || []
       ).map((item) => item.category?.id);
-      const filteredCategories = categoriesData.filter(
-        (category) => !existingCategoryIds.includes(category.id),
-      );
 
-      setCategoriesForModal(filteredCategories);
+      const childCategories = [];
+      categoriesData.forEach((category) => {
+        if (category.children && category.children.length > 0) {
+          category.children.forEach((child) => {
+            if (!existingCategoryIds.includes(child.id)) {
+              childCategories.push(child);
+            }
+          });
+        }
+      });
+
+      setCategoriesForModal(childCategories);
     } catch (error) {
       message.error("Không thể tải danh sách danh mục!");
       setCategoriesForModal([]);
@@ -1111,22 +1121,26 @@ const PromotionList = () => {
           setCategoriesForModal([]);
           setSelectedCategoryIds([]);
         }}
+        centered
         onOk={handleAddCategory}
         width={800}
+        style={{ maxHeight: "80vh" }}
       >
-        <AntTable
-          dataSource={categoriesForModal}
-          columns={categoryModalColumns}
-          rowKey={(record) => record.id}
-          pagination={false}
-          rowSelection={{
-            selectedRowKeys: selectedCategoryIds,
-            onChange: (selectedRowKeys) =>
-              setSelectedCategoryIds(selectedRowKeys),
-          }}
-          className={styles.table}
-          scroll={{ x: "max-content" }}
-        />
+        <div style={{ maxHeight: "80vh", overflowY: "auto" }}>
+          <AntTable
+            dataSource={categoriesForModal}
+            columns={categoryModalColumns}
+            rowKey={(record) => record.id}
+            pagination={false}
+            rowSelection={{
+              selectedRowKeys: selectedCategoryIds,
+              onChange: (selectedRowKeys) =>
+                setSelectedCategoryIds(selectedRowKeys),
+            }}
+            className={styles.table}
+            scroll={{ x: "max-content" }}
+          />
+        </div>
       </Modal>
     </div>
   );

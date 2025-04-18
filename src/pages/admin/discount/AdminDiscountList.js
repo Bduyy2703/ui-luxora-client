@@ -330,6 +330,24 @@ const AdminDiscountList = () => {
     },
   ];
 
+  const checkDiscountNameUnique = (name, currentDiscountId = null) => {
+    const allDiscountNames = data.map((item) => item.name.toLowerCase());
+
+    if (currentDiscountId) {
+      const currentDiscount = data.find(
+        (item) => item.id === currentDiscountId,
+      );
+      if (
+        currentDiscount &&
+        currentDiscount.name.toLowerCase() === name.toLowerCase()
+      ) {
+        return true;
+      }
+    }
+
+    return !allDiscountNames.includes(name.toLowerCase());
+  };
+
   return (
     <div className="wrapper">
       <header className="admin-header">
@@ -402,7 +420,10 @@ const AdminDiscountList = () => {
           <Modal
             title="Thêm mã giảm giá"
             visible={modalVisible}
-            onCancel={() => setModalVisible(false)}
+            onCancel={() => {
+              setModalVisible(false);
+              form.resetFields();
+            }}
             footer={null}
             className={styles.addDiscountModal}
             width={600}
@@ -414,6 +435,17 @@ const AdminDiscountList = () => {
                 name="name"
                 rules={[
                   { required: true, message: "Vui lòng nhập tên mã giảm giá!" },
+                  {
+                    validator: async (_, value) => {
+                      if (!value) return Promise.resolve();
+                      if (checkDiscountNameUnique(value)) {
+                        return Promise.resolve();
+                      }
+                      return Promise.reject(
+                        new Error("Tên mã giảm giá đã tồn tại!"),
+                      );
+                    },
+                  },
                 ]}
               >
                 <Input placeholder="Nhập tên mã giảm giá" />
@@ -536,6 +568,17 @@ const AdminDiscountList = () => {
                 name="name"
                 rules={[
                   { required: true, message: "Vui lòng nhập tên mã giảm giá!" },
+                  {
+                    validator: async (_, value) => {
+                      if (!value) return Promise.resolve();
+                      if (checkDiscountNameUnique(value, currentDiscount?.id)) {
+                        return Promise.resolve();
+                      }
+                      return Promise.reject(
+                        new Error("Tên mã giảm giá đã tồn tại!"),
+                      );
+                    },
+                  },
                 ]}
               >
                 <Input placeholder="Nhập tên mã giảm giá" />
@@ -661,6 +704,17 @@ const AdminDiscountList = () => {
                 name="name"
                 rules={[
                   { required: true, message: "Vui lòng nhập tên mã giảm giá!" },
+                  {
+                    validator: async (_, value) => {
+                      if (!value) return Promise.resolve();
+                      if (checkDiscountNameUnique(value, currentDiscount?.id)) {
+                        return Promise.resolve();
+                      }
+                      return Promise.reject(
+                        new Error("Tên mã giảm giá đã tồn tại!"),
+                      );
+                    },
+                  },
                 ]}
               >
                 <Input placeholder="Nhập tên mã giảm giá" />

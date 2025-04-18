@@ -273,6 +273,22 @@ const AdminUserList = () => {
     // },
   ];
 
+  const checkUsernameUnique = (username) => {
+    return !data.some(
+      (user) => user.username.toLowerCase() === username.toLowerCase(),
+    );
+  };
+
+  const checkEmailUnique = (email) => {
+    return !data.some(
+      (user) => user.email.toLowerCase() === email.toLowerCase(),
+    );
+  };
+
+  const checkPhoneNumberUnique = (phoneNumber) => {
+    return !data.some((user) => user.profile?.phoneNumber === phoneNumber);
+  };
+
   return (
     <div className="wrapper">
       <header className="admin-header">
@@ -355,10 +371,13 @@ const AdminUserList = () => {
           <Modal
             title="Thêm người dùng"
             visible={modalVisible}
-            onCancel={() => setModalVisible(false)}
+            onCancel={() => {
+              setModalVisible(false);
+              form.resetFields();
+            }}
             footer={null}
-            className={styles.addUserModal} // Thêm class để tùy chỉnh CSS
-            width={600} // Tăng chiều rộng modal
+            className={styles.addUserModal}
+            width={600}
           >
             <Form form={form} layout="vertical" onFinish={handleAddUser}>
               <Form.Item
@@ -366,6 +385,17 @@ const AdminUserList = () => {
                 name="username"
                 rules={[
                   { required: true, message: "Vui lòng nhập tên người dùng!" },
+                  {
+                    validator: async (_, value) => {
+                      if (!value) return Promise.resolve();
+                      if (checkUsernameUnique(value)) {
+                        return Promise.resolve();
+                      }
+                      return Promise.reject(
+                        new Error("Tên người dùng đã tồn tại!"),
+                      );
+                    },
+                  },
                 ]}
               >
                 <Input placeholder="Nhập tên người dùng" />
@@ -376,6 +406,15 @@ const AdminUserList = () => {
                 rules={[
                   { required: true, message: "Vui lòng nhập email!" },
                   { type: "email", message: "Email không hợp lệ!" },
+                  {
+                    validator: async (_, value) => {
+                      if (!value) return Promise.resolve();
+                      if (checkEmailUnique(value)) {
+                        return Promise.resolve();
+                      }
+                      return Promise.reject(new Error("Email đã tồn tại!"));
+                    },
+                  },
                 ]}
               >
                 <Input placeholder="Nhập email" />
@@ -386,9 +425,19 @@ const AdminUserList = () => {
                 rules={[
                   { required: true, message: "Vui lòng nhập số điện thoại!" },
                   {
-                    pattern: /^[0-9]{10,15}$/,
-                    message:
-                      "Số điện thoại không hợp lệ! (Chỉ nhập số, 10-15 chữ số)",
+                    pattern: /^[0-9]{10}$/,
+                    message: "Số điện thoại phải đủ 10 chữ số!",
+                  },
+                  {
+                    validator: async (_, value) => {
+                      if (!value) return Promise.resolve();
+                      if (checkPhoneNumberUnique(value)) {
+                        return Promise.resolve();
+                      }
+                      return Promise.reject(
+                        new Error("Số điện thoại đã tồn tại!"),
+                      );
+                    },
                   },
                 ]}
               >
@@ -417,7 +466,10 @@ const AdminUserList = () => {
                 </Button>
                 <Button
                   className={styles.cancelButton}
-                  onClick={() => setModalVisible(false)}
+                  onClick={() => {
+                    setModalVisible(false);
+                    form.resetFields();
+                  }}
                   style={{ marginLeft: 8 }}
                 >
                   Hủy

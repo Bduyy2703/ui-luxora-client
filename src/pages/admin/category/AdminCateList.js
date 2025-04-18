@@ -418,6 +418,29 @@ const AdminCategoryList = () => {
     // },
   ];
 
+  const checkSlugUnique = (slug, currentCategoryId = null) => {
+    const allSlugs = [];
+    data.forEach((category) => {
+      allSlugs.push(category.slug);
+      if (category.children && category.children.length > 0) {
+        category.children.forEach((child) => allSlugs.push(child.slug));
+      }
+    });
+
+    if (currentCategoryId) {
+      const currentCategory =
+        data.find((cat) => cat.id === currentCategoryId) ||
+        data
+          .flatMap((cat) => cat.children)
+          .find((cat) => cat.id === currentCategoryId);
+      if (currentCategory && currentCategory.slug === slug) {
+        return true; 
+      }
+    }
+
+    return !allSlugs.includes(slug);
+  };
+
   return (
     <div className={styles.adminWrapper}>
       <header className={styles.adminHeader}>
@@ -544,7 +567,22 @@ const AdminCategoryList = () => {
           <Form.Item
             label="Slug"
             name="slug"
-            rules={[{ required: true, message: "Vui lòng nhập slug!" }]}
+            rules={[
+              { required: true, message: "Vui lòng nhập slug!" },
+              {
+                validator: async (_, value) => {
+                  if (!value) return Promise.resolve();
+                  const isUnique = checkSlugUnique(
+                    value,
+                    modalMode === "edit" ? selectedCategory?.id : null,
+                  );
+                  if (isUnique) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error("Slug đã tồn tại!"));
+                },
+              },
+            ]}
           >
             <Input placeholder="Nhập slug" />
           </Form.Item>
