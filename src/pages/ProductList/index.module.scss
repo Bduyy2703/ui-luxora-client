@@ -76,6 +76,13 @@
         }
       }
 
+      .noSalesMessage {
+        font-size: 14px;
+        color: #666;
+        font-style: italic;
+        text-align: center;
+      }
+
       .filterButtonContainer {
         margin-top: 20px;
       }
@@ -112,6 +119,29 @@
           font-size: 28px;
           font-weight: 600;
           color: #333;
+          position: relative; /* Để tạo gạch chân động */
+          display: inline-block; /* Để gạch chân không vượt quá chiều rộng của text */
+          opacity: 0; /* Ban đầu ẩn để tạo hiệu ứng fade-in */
+          transform: translateY(
+            20px
+          ); /* Ban đầu dịch xuống để tạo hiệu ứng slide-up */
+          animation: fadeInSlideUp 0.8s ease forwards; /* Áp dụng hiệu ứng fade-in và slide-up */
+
+          /* Tạo gạch chân động */
+          &::after {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0; /* Ban đầu gạch chân có chiều rộng 0 */
+            height: 2px;
+            background-color: #1890ff; /* Màu gạch chân, đồng bộ với màu điểm nhấn */
+            transition: width 0.3s ease; /* Hiệu ứng mở rộng gạch chân */
+          }
+
+          &:hover::after {
+            width: 100%; /* Khi hover, gạch chân mở rộng toàn bộ chiều rộng */
+          }
         }
 
         .ant-select {
@@ -151,6 +181,7 @@
           transition:
             transform 0.3s ease,
             box-shadow 0.3s ease;
+          position: relative;
 
           &:hover {
             transform: translateY(-5px);
@@ -160,6 +191,23 @@
               .productImage {
                 transform: scale(1.05);
               }
+            }
+
+            &::before {
+              content: "";
+              position: absolute;
+              top: 0;
+              left: -100%;
+              width: 50%;
+              height: 100%;
+              background: linear-gradient(
+                to right,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.5) 50%,
+                rgba(255, 255, 255, 0) 100%
+              );
+              animation: shimmer 1s infinite;
+              transform: skewX(-20deg);
             }
           }
 
@@ -250,5 +298,25 @@
     color: #ff4d4f;
     font-size: 16px;
     margin-top: 20px;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+@keyframes fadeInSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
