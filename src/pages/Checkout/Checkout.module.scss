@@ -672,6 +672,59 @@
     text-align: center;
   }
 }
+// .discountList {
+//   display: flex;
+//   flex-direction: column;
+//   gap: 10px;
+// }
+
+// .discountItem {
+//   display: flex;
+//   align-items: center;
+//   background: #ffffff;
+//   padding: 10px;
+//   border-radius: 6px;
+//   border: 1px solid #ddd;
+//   font-size: 14px;
+//   color: #333;
+// }
+
+// .discountItem p {
+//   margin: 0;
+//   flex: 1;
+// }
+
+// .discountItem strong {
+//   color: #e8002d; /* Màu đỏ cho mã giảm giá */
+// }
+
+// .discountCheckbox {
+//   margin-right: 10px;
+// }
+
+.total {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+  font-size: 16px;
+}
+
+.total div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.totalLabel {
+  font-weight: bold;
+  color: #333;
+}
+
+.totalAmount {
+  font-weight: bold;
+  color: #e8002d; /* Màu đỏ cho tổng thanh toán */
+}
+
 .discountList {
   display: flex;
   flex-direction: column;
@@ -695,7 +748,7 @@
 }
 
 .discountItem strong {
-  color: #e8002d; /* Màu đỏ cho mã giảm giá */
+  color: #e8002d;
 }
 
 .discountCheckbox {
