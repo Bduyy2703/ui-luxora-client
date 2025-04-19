@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { getProductList } from "../../services/api/productService";
+import { getAllSales } from "../../services/api/promotionService";
 import {
   Image,
   Pagination,
@@ -13,6 +14,7 @@ import {
   Skeleton,
   Drawer,
   Space,
+  Empty,
 } from "antd";
 import { FilterOutlined } from "@ant-design/icons";
 import styles from "./index.module.scss";
@@ -32,21 +34,25 @@ const ProductList = () => {
   const location = useLocation();
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
+  const [displayedProducts, setDisplayedProducts] = useState([]); // Sản phẩm hiển thị trên trang hiện tại
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [categories, setCategories] = useState([]);
+  const [sales, setSales] = useState([]);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [keyword, setKeyword] = useState("");
+  const [sortOption, setSortOption] = useState("default");
   const limit = 16;
 
   const [selectedFilters, setSelectedFilters] = useState({
     priceRanges: [],
     materials: [],
     sizes: [],
-    categoryId: null,
+    categories: [],
+    sales: [],
   });
 
   const priceRanges = [
@@ -59,20 +65,38 @@ const ProductList = () => {
   const sizes = ["Nhỏ", "Trung", "Lớn"];
 
   const productDetailsMock = {
-    17: { material: "Bạc Y 925", size: "Trung" },
     15: { material: "Ngọc Trai", size: "Nhỏ" },
     16: { material: "Đá CZ", size: "Lớn" },
+    17: { material: "Bạc Y 925", size: "Trung" },
   };
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
-    const categoryId = searchParams.get("categoryId");
+    const categoryIds =
+      searchParams
+        .get("categories")
+        ?.split(",")
+        .map(Number)
+        .filter((id) => id) || [];
+    const saleIds =
+      searchParams
+        .get("sales")
+        ?.split(",")
+        .map(Number)
+        .filter((id) => id) || [];
     const urlKeyword = searchParams.get("keyword");
 
-    if (categoryId) {
+    if (categoryIds.length > 0) {
       setSelectedFilters((prev) => ({
         ...prev,
-        categoryId: parseInt(categoryId),
+        categories: categoryIds,
+      }));
+    }
+
+    if (saleIds.length > 0) {
+      setSelectedFilters((prev) => ({
+        ...prev,
+        sales: saleIds,
       }));
     }
 
@@ -86,15 +110,27 @@ const ProductList = () => {
     if (state?.isCategory && state?.categoryId) {
       setSelectedFilters((prev) => ({
         ...prev,
-        categoryId: state.categoryId,
+        categories: [state.categoryId],
+        sales: [],
       }));
-    } else if (state?.isSale) {
+    } else if (state?.isSale && state?.saleId) {
       setSelectedFilters((prev) => ({
         ...prev,
-        categoryId: null,
+        sales: [state.saleId],
+        categories: [],
       }));
     }
   }, [location]);
+
+  const fetchSalesData = useCallback(async () => {
+    try {
+      const salesResponse = await getAllSales({ page: 1, limit: 1000 });
+      const activeSales = salesResponse.filter((sale) => sale.isActive);
+      setSales(activeSales);
+    } catch (error) {
+      console.error("Lỗi khi tải chương trình giảm giá:", error);
+    }
+  }, []);
 
   const fetchProductsData = useCallback(async () => {
     setLoading(true);
@@ -128,7 +164,8 @@ const ProductList = () => {
 
   useEffect(() => {
     fetchProductsData();
-  }, [fetchProductsData]);
+    fetchSalesData();
+  }, [fetchProductsData, fetchSalesData]);
 
   const applyFilters = useCallback(() => {
     let filtered = [...products];
@@ -143,12 +180,31 @@ const ProductList = () => {
       });
     }
 
-    if (selectedFilters.categoryId) {
+    if (selectedFilters.categories.length > 0) {
       filtered = filtered.filter(
         (product) =>
           product.category &&
-          product.category.id === selectedFilters.categoryId,
+          selectedFilters.categories.includes(product.category.id),
       );
+    }
+
+    if (selectedFilters.sales.length > 0) {
+      const selectedSales = sales.filter((sale) =>
+        selectedFilters.sales.includes(sale.id),
+      );
+      if (selectedSales.length > 0) {
+        const saleProductIds = new Set();
+        selectedSales.forEach((sale) => {
+          if (sale.isGlobalSale) {
+            products.forEach((product) => saleProductIds.add(product.id));
+          } else {
+            sale.productStrategySales.forEach((item) =>
+              saleProductIds.add(item.product.id),
+            );
+          }
+        });
+        filtered = filtered.filter((product) => saleProductIds.has(product.id));
+      }
     }
 
     if (selectedFilters.priceRanges.length > 0) {
@@ -175,14 +231,38 @@ const ProductList = () => {
       });
     }
 
+    if (sortOption === "price-asc") {
+      filtered.sort(
+        (a, b) => parseFloat(a.finalPrice) - parseFloat(b.finalPrice),
+      );
+    } else if (sortOption === "price-desc") {
+      filtered.sort(
+        (a, b) => parseFloat(b.finalPrice) - parseFloat(a.finalPrice),
+      );
+    }
+
     setFilteredProducts(filtered);
     setTotalItems(filtered.length);
     setTotalPages(Math.ceil(filtered.length / limit));
-  }, [products, selectedFilters, keyword, limit]);
+
+    // Tính toán sản phẩm hiển thị trên trang hiện tại
+    const startIndex = (currentPage - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedProducts = filtered.slice(startIndex, endIndex);
+    setDisplayedProducts(paginatedProducts);
+  }, [
+    products,
+    selectedFilters,
+    keyword,
+    sortOption,
+    currentPage,
+    limit,
+    sales,
+  ]);
 
   useEffect(() => {
     applyFilters();
-  }, [selectedFilters, keyword, applyFilters]);
+  }, [selectedFilters, keyword, sortOption, currentPage, applyFilters]);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -194,33 +274,30 @@ const ProductList = () => {
 
   const handleFilterChange = (type, value) => {
     setSelectedFilters((prev) => {
-      if (type === "categoryId") {
-        return {
-          ...prev,
-          categoryId: prev.categoryId === value ? null : value,
-        };
-      }
       const currentValues = prev[type];
       const newValues = currentValues.includes(value)
         ? currentValues.filter((item) => item !== value)
         : [...currentValues, value];
-      return { ...prev, [type]: newValues };
-    });
-    if (type === "categoryId") {
-      const newCategoryId = selectedFilters.categoryId === value ? null : value;
-      navigate(
-        `/list-product${newCategoryId ? `?categoryId=${newCategoryId}` : ""}`,
-        {
-          replace: true,
-        },
-      );
-    }
-  };
+      const updatedFilters = { ...prev, [type]: newValues };
 
-  const handleCategoryClick = (categoryId) => {
-    setSelectedFilters((prev) => ({ ...prev, categoryId }));
-    navigate(`/list-product${categoryId ? `?categoryId=${categoryId}` : ""}`, {
-      replace: true,
+      setTimeout(() => {
+        const queryParams = [];
+        if (updatedFilters.categories.length > 0) {
+          queryParams.push(`categories=${updatedFilters.categories.join(",")}`);
+        }
+        if (updatedFilters.sales.length > 0) {
+          queryParams.push(`sales=${updatedFilters.sales.join(",")}`);
+        }
+
+        const queryString =
+          queryParams.length > 0 ? `?${queryParams.join("&")}` : "";
+        navigate(`/list-product${queryString}`, { replace: true });
+      }, 0);
+
+      // Khi thay đổi bộ lọc, đặt lại về trang 1
+      setCurrentPage(1);
+
+      return updatedFilters;
     });
   };
 
@@ -235,10 +312,17 @@ const ProductList = () => {
       priceRanges: [],
       materials: [],
       sizes: [],
-      categoryId: null,
+      categories: [],
+      sales: [],
     });
     setKeyword("");
+    setCurrentPage(1); // Đặt lại về trang 1 khi xóa bộ lọc
     navigate("/list-product", { replace: true });
+  };
+
+  const handleSortChange = (value) => {
+    setSortOption(value);
+    setCurrentPage(1); // Đặt lại về trang 1 khi thay đổi sắp xếp
   };
 
   const parsePrice = (price) => {
@@ -250,24 +334,51 @@ const ProductList = () => {
   const renderSidebar = () => (
     <div className={styles.filterContent}>
       <Collapse
-        defaultActiveKey={["categories", "price", "materials", "sizes"]}
+        defaultActiveKey={[
+          "categories",
+          "sales",
+          "price",
+          "materials",
+          "sizes",
+        ]}
         bordered={false}
         expandIconPosition="right"
       >
         <Panel header="Danh mục sản phẩm" key="categories">
           {categories.map((category) => (
-            <div
-              key={category.id}
-              className={`${styles.categoryItem} ${
-                selectedFilters.categoryId === category.id
-                  ? styles.selected
-                  : ""
-              }`}
-              onClick={() => handleCategoryClick(category.id)}
-            >
-              {category.name}
+            <div key={category.id} className={styles.checkboxItem}>
+              <Checkbox
+                checked={selectedFilters.categories.includes(category.id)}
+                onChange={() => handleFilterChange("categories", category.id)}
+              >
+                {category.name}
+              </Checkbox>
             </div>
           ))}
+        </Panel>
+
+        <Panel header="Chương trình giảm giá" key="sales">
+          {sales.length > 0 ? (
+            sales.map((sale) => (
+              <div key={sale.id} className={styles.checkboxItem}>
+                <Checkbox
+                  checked={selectedFilters.sales.includes(sale.id)}
+                  onChange={() => handleFilterChange("sales", sale.id)}
+                >
+                  {sale.name}
+                </Checkbox>
+              </div>
+            ))
+          ) : (
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description={
+                <span className={styles.noSalesMessage}>
+                  Chưa có chương trình giảm giá nào.
+                </span>
+              }
+            />
+          )}
         </Panel>
 
         <Panel header="Chọn khoảng giá" key="price">
@@ -282,19 +393,6 @@ const ProductList = () => {
             </div>
           ))}
         </Panel>
-
-        {/* <Panel header="Kích thước" key="sizes">
-          {sizes.map((size, index) => (
-            <div key={index} className={styles.checkboxItem}>
-              <Checkbox
-                checked={selectedFilters.sizes.includes(size)}
-                onChange={() => handleFilterChange("sizes", size)}
-              >
-                {size}
-              </Checkbox>
-            </div>
-          ))}
-        </Panel> */}
       </Collapse>
 
       <div className={styles.filterButtonContainer}>
@@ -337,7 +435,11 @@ const ProductList = () => {
         <div className={styles.productSection}>
           <div className={styles.productHeader}>
             <h2>Sản phẩm quà tặng</h2>
-            <Select defaultValue="default" style={{ width: 200 }}>
+            <Select
+              value={sortOption}
+              onChange={handleSortChange}
+              style={{ width: 200 }}
+            >
               <Select.Option value="default">Sắp xếp: Mặc định</Select.Option>
               <Select.Option value="price-asc">Giá: Thấp đến Cao</Select.Option>
               <Select.Option value="price-desc">
@@ -362,7 +464,7 @@ const ProductList = () => {
             <p>Không có sản phẩm nào.</p>
           ) : (
             <div className={styles.productGrid}>
-              {filteredProducts.map((product) => (
+              {displayedProducts.map((product) => (
                 <Card
                   key={product.id}
                   className={styles.productCard}
@@ -407,15 +509,17 @@ const ProductList = () => {
             </div>
           )}
 
-          <div className={styles.pagination}>
-            <Pagination
-              current={currentPage}
-              pageSize={limit}
-              total={totalItems}
-              onChange={handlePageChange}
-              showSizeChanger={false}
-            />
-          </div>
+          {totalItems > 15 && (
+            <div className={styles.pagination}>
+              <Pagination
+                current={currentPage}
+                pageSize={limit}
+                total={totalItems}
+                onChange={handlePageChange}
+                showSizeChanger={false}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

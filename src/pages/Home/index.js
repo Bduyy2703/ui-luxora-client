@@ -29,58 +29,57 @@ function Home() {
       setFlashSaleLoading(true);
       const salesResponse = await getAllSales({ page: 1, limit: 1000 });
       const activeSales = salesResponse.filter((sale) => sale.isActive);
-
+  
       if (activeSales.length === 0) {
         setFlashSaleProducts([]);
         setFlashSaleEndTime(null);
         return;
       }
-
-      const endTimes = activeSales.map((sale) =>
-        new Date(sale.endDate).getTime(),
-      );
+  
+      const endTimes = activeSales.map((sale) => new Date(sale.endDate).getTime());
       const earliestEndTime = Math.min(...endTimes);
       setFlashSaleEndTime(new Date(earliestEndTime));
-
-      let allFlashSaleProducts = [];
+  
+      const productMap = new Map();
+  
       for (const sale of activeSales) {
+        let productsToProcess = [];
+  
         if (sale.isGlobalSale) {
           const productsResponse = await getProductList(1, 1000);
-          const products = productsResponse?.data || [];
-          allFlashSaleProducts = [
-            ...allFlashSaleProducts,
-            ...products.map((product) => ({
-              ...product,
-              saleId: sale.id,
-              saleName: sale.name,
-              discountPercent: parseFloat(sale.discountAmount) || 0,
-              finalPrice: (
-                (parseFloat(product.originalPrice) || 0) *
-                (1 - (parseFloat(sale.discountAmount) || 0) / 100)
-              ).toFixed(2),
-            })),
-          ];
+          productsToProcess = productsResponse?.data || [];
         } else {
-          const products = sale.productStrategySales.map((item) => {
-            const productFromList = allProducts.find(
-              (p) => p.id === item.product.id,
-            );
-            return {
-              ...item.product,
-              saleId: sale.id,
-              saleName: sale.name,
-              discountPercent: parseFloat(sale.discountAmount) || 0,
-              finalPrice: (
-                (parseFloat(item.product.originalPrice) || 0) *
-                (1 - (parseFloat(sale.discountAmount) || 0) / 100)
-              ).toFixed(2),
-              images: productFromList?.images,
-            };
-          });
-          allFlashSaleProducts = [...allFlashSaleProducts, ...products];
+          productsToProcess = sale.productStrategySales.map((item) => item.product);
         }
+  
+        productsToProcess.forEach((product) => {
+          const discountPercent = parseFloat(sale.discountAmount) || 0;
+          const finalPrice = (
+            (parseFloat(product.originalPrice) || 0) *
+            (1 - discountPercent / 100)
+          ).toFixed(2);
+  
+          const productData = {
+            ...product,
+            saleId: sale.id,
+            saleName: sale.name,
+            discountPercent,
+            finalPrice,
+            images: allProducts.find((p) => p.id === product.id)?.images,
+          };
+  
+          if (productMap.has(product.id)) {
+            const existingProduct = productMap.get(product.id);
+            if (discountPercent > existingProduct.discountPercent) {
+              productMap.set(product.id, productData);
+            }
+          } else {
+            productMap.set(product.id, productData);
+          }
+        });
       }
-
+  
+      const allFlashSaleProducts = Array.from(productMap.values());
       setFlashSaleProducts(allFlashSaleProducts);
     } catch (error) {
       console.error("Lỗi khi lấy dữ liệu Flash Sale:", error);
