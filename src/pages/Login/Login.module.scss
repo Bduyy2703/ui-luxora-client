@@ -6,18 +6,18 @@
   padding: 20px;
   background: url("https://bizweb.dktcdn.net/100/461/213/themes/870653/assets/slider_3.jpg?1744711547396")
     no-repeat center/cover;
-  image-rendering: auto; /* Tăng độ nét */
+  image-rendering: auto;
 }
 
 .formWrapper {
   width: 100%;
   max-width: 400px;
-  background: rgba(255, 255, 255, 0.8); /* Nền mờ ảo */
+  background: rgba(255, 255, 255, 0.8); 
   padding: 30px;
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
   animation: fadeIn 0.5s ease-in-out;
-  backdrop-filter: blur(5px); /* Hiệu ứng mờ hiện đại */
+  backdrop-filter: blur(5px); 
 }
 
 h1 {
