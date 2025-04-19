@@ -9,56 +9,65 @@ import { Badge, Button } from "antd";
 function Home() {
   const [products, setProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(true);
+  const [productsError, setProductsError] = useState(null);
   const [saleProducts, setSaleProducts] = useState([]);
   const [saleProductsLoading, setSaleProductsLoading] = useState(true);
+  const [saleProductsError, setSaleProductsError] = useState(null);
   const [flashSaleProducts, setFlashSaleProducts] = useState([]);
   const [flashSaleLoading, setFlashSaleLoading] = useState(true);
   const [flashSaleEndTime, setFlashSaleEndTime] = useState(null);
   const [allProducts, setAllProducts] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [cateProducts, setCateProducts] = useState([]);
   const [news, setNews] = useState([]);
   const [newsLoading, setNewsLoading] = useState(true);
   const [newsError, setNewsError] = useState(null);
   const navigate = useNavigate();
 
-  const limit = 1;
+  const limit = 10;
 
   const getFlashSaleData = async () => {
     try {
       setFlashSaleLoading(true);
       const salesResponse = await getAllSales({ page: 1, limit: 1000 });
-      const activeSales = salesResponse.filter((sale) => sale.isActive);
-  
+
+      // Lọc các sale đang hoạt động và chưa hết thời gian
+      const now = new Date().getTime();
+      const activeSales = salesResponse.filter(
+        (sale) => sale.isActive && new Date(sale.endDate).getTime() > now,
+      );
+
       if (activeSales.length === 0) {
         setFlashSaleProducts([]);
         setFlashSaleEndTime(null);
         return;
       }
-  
-      const endTimes = activeSales.map((sale) => new Date(sale.endDate).getTime());
+
+      // Tìm thời gian kết thúc sớm nhất
+      const endTimes = activeSales.map((sale) =>
+        new Date(sale.endDate).getTime(),
+      );
       const earliestEndTime = Math.min(...endTimes);
       setFlashSaleEndTime(new Date(earliestEndTime));
-  
+
       const productMap = new Map();
-  
+
       for (const sale of activeSales) {
         let productsToProcess = [];
-  
+
         if (sale.isGlobalSale) {
-          const productsResponse = await getProductList(1, 1000);
-          productsToProcess = productsResponse?.data || [];
+          productsToProcess = allProducts;
         } else {
-          productsToProcess = sale.productStrategySales.map((item) => item.product);
+          productsToProcess = sale.productStrategySales.map(
+            (item) => item.product,
+          );
         }
-  
+
         productsToProcess.forEach((product) => {
           const discountPercent = parseFloat(sale.discountAmount) || 0;
           const finalPrice = (
             (parseFloat(product.originalPrice) || 0) *
             (1 - discountPercent / 100)
           ).toFixed(2);
-  
+
           const productData = {
             ...product,
             saleId: sale.id,
@@ -67,7 +76,7 @@ function Home() {
             finalPrice,
             images: allProducts.find((p) => p.id === product.id)?.images,
           };
-  
+
           if (productMap.has(product.id)) {
             const existingProduct = productMap.get(product.id);
             if (discountPercent > existingProduct.discountPercent) {
@@ -78,7 +87,7 @@ function Home() {
           }
         });
       }
-  
+
       const allFlashSaleProducts = Array.from(productMap.values());
       setFlashSaleProducts(allFlashSaleProducts);
     } catch (error) {
@@ -105,9 +114,7 @@ function Home() {
       const distance = end - now;
 
       if (distance <= 0) {
-        setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
-        setFlashSaleProducts([]);
-        setFlashSaleEndTime(null);
+        getFlashSaleData();
         return;
       }
 
@@ -128,40 +135,25 @@ function Home() {
   useEffect(() => {
     const getAllProducts = async () => {
       try {
+        setProductsLoading(true);
+        setSaleProductsLoading(true);
         const productsResponse = await getProductList(1, 1000);
-        console.log("productsResponse:", productsResponse);
         const products = productsResponse?.data || [];
         setAllProducts(products);
+
+        setProducts(products.slice(0, 10));
+        setSaleProducts(products.slice(0, 10));
       } catch (error) {
         console.error("Lỗi khi lấy toàn bộ sản phẩm:", error);
+        setProductsError("Không thể tải sản phẩm. Vui lòng thử lại sau.");
+        setSaleProductsError(
+          "Không thể tải sản phẩm sale. Vui lòng thử lại sau.",
+        );
         setAllProducts([]);
-      }
-    };
-
-    const getProducts = async () => {
-      try {
-        setProductsLoading(true);
-        const data = await getProductList(limit, 10);
-        if (data && data.data) {
-          setProducts(data.data);
-        }
-      } catch (error) {
-        console.error("Lỗi khi lấy dữ liệu sản phẩm:", error);
+        setProducts([]);
+        setSaleProducts([]);
       } finally {
         setProductsLoading(false);
-      }
-    };
-
-    const getSaleProductsData = async () => {
-      try {
-        setSaleProductsLoading(true);
-        const data = await getProductList(limit, 10);
-        if (data && data.data) {
-          setSaleProducts(data.data);
-        }
-      } catch (error) {
-        console.error("Lỗi khi lấy dữ liệu sản phẩm sale:", error);
-      } finally {
         setSaleProductsLoading(false);
       }
     };
@@ -194,8 +186,6 @@ function Home() {
     };
 
     getAllProducts();
-    getProducts();
-    getSaleProductsData();
     fetchNews();
   }, []);
 
@@ -204,10 +194,6 @@ function Home() {
       getFlashSaleData();
     }
   }, [allProducts]);
-
-  const handleCategoryClick = (categoryId) => {
-    setSelectedCategory(categoryId);
-  };
 
   const handleProductClick = (productId) => {
     navigate(`/detail-product/${productId}`);
@@ -378,6 +364,8 @@ function Home() {
         <div className={styles.loadingSpinnerContainer}>
           <div className={styles.loadingSpinner}></div>
         </div>
+      ) : saleProductsError ? (
+        <div className={styles.error}>{saleProductsError}</div>
       ) : (
         <div className={styles.swiper}>
           {saleProducts.slice(0, 4).map((product, index) => (
@@ -443,6 +431,8 @@ function Home() {
         <div className={styles.loadingSpinnerContainer}>
           <div className={styles.loadingSpinner}></div>
         </div>
+      ) : productsError ? (
+        <div className={styles.error}>{productsError}</div>
       ) : (
         <div className={styles.swiper}>
           {products.slice(4, 8).map((product, index) => (
