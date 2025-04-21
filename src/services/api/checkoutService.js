@@ -1,4 +1,5 @@
 import axios from "axios";
+import privateAxios from "./privateAxios";
 
 const API_BASE_URL = "http://35.247.185.8/api";
 export const fetchPayment = async ({ emailtoken, items, discount_id }) => {
@@ -41,24 +42,24 @@ export const PaymentVNPAY = async ({
   }
 };
 
-export const retryPayment = async ({ invoiceId }) => {
+export const retryPayment = async ({ invoiceId, paymentMethod = "VNPAY" }) => {
   try {
-    const response = await axios.post(
-      `${API_BASE_URL}/invoices/retryPayment`,
-      null,
-      {
-        params: {
-          invoiceId: invoiceId,
-        },
-      },
-    );
+    const parsedInvoiceId = Number(invoiceId);
+    if (isNaN(parsedInvoiceId)) {
+      throw new Error("invoiceId phải là một số hợp lệ");
+    }
+
+    const response = await privateAxios.post(`/v1/payment/retry-payment`, {
+      invoiceId: parsedInvoiceId,
+      paymentMethod,
+    });
 
     return {
       data: response.data,
-      paymentUrl: response.data.paymenturl,
+      paymentUrl: response.data.paymentUrl,
     };
   } catch (error) {
-    console.error(error);
-    return { error: error.message };
+    console.error("Error retrying payment:", error);
+    throw error;
   }
 };

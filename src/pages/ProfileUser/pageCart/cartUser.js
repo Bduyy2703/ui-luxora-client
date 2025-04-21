@@ -3,13 +3,17 @@ import {
   IssuesCloseOutlined,
   PayCircleOutlined,
 } from "@ant-design/icons";
-import { Pagination, Tooltip } from "antd";
+import { Pagination, Tooltip, notification } from "antd";
 import { useEffect, useState } from "react";
 import { defineMessages } from "react-intl";
 import { useNavigate } from "react-router-dom";
 import { retryPayment } from "../../../services/api/checkoutService";
-import { getAllInvoices } from "../../../services/api/userService";
+import { getProfile } from "../../../services/api/userService"; // Thêm getInvoiceById
 import styles from "./CartUser.module.scss";
+import {
+  getInvoiceById,
+  getInvoiceByUser,
+} from "../../../services/api/invoiceService";
 
 const messages = defineMessages({
   jewelryTitle: {
@@ -21,10 +25,9 @@ const messages = defineMessages({
 const CartUser = () => {
   const [orders, setOrders] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  // const location = useLocation();
-  // const { cartItems, emailtoken, paymentData } = location.state || {};
-  // const paymentDataArray = Object.values(paymentData);
+  const [loading, setLoading] = useState(true);
   const ordersPerPage = 8;
+  const navigate = useNavigate();
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -34,15 +37,39 @@ const CartUser = () => {
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
   const currentOrders = orders.slice(indexOfFirstOrder, indexOfLastOrder);
 
-  const navigate = useNavigate();
-
   const getAll = async () => {
+    setLoading(true);
     try {
-      const userId = localStorage.getItem("userId");
-      const response = await getAllInvoices(userId);
-      setOrders(response);
+      const profile = await getProfile();
+      const userId = profile?.userId;
+      if (!userId) {
+        throw new Error("Không tìm thấy userId");
+      }
+
+      const response = await getInvoiceByUser(userId);
+      const mappedOrders = response.map((invoice) => ({
+        _id: invoice.id,
+        orderCode: `INV-${invoice.id}`,
+        purchaseDate: invoice.createdAt,
+        paymentMethod: invoice.paymentMethod,
+        amountToPay: invoice.finalTotal,
+        status:
+          invoice.status === "PAID"
+            ? "success"
+            : invoice.status === "PENDING"
+              ? "pending"
+              : "unknown",
+      }));
+      setOrders(mappedOrders);
     } catch (error) {
       console.error("Lỗi khi lấy danh sách đơn hàng:", error);
+      notification.error({
+        message: "Thông báo",
+        description: "Không thể tải danh sách đơn hàng",
+        duration: 3,
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -50,26 +77,41 @@ const CartUser = () => {
     getAll();
   }, []);
 
-  const handleInvoiceDetail = (invoiceId) => {
-    localStorage.setItem("invoiceId", invoiceId);
-    window.location.href = "/account/orders/invoice-detail";
+  const handleInvoiceDetail = async (invoiceId) => {
+    try {
+      const invoiceDetail = await getInvoiceById(invoiceId);
+      navigate("/account/orders/invoice-detail", { state: { invoiceDetail } });
+    } catch (error) {
+      console.error("Lỗi khi lấy chi tiết hóa đơn:", error);
+      notification.error({
+        message: "Thông báo",
+        description: "Không thể tải chi tiết hóa đơn",
+        duration: 3,
+      });
+      navigate("/account/orders"); // Quay lại trang danh sách nếu lỗi
+    }
   };
 
-  const handlePayment = async (invoiceId) => {
+  const handlePayment = async (invoiceId, paymentMethod) => {
     try {
-      const result = await retryPayment({ invoiceId });
-      
-      if (result.error) {
-        console.error("Lỗi khi thanh toán lại:", result.error);
+      const result = await retryPayment({ invoiceId, paymentMethod });
+      if (result?.paymentUrl) {
+        window.location.href = result.paymentUrl;
       } else {
-        if (result?.data?.paymentUrl) {
-          window.location.href = result?.data?.paymentUrl; 
-        } else {
-          console.error("Không tìm thấy paymentUrl trong phản hồi.");
-        }
+        console.error("Không tìm thấy paymentUrl trong phản hồi.");
+        notification.error({
+          message: "Thông báo",
+          description: "Không thể thực hiện thanh toán lại",
+          duration: 3,
+        });
       }
     } catch (error) {
       console.error("Lỗi khi gọi hàm thanh toán lại:", error);
+      notification.error({
+        message: "Thông báo",
+        description: error.response?.data?.message || "Thanh toán lại thất bại",
+        duration: 3,
+      });
     }
   };
 
@@ -148,7 +190,20 @@ const CartUser = () => {
             </tr>
           </thead>
           <tbody>
-            {currentOrders.length === 0 ? (
+            {loading ? (
+              <tr>
+                <td
+                  colSpan="5"
+                  style={{
+                    textAlign: "center",
+                    color: "#666",
+                    padding: "20px",
+                  }}
+                >
+                  Đang tải đơn hàng...
+                </td>
+              </tr>
+            ) : currentOrders.length === 0 ? (
               <tr>
                 <td
                   colSpan="5"
@@ -162,7 +217,7 @@ const CartUser = () => {
                 </td>
               </tr>
             ) : (
-              currentOrders.map((order, index) => (
+              currentOrders.map((order) => (
                 <tr
                   key={order._id}
                   style={{ height: "50px", borderBottom: "1px solid #ebebeb" }}
@@ -184,7 +239,6 @@ const CartUser = () => {
                       borderRight: "1px solid #ebebeb",
                     }}
                   >
-                    {/* {order.purchaseDate} */}
                     {new Date(order.purchaseDate).toLocaleDateString("vi-VN")}
                   </td>
                   <td
@@ -245,7 +299,9 @@ const CartUser = () => {
                               color: "blue",
                               cursor: "pointer",
                             }}
-                            onClick={() => handlePayment(order._id)}
+                            onClick={() =>
+                              handlePayment(order._id, order.paymentMethod)
+                            }
                           />
                         </Tooltip>
                       </span>
@@ -267,7 +323,6 @@ const CartUser = () => {
         />
       </div>
     </div>
-    // </PageWrapper>
   );
 };
 
