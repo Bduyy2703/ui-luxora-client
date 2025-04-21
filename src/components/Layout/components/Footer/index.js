@@ -211,7 +211,7 @@ function Footer() {
                 whileHover={{ scale: 1.05, color: "#e6ff83" }}
                 transition={{ duration: 0.3 }}
                 onClick={() =>
-                  navigate(`/list-product?categoryId=${category.id}`)
+                  navigate(`/list-product?categories=${category.id}`)
                 }
               >
                 {category.name}
