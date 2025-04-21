@@ -1,24 +1,26 @@
 import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom"; // Thêm useLocation, useNavigate
 import styles from "./invoiceDetail.module.scss";
-import { getInvoiceDetail } from "../../services/api/userService";
-import { Breadcrumb } from "antd";
+import { Breadcrumb, notification } from "antd";
 
 const InvoiceDetail = () => {
   const [invoiceDetail, setInvoiceDetail] = useState(null);
-
-  const InvoiceDetail = async () => {
-    try {
-      const invoiceId = localStorage.getItem("invoiceId");
-      const response = await getInvoiceDetail(invoiceId);
-      setInvoiceDetail(response);
-    } catch (error) {
-      console.error("Lỗi khi lấy chi tiết hóa đơn:", error);
-    }
-  };
+  const location = useLocation(); // Lấy state từ navigate
+  const navigate = useNavigate();
 
   useEffect(() => {
-    InvoiceDetail();
-  }, []);
+    const { invoiceDetail } = location.state || {};
+    if (!invoiceDetail) {
+      notification.error({
+        message: "Thông báo",
+        description: "Không tìm thấy chi tiết hóa đơn",
+        duration: 3,
+      });
+      navigate("/account/orders"); // Quay lại nếu không có dữ liệu
+      return;
+    }
+    setInvoiceDetail(invoiceDetail);
+  }, [location, navigate]);
 
   const breadcrumbItems = [
     { label: "Trang chủ", path: "/" },
@@ -26,17 +28,25 @@ const InvoiceDetail = () => {
     { label: "Chi tiết đơn hàng" },
   ];
 
+  if (!invoiceDetail) {
+    return <div>Đang tải...</div>;
+  }
+
+  // Tính tổng khuyến mại (productDiscount + shippingFeeDiscount)
+  const totalDiscount =
+    (invoiceDetail.productDiscount || 0) +
+    (invoiceDetail.shippingFeeDiscount || 0);
 
   return (
     <>
       <Breadcrumb items={breadcrumbItems} />
       <div className={styles.orderDetail}>
-        <h1>Chi tiết đơn hàng {invoiceDetail?.invoice?.orderCode}</h1>
+        <h1>Chi tiết đơn hàng INV-{invoiceDetail.id}</h1>
         <div className={styles.status}>
           <span>
             Trạng thái thanh toán:{" "}
             <span className={styles.unpaid}>
-              {invoiceDetail?.invoice?.status === "success" ? (
+              {invoiceDetail.status === "PAID" ? (
                 <span style={{ color: "green" }}>Đã thanh toán</span>
               ) : (
                 <span style={{ color: "red" }}>Đang chờ</span>
@@ -45,31 +55,26 @@ const InvoiceDetail = () => {
           </span>
           <span>Trạng thái vận chuyển: Đang vận chuyển</span>
           <span>
-            Ngày tạo:
-            {new Date(invoiceDetail?.invoice?.createdAt).toLocaleDateString(
-              "vi-VN",
-            )}
+            Ngày tạo:{" "}
+            {new Date(invoiceDetail.createdAt).toLocaleDateString("vi-VN")}
           </span>
         </div>
         <div className={styles.info}>
           <div>
             <h2>Địa chỉ giao hàng</h2>
-            {/* <p>{invoiceDetail?.invoice?.address.name}</p> */}
-            <p>Quận 1</p>
-
-            {/* <p>Địa chỉ: {invoiceDetail?.invoice?.address.location}</p> */}
+            <p>{invoiceDetail.address.street}</p>
             <p>
-              Số điện thoại:{" "}
-              {invoiceDetail?.invoiceUser?.user_profile?.phoneNumber}
+              {invoiceDetail.address.city}, {invoiceDetail.address.country}
             </p>
+            <p>Số điện thoại: {invoiceDetail.user.phoneNumber}</p>
           </div>
           <div>
             <h2>Thanh toán</h2>
-            <p>{invoiceDetail?.invoice?.paymentMethod}</p>
+            <p>{invoiceDetail.paymentMethod}</p>
           </div>
           <div>
             <h2>Ghi chú</h2>
-            {/* <p>{invoiceDetail?.invoice?.note}</p> */}
+            <p>{invoiceDetail.note || "Không có ghi chú"}</p>
           </div>
         </div>
         <table className={styles.table}>
@@ -82,20 +87,18 @@ const InvoiceDetail = () => {
             </tr>
           </thead>
           <tbody>
-            {invoiceDetail?.productDetails?.map((product, index) => (
-              <tr key={index}>
+            {invoiceDetail.items?.map((item) => (
+              <tr key={item.id}>
                 <td>
-                  <p>{product.name}</p>
+                  <p>{item.productDetail.name}</p>
                 </td>
                 <td>
-                  {new Intl.NumberFormat("vi-VN").format(product.price)}
+                  {new Intl.NumberFormat("vi-VN").format(item.price)}
                   <span className={styles.dong}>đ</span>
                 </td>
-                <td>{product.quantity}</td>
+                <td>{item.quantity}</td>
                 <td>
-                  {new Intl.NumberFormat("vi-VN").format(
-                    product.price * product.quantity,
-                  )}
+                  {new Intl.NumberFormat("vi-VN").format(item.subtotal)}
                   <span className={styles.dong}>đ</span>
                 </td>
               </tr>
@@ -104,25 +107,18 @@ const InvoiceDetail = () => {
         </table>
         <div className={styles.summary}>
           <p>
-            Khuyến mại:{" "}
-            {new Intl.NumberFormat("vi-VN").format(
-              invoiceDetail?.invoice?.discountAmount,
-            )}
+            Khuyến mại: {new Intl.NumberFormat("vi-VN").format(totalDiscount)}
             <span className={styles.dong}>đ</span>
           </p>
-          {/* <p>
-          Phí vận chuyển:{" "}
-          {new Intl.NumberFormat("vi-VN").format(
-            invoiceDetail?.invoice?.shippingFee,
-          )}
-          <span className={styles.dong}>đ</span>
-        </p> */}
+          <p>
+            Phí vận chuyển:{" "}
+            {new Intl.NumberFormat("vi-VN").format(invoiceDetail.shippingFee)}
+            <span className={styles.dong}>đ</span>
+          </p>
           <p>
             Tổng tiền:{" "}
             <span className={styles.total}>
-              {new Intl.NumberFormat("vi-VN").format(
-                invoiceDetail?.invoice?.amountToPay,
-              )}
+              {new Intl.NumberFormat("vi-VN").format(invoiceDetail.finalTotal)}
               <span className={styles.dong}>đ</span>
             </span>
           </p>
