@@ -30,18 +30,8 @@ const PasswordUser = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        style={{ height: "100px" }}
       >
-        <span
-          className={styles.changePassword}
-          style={{
-            fontSize: "24px",
-            fontWeight: "300",
-            color: "#4a4a4a",
-          }}
-        >
-          ĐỔI MẬT KHẨU
-        </span>
+        <span className={styles.changePassword}>ĐỔI MẬT KHẨU</span>
 
         <Card
           style={{

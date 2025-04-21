@@ -17,15 +17,15 @@
 
 .contentWrapper {
   flex: 1;
-  height: 500px; /* Chiều cao cố định */
-  overflow-y: auto; /* Cho phép cuộn nếu nội dung vượt quá chiều cao */
+  // height: 500px; /* Chiều cao cố định */
+  // overflow-y: auto; /* Cho phép cuộn nếu nội dung vượt quá chiều cao */
 }
 
 .content {
   background: #fff;
   border-radius: 8px;
   padding: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  // box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
   min-height: 100%; /* Đảm bảo nội dung chiếm toàn bộ chiều cao của contentWrapper */
 }
 
