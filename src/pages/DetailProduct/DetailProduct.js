@@ -209,6 +209,9 @@ export const DetailProduct = () => {
                     )}
                   </motion.span>
                 ))}
+                <span className={styles.sold}>
+                  {product.totalSold || 0} Đã bán
+                </span>
               </div>
             </div>
             <div className={styles.priceProduct}>
@@ -241,7 +244,7 @@ export const DetailProduct = () => {
                         name="color"
                         value={color}
                         checked={selectedColor === color}
-                        style={{ marginTop: "10px" }}
+                        style={{ marginTop: "1px" }}
                         onChange={() => handleColorChange(color)}
                       />
                       <span>{color}</span>
@@ -271,35 +274,42 @@ export const DetailProduct = () => {
                   </motion.select>
                 </div>
               )}
-              <div className={styles.quantity}>
-                <motion.button
-                  type="button"
-                  className={styles.quantityBtn}
-                  onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  -
-                </motion.button>
-                <input
-                  type="number"
-                  value={quantity}
-                  onChange={(e) =>
-                    setQuantity(Math.max(1, parseInt(e.target.value) || 1))
-                  }
-                  className={styles.quantityInput}
-                />
-                <motion.button
-                  type="button"
-                  className={styles.quantityBtn}
-                  onClick={() => setQuantity((prev) => prev + 1)}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  +
-                </motion.button>
+              <div className={styles.quantityWrapper}>
+                <div className={styles.quantityLabel}>Số lượng: </div>
+                <div className={styles.quantity}>
+                  <motion.button
+                    type="button"
+                    className={styles.quantityBtn}
+                    onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
+                    disabled={quantity <= 1}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    -
+                  </motion.button>
+                  <input
+                    type="number"
+                    value={quantity}
+                    onChange={(e) =>
+                      setQuantity(Math.max(1, parseInt(e.target.value) || 1))
+                    }
+                    className={styles.quantityInput}
+                  />
+                  <motion.button
+                    type="button"
+                    className={styles.quantityBtn}
+                    onClick={() => setQuantity((prev) => prev + 1)}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    +
+                  </motion.button>
+                </div>
+                <div className={styles.stock}>
+                  ({product.totalStock || 0} sản phẩm có sẵn)
+                </div>
               </div>
-              <div>
+              <div className={styles.actionButtons}>
                 <motion.button
                   type="button"
                   className={styles.btn}
@@ -367,7 +377,6 @@ export const Image = ({ product }) => {
     <div className={styles.picture}>
       <motion.div
         className={styles.mainImageContainer}
-        // whileHover={{ scale: 1.05 }}
         transition={{ duration: 0.3 }}
       >
         <AnimatePresence mode="wait">

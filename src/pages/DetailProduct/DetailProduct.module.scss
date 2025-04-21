@@ -284,7 +284,7 @@
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 16px;
-  margin-top: 10px;
+  margin-top: 1px;
 }
 
 .quantityInput::-webkit-inner-spin-button,
@@ -456,4 +456,17 @@
   font-size: 14px;
   font-weight: 600;
   color: #e8002d;
+}
+
+.quantityWrapper {
+  display: flex;
+  align-items: center;
+}
+
+.quantityLabel {
+  margin-right: 10px;
+}
+
+.stock {
+  margin-left: 10px;
 }
