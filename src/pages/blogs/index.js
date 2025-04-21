@@ -193,7 +193,7 @@ function BlogDetail() {
                     transition={{ duration: 0.3 }}
                     style={{ paddingLeft: "10px" }}
                     onClick={() =>
-                      navigate(`/list-product?categoryId=${category.id}`)
+                      navigate(`/list-product?categories=${category.id}`)
                     }
                   >
                     {category.name}
