@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom"; // Thêm useLocation, useNavigate
+import { useLocation, useNavigate } from "react-router-dom";
 import styles from "./invoiceDetail.module.scss";
 import { Breadcrumb, notification } from "antd";
 
 const InvoiceDetail = () => {
   const [invoiceDetail, setInvoiceDetail] = useState(null);
-  const location = useLocation(); // Lấy state từ navigate
+  const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -16,7 +16,7 @@ const InvoiceDetail = () => {
         description: "Không tìm thấy chi tiết hóa đơn",
         duration: 3,
       });
-      navigate("/account/orders"); // Quay lại nếu không có dữ liệu
+      navigate("/account/orders");
       return;
     }
     setInvoiceDetail(invoiceDetail);
@@ -29,38 +29,44 @@ const InvoiceDetail = () => {
   ];
 
   if (!invoiceDetail) {
-    return <div>Đang tải...</div>;
+    return <div className={styles.loading}>Đang tải...</div>;
   }
 
-  // Tính tổng khuyến mại (productDiscount + shippingFeeDiscount)
   const totalDiscount =
     (invoiceDetail.productDiscount || 0) +
     (invoiceDetail.shippingFeeDiscount || 0);
 
   return (
-    <>
-      <Breadcrumb items={breadcrumbItems} />
+    <div className={styles.wrapper}>
+      <Breadcrumb items={breadcrumbItems} className={styles.breadcrumb} />
       <div className={styles.orderDetail}>
-        <h1>Chi tiết đơn hàng INV-{invoiceDetail.id}</h1>
+        <h1 className={styles.title}>
+          Chi tiết đơn hàng INV-{invoiceDetail.id}
+        </h1>
         <div className={styles.status}>
-          <span>
-            Trạng thái thanh toán:{" "}
-            <span className={styles.unpaid}>
-              {invoiceDetail.status === "PAID" ? (
-                <span style={{ color: "green" }}>Đã thanh toán</span>
-              ) : (
-                <span style={{ color: "red" }}>Đang chờ</span>
-              )}
+          <div className={styles.statusItem}>
+            <span>Trạng thái thanh toán: </span>
+            <span
+              className={
+                invoiceDetail.status === "PAID" ? styles.paid : styles.unpaid
+              }
+            >
+              {invoiceDetail.status === "PAID" ? "Đã thanh toán" : "Đang chờ"}
             </span>
-          </span>
-          <span>Trạng thái vận chuyển: Đang vận chuyển</span>
-          <span>
-            Ngày tạo:{" "}
-            {new Date(invoiceDetail.createdAt).toLocaleDateString("vi-VN")}
-          </span>
+          </div>
+          <div className={styles.statusItem}>
+            <span>Trạng thái vận chuyển: </span>
+            <span>Đang vận chuyển</span>
+          </div>
+          <div className={styles.statusItem}>
+            <span>Ngày tạo: </span>
+            <span>
+              {new Date(invoiceDetail.createdAt).toLocaleDateString("vi-VN")}
+            </span>
+          </div>
         </div>
         <div className={styles.info}>
-          <div>
+          <div className={styles.infoBlock}>
             <h2>Địa chỉ giao hàng</h2>
             <p>{invoiceDetail.address.street}</p>
             <p>
@@ -68,43 +74,47 @@ const InvoiceDetail = () => {
             </p>
             <p>Số điện thoại: {invoiceDetail.user.phoneNumber}</p>
           </div>
-          <div>
+          <div className={styles.infoBlock}>
             <h2>Thanh toán</h2>
             <p>{invoiceDetail.paymentMethod}</p>
           </div>
-          <div>
+          <div className={styles.infoBlock}>
             <h2>Ghi chú</h2>
             <p>{invoiceDetail.note || "Không có ghi chú"}</p>
           </div>
         </div>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Sản phẩm</th>
-              <th>Đơn giá</th>
-              <th>Số lượng</th>
-              <th>Tổng</th>
-            </tr>
-          </thead>
-          <tbody>
-            {invoiceDetail.items?.map((item) => (
-              <tr key={item.id}>
-                <td>
-                  <p>{item.productDetail.name}</p>
-                </td>
-                <td>
-                  {new Intl.NumberFormat("vi-VN").format(item.price)}
-                  <span className={styles.dong}>đ</span>
-                </td>
-                <td>{item.quantity}</td>
-                <td>
-                  {new Intl.NumberFormat("vi-VN").format(item.subtotal)}
-                  <span className={styles.dong}>đ</span>
-                </td>
+        <div className={styles.tableWrapper}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Sản phẩm</th>
+                <th>Đơn giá</th>
+                <th>Số lượng</th>
+                <th>Tổng</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {invoiceDetail.items?.map((item, index) => (
+                <tr
+                  key={item.id}
+                  className={styles.tableRow}
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <td>{item.productDetail.name}</td>
+                  <td>
+                    {new Intl.NumberFormat("vi-VN").format(item.price)}
+                    <span className={styles.dong}>đ</span>
+                  </td>
+                  <td>{item.quantity}</td>
+                  <td>
+                    {new Intl.NumberFormat("vi-VN").format(item.subtotal)}
+                    <span className={styles.dong}>đ</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         <div className={styles.summary}>
           <p>
             Khuyến mại: {new Intl.NumberFormat("vi-VN").format(totalDiscount)}
@@ -124,7 +134,7 @@ const InvoiceDetail = () => {
           </p>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

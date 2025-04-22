@@ -1185,7 +1185,7 @@ const CheckoutPage = () => {
           description: response.data.message || "Xác nhận đơn hàng thành công",
           duration: 3,
         });
-        navigate("/order-success");
+        navigate("/");
       }
     } catch (error) {
       console.error("Lỗi khi xác nhận thanh toán:", error);
