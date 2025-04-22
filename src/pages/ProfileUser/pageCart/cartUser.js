@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { defineMessages } from "react-intl";
 import { useNavigate } from "react-router-dom";
 import { retryPayment } from "../../../services/api/checkoutService";
-import { getProfile } from "../../../services/api/userService"; // Thêm getInvoiceById
+import { getProfile } from "../../../services/api/userService";
 import styles from "./CartUser.module.scss";
 import {
   getInvoiceById,
@@ -88,7 +88,7 @@ const CartUser = () => {
         description: "Không thể tải chi tiết hóa đơn",
         duration: 3,
       });
-      navigate("/account/orders"); // Quay lại trang danh sách nếu lỗi
+      navigate("/account/orders");
     }
   };
 
@@ -118,193 +118,78 @@ const CartUser = () => {
   return (
     <div className={styles.profile}>
       <div className={styles.profileUser}>
-        <span style={{ fontSize: "24px", fontWeight: "300" }}>
-          ĐƠN HÀNG CỦA BẠN
-        </span>
-        <table
-          style={{
-            width: "100%",
-            height: "105px",
-            borderCollapse: "collapse",
-            marginTop: "20px",
-            border: "1px solid #ebebeb",
-          }}
-        >
+        <span className={styles.title}>ĐƠN HÀNG CỦA BẠN</span>
+        <table className={styles.orderTable}>
           <thead>
             <tr>
-              <th
-                style={{
-                  width: "182px",
-                  height: "35px",
-                  border: "1px solid #ccc",
-                  backgroundColor: "#01567f",
-                  color: "white",
-                }}
-              >
-                Đơn hàng
-              </th>
-              <th
-                style={{
-                  width: "238px",
-                  height: "35px",
-                  border: "1px solid #ccc",
-                  backgroundColor: "#01567f",
-                  color: "white",
-                }}
-              >
-                Ngày
-              </th>
-              <th
-                style={{
-                  width: "192px",
-                  height: "35px",
-                  border: "1px solid #ccc",
-                  backgroundColor: "#01567f",
-                  color: "white",
-                }}
-              >
-                Phương thức thanh toán
-              </th>
-              <th
-                style={{
-                  width: "188px",
-                  height: "35px",
-                  border: "1px solid #ccc",
-                  backgroundColor: "#01567f",
-                  color: "white",
-                }}
-              >
-                Giá trị đơn hàng
-              </th>
-              <th
-                style={{
-                  width: "245px",
-                  height: "35px",
-                  border: "1px solid #ccc",
-                  backgroundColor: "#01567f",
-                  color: "white",
-                }}
-              >
-                TT thanh toán
-              </th>
+              <th>Đơn hàng</th>
+              <th>Ngày</th>
+              <th>Phương thức thanh toán</th>
+              <th>Giá trị đơn hàng</th>
+              <th>TT thanh toán</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td
-                  colSpan="5"
-                  style={{
-                    textAlign: "center",
-                    color: "#666",
-                    padding: "20px",
-                  }}
-                >
+                <td colSpan="5" className={styles.loadingText}>
                   Đang tải đơn hàng...
                 </td>
               </tr>
             ) : currentOrders.length === 0 ? (
               <tr>
-                <td
-                  colSpan="5"
-                  style={{
-                    textAlign: "center",
-                    color: "#666",
-                    padding: "20px",
-                  }}
-                >
+                <td colSpan="5" className={styles.emptyText}>
                   Không có đơn hàng nào.
                 </td>
               </tr>
             ) : (
-              currentOrders.map((order) => (
+              currentOrders.map((order, index) => (
                 <tr
                   key={order._id}
-                  style={{ height: "50px", borderBottom: "1px solid #ebebeb" }}
+                  className={styles.orderRow}
+                  style={{ animationDelay: `${index * 0.1}s` }}
                 >
                   <td
-                    style={{
-                      textAlign: "center",
-                      borderRight: "1px solid #ebebeb",
-                      textDecoration: "underline",
-                      cursor: "pointer",
-                    }}
+                    className={styles.orderCode}
                     onClick={() => handleInvoiceDetail(order._id)}
                   >
                     {order.orderCode}
                   </td>
-                  <td
-                    style={{
-                      textAlign: "center",
-                      borderRight: "1px solid #ebebeb",
-                    }}
-                  >
+                  <td>
                     {new Date(order.purchaseDate).toLocaleDateString("vi-VN")}
                   </td>
-                  <td
-                    style={{
-                      textAlign: "center",
-                      borderRight: "1px solid #ebebeb",
-                    }}
-                  >
-                    {order.paymentMethod}
-                  </td>
-                  <td
-                    style={{
-                      textAlign: "center",
-                      borderRight: "1px solid #ebebeb",
-                    }}
-                  >
+                  <td>{order.paymentMethod}</td>
+                  <td>
                     {new Intl.NumberFormat("vi-VN").format(order.amountToPay)}
                     <span className={styles.dong}>đ</span>
                   </td>
-                  <td style={{ textAlign: "center" }}>
+                  <td className={styles.status}>
                     {order.status === "success" ? (
-                      <span
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        Đã thanh toán{" "}
-                        <CheckCircleOutlined
-                          style={{ marginLeft: "23px", color: "green" }}
-                        />
-                        <PayCircleOutlined
-                          style={{
-                            marginLeft: "30px",
-                            color: "gray",
-                            cursor: "not-allowed",
-                          }}
-                          title="Đã thanh toán"
-                        />
-                      </span>
-                    ) : order.status === "pending" ? (
-                      <span
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        Đang chờ{" "}
-                        <IssuesCloseOutlined
-                          style={{ marginLeft: "50px", color: "red" }}
-                        />
-                        <Tooltip title="Thanh toán lại">
+                      <div className={styles.statusWrapper}>
+                        <span>Đã thanh toán</span>
+                        <div className={styles.iconGroup}>
+                          <CheckCircleOutlined className={styles.successIcon} />
                           <PayCircleOutlined
-                            style={{
-                              marginLeft: "30px",
-                              color: "blue",
-                              cursor: "pointer",
-                            }}
-                            onClick={() =>
-                              handlePayment(order._id, order.paymentMethod)
-                            }
+                            className={styles.disabledIcon}
+                            title="Đã thanh toán"
                           />
-                        </Tooltip>
-                      </span>
+                        </div>
+                      </div>
+                    ) : order.status === "pending" ? (
+                      <div className={styles.statusWrapper}>
+                        <span>Đang chờ</span>
+                        <div className={styles.iconGroup}>
+                          <IssuesCloseOutlined className={styles.pendingIcon} />
+                          <Tooltip title="Thanh toán lại">
+                            <PayCircleOutlined
+                              className={styles.retryIcon}
+                              onClick={() =>
+                                handlePayment(order._id, order.paymentMethod)
+                              }
+                            />
+                          </Tooltip>
+                        </div>
+                      </div>
                     ) : (
                       <span>Trạng thái không xác định</span>
                     )}
@@ -319,7 +204,7 @@ const CartUser = () => {
           pageSize={ordersPerPage}
           total={orders.length}
           onChange={handlePageChange}
-          style={{ marginTop: "20px", textAlign: "center" }}
+          className={styles.pagination}
         />
       </div>
     </div>

@@ -46,8 +46,6 @@ const AddressesUser = () => {
     }
   };
 
-  console.log("addresses", addresses);
-
   const handleSearch = async () => {
     try {
       const response = await searchAddresses(searchQuery);
@@ -199,19 +197,17 @@ const AddressesUser = () => {
   return (
     <div className={styles.profile}>
       <div className={styles.profileUser}>
-        <span style={{ fontSize: "24px", fontWeight: "300" }}>
-          ĐỊA CHỈ CỦA BẠN
-        </span>
+        <span className={styles.title}>ĐỊA CHỈ CỦA BẠN</span>
         <div className={styles.searchAndAdd}>
-          <div>
+          <div className={styles.searchWrapper}>
             <AntdInput
               placeholder="Tìm kiếm địa chỉ"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ width: "300px", height: "40px" }}
+              className={styles.searchInput}
             />
             <Button
-              className={styles.search}
+              className={styles.searchButton}
               type="primary"
               onClick={handleSearch}
             >
@@ -222,7 +218,7 @@ const AddressesUser = () => {
             <Button
               type="primary"
               onClick={() => showModal("add")}
-              className={styles.resetPassword}
+              className={styles.addButton}
             >
               Thêm địa chỉ
             </Button>
@@ -236,43 +232,46 @@ const AddressesUser = () => {
                 <th>Thành phố</th>
                 <th>Quốc gia</th>
                 <th>Mặc định</th>
-                <th style={{ textAlign: "center", width: "250px" }}>
-                  Hành động
-                </th>
+                <th>Hành động</th>
               </tr>
             </thead>
             <tbody>
-              {currentAddresses.map((address, index) => (
-                <tr key={index} style={{ gap: "10px" }}>
-                  <td>{address.street}</td>
-                  <td>{address.city}</td>
-                  <td>{address.country}</td>
-                  <td>{address.isDefault ? "Có" : "Không"}</td>
-                  <td
-                    style={{
-                      display: "flex",
-                      gap: "10px",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <button
-                      className={`${styles.editButton} editButton`}
-                      onClick={() => handleEdit(address.id)}
-                    >
-                      <EditOutlined style={{ marginRight: "5px" }} />
-                      Sửa
-                    </button>
-                    <button
-                      className={`${styles.deleteButton} deleteButton`}
-                      onClick={() => showDeleteConfirm(address.id)}
-                    >
-                      <DeleteOutlined style={{ marginRight: "5px" }} />
-                      Xóa
-                    </button>
+              {currentAddresses.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className={styles.emptyText}>
+                    Không có địa chỉ nào.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                currentAddresses.map((address, index) => (
+                  <tr
+                    key={index}
+                    className={styles.tableRow}
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    <td>{address.street}</td>
+                    <td>{address.city}</td>
+                    <td>{address.country}</td>
+                    <td>{address.isDefault ? "Có" : "Không"}</td>
+                    <td className={styles.actionColumn}>
+                      <button
+                        className={styles.editButton}
+                        onClick={() => handleEdit(address.id)}
+                      >
+                        <EditOutlined className={styles.icon} />
+                        Sửa
+                      </button>
+                      <button
+                        className={styles.deleteButton}
+                        onClick={() => showDeleteConfirm(address.id)}
+                      >
+                        <DeleteOutlined className={styles.icon} />
+                        Xóa
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
           <Pagination
@@ -280,26 +279,31 @@ const AddressesUser = () => {
             pageSize={addressesPerPage}
             total={addressesArray.length}
             onChange={handlePageChange}
-            style={{ marginTop: "20px", textAlign: "center" }}
+            className={styles.pagination}
           />
         </div>
       </div>
 
       {modalType === "add" && (
         <Modal
-          title={"THÊM ĐỊA CHỈ MỚI"}
+          title="THÊM ĐỊA CHỈ MỚI"
           visible={isModalVisible}
           onOk={handleOk}
           onCancel={handleCancel}
+          className={styles.modal}
           footer={[
-            <Button key="back" onClick={handleCancel}>
+            <Button
+              key="back"
+              onClick={handleCancel}
+              className={styles.modalButton}
+            >
               Hủy
             </Button>,
             <Button
-              className={styles.button}
               key="submit"
               type="primary"
               onClick={handleOk}
+              className={styles.modalButton}
             >
               Thêm địa chỉ
             </Button>,
@@ -341,15 +345,19 @@ const AddressesUser = () => {
 
       {modalType === "edit" && (
         <Modal
-          title={"SỬA ĐỊA CHỈ"}
+          title="SỬA ĐỊA CHỈ"
           visible={isModalVisible}
           onCancel={handleCancel}
+          className={styles.modal}
           footer={[
-            <Button key="back" onClick={handleCancel}>
+            <Button
+              key="back"
+              onClick={handleCancel}
+              className={styles.modalButton}
+            >
               Hủy
             </Button>,
             <Button
-              className={styles.button}
               key="submit"
               type="primary"
               onClick={async () => {
@@ -366,6 +374,7 @@ const AddressesUser = () => {
                   });
                 }
               }}
+              className={styles.modalButton}
             >
               Sửa địa chỉ
             </Button>,

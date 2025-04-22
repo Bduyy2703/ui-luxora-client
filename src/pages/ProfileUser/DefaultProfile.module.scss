@@ -17,7 +17,7 @@
 
 .contentWrapper {
   flex: 1;
-  height: 600px; /* Chiều cao cố định cho tất cả các menu */
+  height: 100%; /* Chiều cao cố định cho tất cả các menu */
   overflow-y: auto; /* Cho phép cuộn nếu nội dung vượt quá chiều cao */
   display: flex;
   flex-direction: column;
