@@ -171,6 +171,12 @@ export const DetailProduct = () => {
     setSelectedSize(e.target.value);
   };
 
+  const selectedVariant = product.productDetails?.find(
+    (detail) => detail.color === selectedColor && detail.size === selectedSize,
+  );
+  const variantStock = selectedVariant ? selectedVariant.stock : 0;
+  const isOutOfStock = variantStock === 0;
+
   return (
     <motion.div
       className={styles.wrapper}
@@ -281,7 +287,7 @@ export const DetailProduct = () => {
                     type="button"
                     className={styles.quantityBtn}
                     onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-                    disabled={quantity <= 1}
+                    disabled={quantity <= 1 || isOutOfStock}
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                   >
@@ -294,11 +300,13 @@ export const DetailProduct = () => {
                       setQuantity(Math.max(1, parseInt(e.target.value) || 1))
                     }
                     className={styles.quantityInput}
+                    disabled={isOutOfStock}
                   />
                   <motion.button
                     type="button"
                     className={styles.quantityBtn}
                     onClick={() => setQuantity((prev) => prev + 1)}
+                    disabled={isOutOfStock}
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                   >
@@ -306,7 +314,9 @@ export const DetailProduct = () => {
                   </motion.button>
                 </div>
                 <div className={styles.stock}>
-                  ({product.totalStock || 0} sản phẩm có sẵn)
+                  {isOutOfStock
+                    ? "(Hết hàng)"
+                    : `(${variantStock} sản phẩm có sẵn)`}
                 </div>
               </div>
               <div className={styles.actionButtons}>
@@ -314,7 +324,11 @@ export const DetailProduct = () => {
                   type="button"
                   className={styles.btn}
                   onClick={handleAddToCart}
-                  disabled={loading}
+                  style={{
+                    background: isOutOfStock ? "gray" : "",
+                    cursor: isOutOfStock ? "not-allowed" : "pointer",
+                  }}
+                  disabled={loading || isOutOfStock}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95, rotate: 2 }}
                 >
