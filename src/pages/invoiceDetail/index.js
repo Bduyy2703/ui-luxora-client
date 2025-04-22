@@ -38,17 +38,20 @@ const InvoiceDetail = () => {
 
   return (
     <div className={styles.wrapper}>
-      <Breadcrumb items={breadcrumbItems} className={styles.breadcrumb} />
-      <div className={styles.orderDetail}>
+      <div className={styles.header}>
+        <div className={styles.logo}>Jewelry Co.</div>
         <h1 className={styles.title}>
           Chi tiết đơn hàng INV-{invoiceDetail.id}
         </h1>
+      </div>
+      <Breadcrumb items={breadcrumbItems} className={styles.breadcrumb} />
+      <div className={styles.orderDetail}>
         <div className={styles.status}>
           <div className={styles.statusItem}>
             <span>Trạng thái thanh toán: </span>
             <span
               className={
-                invoiceDetail.status === "PAID" ? styles.paid : styles.unpaid
+                invoiceDetail.status === "PAID" ? styles.paid : styles.pending
               }
             >
               {invoiceDetail.status === "PAID" ? "Đã thanh toán" : "Đang chờ"}
@@ -62,6 +65,12 @@ const InvoiceDetail = () => {
             <span>Ngày tạo: </span>
             <span>
               {new Date(invoiceDetail.createdAt).toLocaleDateString("vi-VN")}
+            </span>
+          </div>
+          <div className={styles.statusItem}>
+            <span>Ngày cập nhật: </span>
+            <span>
+              {new Date(invoiceDetail.updatedAt).toLocaleDateString("vi-VN")}
             </span>
           </div>
         </div>
@@ -115,7 +124,61 @@ const InvoiceDetail = () => {
             </tbody>
           </table>
         </div>
+        {invoiceDetail.discount?.length > 0 && (
+          <div className={styles.discountSection}>
+            <h2>Chi tiết khuyến mại</h2>
+            <div className={styles.discountList}>
+              {invoiceDetail.discount.map((disc, index) => (
+                <div key={disc.id} className={styles.discountItem}>
+                  <p>
+                    <span>Mã giảm giá: </span>
+                    <span className={styles.discountCode}>
+                      {disc.discount.name}
+                    </span>
+                  </p>
+                  <p>
+                    <span>Loại: </span>
+                    {disc.discount.discountType === "PERCENTAGE"
+                      ? "Giảm theo phần trăm"
+                      : "Giảm số tiền cố định"}
+                  </p>
+                  <p>
+                    <span>Giá trị: </span>
+                    {disc.discount.discountType === "PERCENTAGE"
+                      ? `${disc.discount.discountValue}%`
+                      : `${new Intl.NumberFormat("vi-VN").format(
+                          disc.discount.discountValue,
+                        )}đ`}
+                  </p>
+                  <p>
+                    <span>Áp dụng cho: </span>
+                    {disc.discount.condition === "SHIPPING"
+                      ? "Phí vận chuyển"
+                      : "Tổng hóa đơn"}
+                  </p>
+                  <p>
+                    <span>Thời gian áp dụng: </span>
+                    {new Date(disc.discount.startDate).toLocaleDateString(
+                      "vi-VN",
+                    )}{" "}
+                    -{" "}
+                    {new Date(disc.discount.endDate).toLocaleDateString(
+                      "vi-VN",
+                    )}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         <div className={styles.summary}>
+          <p>
+            Tổng sản phẩm:{" "}
+            {new Intl.NumberFormat("vi-VN").format(
+              invoiceDetail.totalProductAmount,
+            )}
+            <span className={styles.dong}>đ</span>
+          </p>
           <p>
             Khuyến mại: {new Intl.NumberFormat("vi-VN").format(totalDiscount)}
             <span className={styles.dong}>đ</span>
