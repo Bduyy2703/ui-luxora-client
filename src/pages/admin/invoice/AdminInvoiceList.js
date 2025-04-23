@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import Swal from "sweetalert2";
 import {
@@ -46,7 +45,6 @@ const INVOICE_STATUSES = [
   { value: "RETURNED", label: "Đã trả hàng", color: "volcano" },
 ];
 
-// Quy tắc chuyển trạng thái
 const VALID_TRANSITIONS = {
   PENDING: ["CONFIRMED", "CANCELLED"],
   CONFIRMED: ["SHIPPING", "CANCELLED"],
@@ -67,7 +65,8 @@ const AdminInvoiceList = () => {
   const [loading, setLoading] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [statusModalVisible, setStatusModalVisible] = useState(false);
-  const [notificationModalVisible, setNotificationModalVisible] = useState(false);
+  const [notificationModalVisible, setNotificationModalVisible] =
+    useState(false);
   const [currentInvoice, setCurrentInvoice] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [notificationTotal, setNotificationTotal] = useState(0);
@@ -103,7 +102,11 @@ const AdminInvoiceList = () => {
   // Lấy danh sách thông báo
   const fetchNotifications = useCallback(async () => {
     try {
-      const response = await getAllNotifications(notificationPage, notificationLimit, ""); // Không lọc type để lấy cả INVOICE_CREATED và INVOICE_CANCELLED
+      const response = await getAllNotifications(
+        notificationPage,
+        notificationLimit,
+        "",
+      ); // Không lọc type để lấy cả INVOICE_CREATED và INVOICE_CANCELLED
       setNotifications(response.notifications);
       setNotificationTotal(response.total);
       setUnreadCount(response.unreadCount);
@@ -136,17 +139,27 @@ const AdminInvoiceList = () => {
 
   // Cập nhật trạng thái hóa đơn
   const handleUpdateStatus = async (values) => {
-    const cleanStatus = values.status.replace(/['"]/g, '');
+    const cleanStatus = values.status.replace(/['"]/g, "");
     setLoading(true);
     try {
-      const response = await updateStatusInvoice(currentInvoice.id, cleanStatus);
+      const response = await updateStatusInvoice(
+        currentInvoice.id,
+        cleanStatus,
+      );
 
-      const finalStatus = currentInvoice.paymentMethod === "COD" && cleanStatus === "DELIVERED" ? "PAID" : cleanStatus;
-      const statusLabel = INVOICE_STATUSES.find((s) => s.value === finalStatus)?.label || finalStatus;
+      const finalStatus =
+        currentInvoice.paymentMethod === "COD" && cleanStatus === "DELIVERED"
+          ? "PAID"
+          : cleanStatus;
+      const statusLabel =
+        INVOICE_STATUSES.find((s) => s.value === finalStatus)?.label ||
+        finalStatus;
 
       Swal.fire({
         title: "Cập nhật thành công!",
-        text: response.message || `Hóa đơn đã được cập nhật trạng thái thành ${statusLabel}.`,
+        text:
+          response.message ||
+          `Hóa đơn đã được cập nhật trạng thái thành ${statusLabel}.`,
         icon: "success",
         timer: 1500,
         showConfirmButton: false,
@@ -172,9 +185,7 @@ const AdminInvoiceList = () => {
     try {
       await markNotificationAsReadAdmin(notificationId);
       setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === notificationId ? { ...n, isRead: true } : n,
-        ),
+        prev.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n)),
       );
       setUnreadCount((prev) => Math.max(prev - 1, 0));
     } catch (error) {
@@ -198,7 +209,9 @@ const AdminInvoiceList = () => {
 
     socket.on("notification", (data) => {
       if (
-        (data.type === "INVOICE_CREATED" || data.type === "INVOICE_CANCELLED") &&
+        (data.type === "INVOICE_CREATED" ||
+          data.type === "INVOICE_CANCELLED" ||
+          data.type === "INVOICE_PAYMENT") &&
         data.source === "USER"
       ) {
         toast.info(data.message, { autoClose: 3000 });
@@ -279,9 +292,7 @@ const AdminInvoiceList = () => {
       render: (text) => {
         const status = INVOICE_STATUSES.find((s) => s.value === text);
         return (
-          <Tag color={status?.color || "default"}>
-            {status?.label || text}
-          </Tag>
+          <Tag color={status?.color || "default"}>{status?.label || text}</Tag>
         );
       },
       align: "center",
@@ -385,10 +396,7 @@ const AdminInvoiceList = () => {
       key: "actions",
       render: (row) =>
         !row.isRead && (
-          <Button
-            type="link"
-            onClick={() => handleMarkAsRead(row.id)}
-          >
+          <Button type="link" onClick={() => handleMarkAsRead(row.id)}>
             Đánh dấu đã đọc
           </Button>
         ),
@@ -397,7 +405,9 @@ const AdminInvoiceList = () => {
 
   const getValidStatusOptions = (currentStatus) => {
     const validStatuses = VALID_TRANSITIONS[currentStatus] || [];
-    return INVOICE_STATUSES.filter((status) => validStatuses.includes(status.value));
+    return INVOICE_STATUSES.filter((status) =>
+      validStatuses.includes(status.value),
+    );
   };
 
   return (
@@ -510,19 +520,27 @@ const AdminInvoiceList = () => {
                       <strong>Trạng thái:</strong>{" "}
                       <Tag
                         color={
-                          INVOICE_STATUSES.find((s) => s.value === currentInvoice.status)?.color || "default"
+                          INVOICE_STATUSES.find(
+                            (s) => s.value === currentInvoice.status,
+                          )?.color || "default"
                         }
                       >
-                        {INVOICE_STATUSES.find((s) => s.value === currentInvoice.status)?.label || currentInvoice.status}
+                        {INVOICE_STATUSES.find(
+                          (s) => s.value === currentInvoice.status,
+                        )?.label || currentInvoice.status}
                       </Tag>
                     </p>
                     <p>
                       <strong>Ngày tạo:</strong>{" "}
-                      {new Date(currentInvoice.createdAt).toLocaleString("vi-VN")}
+                      {new Date(currentInvoice.createdAt).toLocaleString(
+                        "vi-VN",
+                      )}
                     </p>
                     <p>
                       <strong>Ngày cập nhật:</strong>{" "}
-                      {new Date(currentInvoice.updatedAt).toLocaleString("vi-VN")}
+                      {new Date(currentInvoice.updatedAt).toLocaleString(
+                        "vi-VN",
+                      )}
                     </p>
                   </Col>
                 </Row>
@@ -544,44 +562,56 @@ const AdminInvoiceList = () => {
                   <Col xs={24} md={12}>
                     <p>
                       <strong>Tổng tiền sản phẩm:</strong>{" "}
-                      {parseFloat(currentInvoice.totalProductAmount).toLocaleString()} VNĐ
+                      {parseFloat(
+                        currentInvoice.totalProductAmount,
+                      ).toLocaleString()}{" "}
+                      VNĐ
                     </p>
                     <p>
                       <strong>Phí vận chuyển:</strong>{" "}
-                      {parseFloat(currentInvoice.shippingFee).toLocaleString()} VNĐ
+                      {parseFloat(currentInvoice.shippingFee).toLocaleString()}{" "}
+                      VNĐ
                     </p>
                     <p>
                       <strong>Giảm giá phí vận chuyển:</strong>{" "}
-                      {parseFloat(currentInvoice.shippingFeeDiscount).toLocaleString()} VNĐ
+                      {parseFloat(
+                        currentInvoice.shippingFeeDiscount,
+                      ).toLocaleString()}{" "}
+                      VNĐ
                     </p>
                   </Col>
                   <Col xs={24} md={12}>
                     <p>
                       <strong>Giảm giá sản phẩm:</strong>{" "}
-                      {parseFloat(currentInvoice.productDiscount).toLocaleString()} VNĐ
+                      {parseFloat(
+                        currentInvoice.productDiscount,
+                      ).toLocaleString()}{" "}
+                      VNĐ
                     </p>
                     <p>
                       <strong>Tổng tiền cuối cùng:</strong>{" "}
                       <span style={{ color: "#1890ff", fontWeight: "bold" }}>
-                        {parseFloat(currentInvoice.finalTotal).toLocaleString()} VNĐ
+                        {parseFloat(currentInvoice.finalTotal).toLocaleString()}{" "}
+                        VNĐ
                       </span>
                     </p>
                   </Col>
                 </Row>
 
-                {currentInvoice.discount && currentInvoice.discount.length > 0 && (
-                  <>
-                    <Title level={4} style={{ marginTop: 24 }}>
-                      Thông tin giảm giá
-                    </Title>
-                    <AntTable
-                      dataSource={currentInvoice.discount}
-                      columns={discountColumns}
-                      rowKey="id"
-                      pagination={false}
-                    />
-                  </>
-                )}
+                {currentInvoice.discount &&
+                  currentInvoice.discount.length > 0 && (
+                    <>
+                      <Title level={4} style={{ marginTop: 24 }}>
+                        Thông tin giảm giá
+                      </Title>
+                      <AntTable
+                        dataSource={currentInvoice.discount}
+                        columns={discountColumns}
+                        rowKey="id"
+                        pagination={false}
+                      />
+                    </>
+                  )}
               </div>
             )}
           </Modal>
@@ -596,26 +626,30 @@ const AdminInvoiceList = () => {
               <Form.Item
                 name="status"
                 label="Trạng thái"
-                rules={[{ required: true, message: "Vui lòng chọn trạng thái!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng chọn trạng thái!" },
+                ]}
               >
                 <Select placeholder="Chọn trạng thái">
                   {currentInvoice &&
-                    getValidStatusOptions(currentInvoice.status).map((status) => (
-                      <Option key={status.value} value={status.value}>
-                        {status.label}
-                      </Option>
-                    ))}
+                    getValidStatusOptions(currentInvoice.status).map(
+                      (status) => (
+                        <Option key={status.value} value={status.value}>
+                          {status.label}
+                        </Option>
+                      ),
+                    )}
                 </Select>
               </Form.Item>
               <Text
                 type="secondary"
                 style={{ display: "block", marginBottom: 16 }}
               >
-                Lưu ý: 
-                {currentInvoice?.paymentMethod === "COD" && currentInvoice?.status === "SHIPPING" ? 
-                  " Chọn 'Đã giao' sẽ tự động cập nhật thành 'Đã thanh toán' cho hóa đơn COD." : 
-                  " Trạng thái sẽ được cập nhật và thông báo sẽ được gửi đến khách hàng."
-                }
+                Lưu ý:
+                {currentInvoice?.paymentMethod === "COD" &&
+                currentInvoice?.status === "SHIPPING"
+                  ? " Chọn 'Đã giao' sẽ tự động cập nhật thành 'Đã thanh toán' cho hóa đơn COD."
+                  : " Trạng thái sẽ được cập nhật và thông báo sẽ được gửi đến khách hàng."}
               </Text>
               <Form.Item>
                 <Button type="primary" htmlType="submit" loading={loading}>

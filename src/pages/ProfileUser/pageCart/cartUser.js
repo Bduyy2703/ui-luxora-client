@@ -2,6 +2,12 @@ import {
   CheckCircleOutlined,
   IssuesCloseOutlined,
   PayCircleOutlined,
+  ClockCircleOutlined,
+  CarOutlined,
+  GiftOutlined,
+  CloseCircleOutlined,
+  RollbackOutlined,
+  WarningOutlined,
 } from "@ant-design/icons";
 import { Pagination, Tooltip, notification } from "antd";
 import { useEffect, useState } from "react";
@@ -21,6 +27,42 @@ const messages = defineMessages({
     defaultMessage: "Jewelry",
   },
 });
+
+// Định nghĩa ánh xạ trạng thái sang tên hiển thị và biểu tượng
+const statusConfig = {
+  PAID: {
+    display: "Đã thanh toán",
+    icon: <CheckCircleOutlined className={styles.successIcon} />,
+  },
+  PENDING: {
+    display: "Đang chờ",
+    icon: <IssuesCloseOutlined className={styles.pendingIcon} />,
+  },
+  CONFIRMED: {
+    display: "Đã xác nhận",
+    icon: <ClockCircleOutlined className={styles.confirmedIcon} />,
+  },
+  SHIPPING: {
+    display: "Đang giao hàng",
+    icon: <CarOutlined className={styles.shippingIcon} />,
+  },
+  DELIVERED: {
+    display: "Đã giao hàng",
+    icon: <GiftOutlined className={styles.deliveredIcon} />,
+  },
+  CANCELLED: {
+    display: "Đã hủy",
+    icon: <CloseCircleOutlined className={styles.cancelledIcon} />,
+  },
+  RETURNED: {
+    display: "Đã trả hàng",
+    icon: <RollbackOutlined className={styles.returnedIcon} />,
+  },
+  FAILED: {
+    display: "Thất bại",
+    icon: <WarningOutlined className={styles.failedIcon} />,
+  },
+};
 
 const CartUser = () => {
   const [orders, setOrders] = useState([]);
@@ -53,12 +95,7 @@ const CartUser = () => {
         purchaseDate: invoice.createdAt,
         paymentMethod: invoice.paymentMethod,
         amountToPay: invoice.finalTotal,
-        status:
-          invoice.status === "PAID"
-            ? "success"
-            : invoice.status === "PENDING"
-              ? "pending"
-              : "unknown",
+        status: invoice.status, // Giữ nguyên status từ API
       }));
       setOrders(mappedOrders);
     } catch (error) {
@@ -126,7 +163,7 @@ const CartUser = () => {
               <th>Ngày</th>
               <th>Phương thức thanh toán</th>
               <th>Giá trị đơn hàng</th>
-              <th>TT thanh toán</th>
+              <th>Trạng thái</th>
             </tr>
           </thead>
           <tbody>
@@ -164,22 +201,14 @@ const CartUser = () => {
                     <span className={styles.dong}>đ</span>
                   </td>
                   <td className={styles.status}>
-                    {order.status === "success" ? (
-                      <div className={styles.statusWrapper}>
-                        <span>Đã thanh toán</span>
-                        <div className={styles.iconGroup}>
-                          <CheckCircleOutlined className={styles.successIcon} />
-                          <PayCircleOutlined
-                            className={styles.disabledIcon}
-                            title="Đã thanh toán"
-                          />
-                        </div>
-                      </div>
-                    ) : order.status === "pending" ? (
-                      <div className={styles.statusWrapper}>
-                        <span>Đang chờ</span>
-                        <div className={styles.iconGroup}>
-                          <IssuesCloseOutlined className={styles.pendingIcon} />
+                    <div className={styles.statusWrapper}>
+                      <span>
+                        {statusConfig[order.status]?.display ||
+                          "Trạng thái không xác định"}
+                      </span>
+                      <div className={styles.iconGroup}>
+                        {statusConfig[order.status]?.icon || null}
+                        {order.status === "PENDING" && (
                           <Tooltip title="Thanh toán lại">
                             <PayCircleOutlined
                               className={styles.retryIcon}
@@ -188,11 +217,9 @@ const CartUser = () => {
                               }
                             />
                           </Tooltip>
-                        </div>
+                        )}
                       </div>
-                    ) : (
-                      <span>Trạng thái không xác định</span>
-                    )}
+                    </div>
                   </td>
                 </tr>
               ))
