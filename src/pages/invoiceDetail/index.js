@@ -1,10 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { Breadcrumb, notification, Tooltip } from "antd";
+import { PayCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
+import {
+  retryPayment,
+  cancelPayment,
+} from "../../services/api/checkoutService";
 import styles from "./invoiceDetail.module.scss";
-import { Breadcrumb, notification } from "antd";
 
 const InvoiceDetail = () => {
   const [invoiceDetail, setInvoiceDetail] = useState(null);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const [isCancelDisabled, setIsCancelDisabled] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -20,7 +28,63 @@ const InvoiceDetail = () => {
       return;
     }
     setInvoiceDetail(invoiceDetail);
+
+    // Kiểm tra thời gian createdAt để vô hiệu hóa nút Hủy
+    const createdAt = new Date(invoiceDetail.createdAt).getTime();
+    const now = new Date().getTime();
+    const thirtyMinutes = 30 * 60 * 1000; // 30 phút tính bằng milliseconds
+    if (now - createdAt > thirtyMinutes) {
+      setIsCancelDisabled(true);
+    }
   }, [location, navigate]);
+
+  const handlePayment = async (invoiceId, paymentMethod) => {
+    setPaymentLoading(true);
+    try {
+      const result = await retryPayment({ invoiceId, paymentMethod });
+      if (result?.paymentUrl) {
+        window.location.href = result.paymentUrl;
+      } else {
+        console.error("Không tìm thấy paymentUrl trong phản hồi.");
+        notification.error({
+          message: "Thông báo",
+          description: "Không thể thực hiện thanh toán lại",
+          duration: 3,
+        });
+      }
+    } catch (error) {
+      console.error("Lỗi khi gọi hàm thanh toán lại:", error);
+      notification.error({
+        message: "Thông báo",
+        description: error.response?.data?.message || "Thanh toán lại thất bại",
+        duration: 3,
+      });
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
+  const handleCancel = async (invoiceId) => {
+    setCancelLoading(true);
+    try {
+      await cancelPayment(invoiceId);
+      notification.success({
+        message: "Thông báo",
+        description: "Hủy hóa đơn thành công",
+        duration: 3,
+      });
+      navigate("/account/orders");
+    } catch (error) {
+      console.error("Lỗi khi hủy hóa đơn:", error);
+      notification.error({
+        message: "Thông báo",
+        description: error.response?.data?.message || "Hủy hóa đơn thất bại",
+        duration: 3,
+      });
+    } finally {
+      setCancelLoading(false);
+    }
+  };
 
   const breadcrumbItems = [
     { label: "Trang chủ", path: "/" },
@@ -51,11 +115,65 @@ const InvoiceDetail = () => {
             <span>Trạng thái thanh toán: </span>
             <span
               className={
-                invoiceDetail.status === "PAID" ? styles.paid : styles.pending
+                invoiceDetail.status === "PAID"
+                  ? styles.paid
+                  : invoiceDetail.status === "PENDING"
+                    ? styles.pending
+                    : styles.confirmed
               }
             >
-              {invoiceDetail.status === "PAID" ? "Đã thanh toán" : "Đang chờ"}
+              {invoiceDetail.status === "PAID"
+                ? "Đã thanh toán"
+                : invoiceDetail.status === "PENDING"
+                  ? "Đang chờ"
+                  : "Đã xác nhận"}
             </span>
+            {(invoiceDetail.status === "PENDING" ||
+              invoiceDetail.status === "CONFIRMED") && (
+              <div className={styles.actionButtons}>
+                {invoiceDetail.status === "PENDING" &&
+                  invoiceDetail.paymentMethod === "VNPAY" && (
+                    <Tooltip>
+                      <div
+                        className={`${styles.retryIcon} ${
+                          paymentLoading ? styles.disabledIcon : ""
+                        }`}
+                        onClick={() =>
+                          !paymentLoading &&
+                          handlePayment(
+                            invoiceDetail.id,
+                            invoiceDetail.paymentMethod,
+                          )
+                        }
+                      >
+                        Thanh toán lại
+                      </div>
+                    </Tooltip>
+                  )}
+                <Tooltip
+                  title={
+                    isCancelDisabled
+                      ? "Không thể hủy sau 30 phút kể từ khi tạo"
+                      : "Hủy hóa đơn"
+                  }
+                >
+                  <div
+                    className={`${styles.cancelIcon} ${
+                      cancelLoading || isCancelDisabled
+                        ? styles.disabledIcon
+                        : ""
+                    }`}
+                    onClick={() =>
+                      !cancelLoading &&
+                      !isCancelDisabled &&
+                      handleCancel(invoiceDetail.id)
+                    }
+                  >
+                    Hủy hóa đơn
+                  </div>
+                </Tooltip>
+              </div>
+            )}
           </div>
           <div className={styles.statusItem}>
             <span>Trạng thái vận chuyển: </span>
