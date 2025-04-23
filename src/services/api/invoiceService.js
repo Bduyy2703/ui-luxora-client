@@ -34,7 +34,7 @@ export const updateStatusInvoice = async (id, invoiceData) => {
   try {
     const response = await privateAxios.put(
       `/v1/payment/invoice/${id}`,
-      invoiceData,
+      { status :invoiceData} ,
     );
     return response.data || [];
   } catch (error) {
