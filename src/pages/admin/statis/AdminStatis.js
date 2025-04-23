@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
   Card,
@@ -58,6 +59,18 @@ const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 const { Option } = Select;
 
+// Định nghĩa tất cả trạng thái hóa đơn
+const INVOICE_STATUSES = [
+  { value: "PENDING", label: "Chờ xử lý", color: "orange" },
+  { value: "CONFIRMED", label: "Đã xác nhận", color: "blue" },
+  { value: "SHIPPING", label: "Đang giao", color: "cyan" },
+  { value: "DELIVERED", label: "Đã giao", color: "green" },
+  { value: "PAID", label: "Đã thanh toán", color: "green" },
+  { value: "FAILED", label: "Thất bại", color: "purple" },
+  { value: "CANCELLED", label: "Đã hủy", color: "red" },
+  { value: "RETURNED", label: "Đã trả hàng", color: "volcano" },
+];
+
 const AdminStatis = () => {
   const [dateRange, setDateRange] = useState([
     moment("2025-01-01"),
@@ -90,11 +103,16 @@ const AdminStatis = () => {
   const [conversionRate, setConversionRate] = useState(0);
   const [productImages, setProductImages] = useState({}); // Lưu URL hình ảnh theo productDetailId
 
+  // Cập nhật mảng màu cho tất cả trạng thái
   const COLORS = {
-    PAID: "#A0DFFF",
     PENDING: "#B0A0FF",
-    CANCELLED: "#FFBAD2",
+    CONFIRMED: "#40C4FF",
+    SHIPPING: "#26A69A",
+    DELIVERED: "#66BB6A",
+    PAID: "#A0DFFF",
     FAILED: "#FFD8A0",
+    CANCELLED: "#FFBAD2",
+    RETURNED: "#FF8A65",
     PRODUCT: ["#6B5BFF", "#00C4FF"],
   };
 
@@ -116,14 +134,9 @@ const AdminStatis = () => {
       // Lấy trạng thái hóa đơn và tính tỷ lệ chuyển đổi
       const statusRes = await getStatusStatistics(startDate, endDate);
       const statusStats = statusRes?.statistics || [];
-      const statusDataMapped = [
-        { name: "PAID", value: 0 },
-        { name: "PENDING", value: 0 },
-        { name: "CANCELLED", value: 0 },
-        { name: "FAILED", value: 0 },
-      ].map((item) => {
-        const stat = statusStats.find((s) => s.status === item.name);
-        return { ...item, value: stat ? stat.count : 0 };
+      const statusDataMapped = INVOICE_STATUSES.map((status) => {
+        const stat = statusStats.find((s) => s.status === status.value);
+        return { name: status.value, value: stat ? stat.count : 0 };
       });
       setStatusData(statusDataMapped);
 
@@ -219,10 +232,10 @@ const AdminStatis = () => {
       const total = paymentData.reduce((sum, item) => {
         return (
           sum +
-          (item.PAID || 0) +
-          (item.PENDING || 0) +
-          (item.CANCELLED || 0) +
-          (item.FAILED || 0)
+          INVOICE_STATUSES.reduce(
+            (acc, status) => acc + (item[status.value] || 0),
+            0,
+          )
         );
       }, 0);
       setTotalRevenue(total);
@@ -304,25 +317,18 @@ const AdminStatis = () => {
 
   // Tính phần trăm cho từng trạng thái thanh toán
   const enhancedPaymentData = paymentMethods.map((item) => {
-    const totalForMethod =
-      (item.PAID || 0) +
-      (item.PENDING || 0) +
-      (item.CANCELLED || 0) +
-      (item.FAILED || 0);
+    const totalForMethod = INVOICE_STATUSES.reduce(
+      (sum, status) => sum + (item[status.value] || 0),
+      0,
+    );
     return {
       ...item,
-      PAID_PERCENT: totalRevenue
-        ? (((item.PAID || 0) / totalRevenue) * 100).toFixed(1)
-        : 0,
-      PENDING_PERCENT: totalRevenue
-        ? (((item.PENDING || 0) / totalRevenue) * 100).toFixed(1)
-        : 0,
-      CANCELLED_PERCENT: totalRevenue
-        ? (((item.CANCELLED || 0) / totalRevenue) * 100).toFixed(1)
-        : 0,
-      FAILED_PERCENT: totalRevenue
-        ? (((item.FAILED || 0) / totalRevenue) * 100).toFixed(1)
-        : 0,
+      ...INVOICE_STATUSES.reduce((acc, status) => {
+        acc[`${status.value}_PERCENT`] = totalRevenue
+          ? (((item[status.value] || 0) / totalRevenue) * 100).toFixed(1)
+          : 0;
+        return acc;
+      }, {}),
     };
   });
 
@@ -523,7 +529,12 @@ const AdminStatis = () => {
                               cx="50%"
                               cy="50%"
                               outerRadius={80}
-                              label={({ name, value }) => `${name}: ${value}`}
+                              label={({ name, value }) =>
+                                `${
+                                  INVOICE_STATUSES.find((s) => s.value === name)
+                                    ?.label
+                                }: ${value}`
+                              }
                               labelLine={true}
                               isAnimationActive={true}
                               animationDuration={800}
@@ -880,7 +891,11 @@ const AdminStatis = () => {
                                   const percentKey = `${name}_PERCENT`;
                                   return [
                                     `${(value / 1000000).toFixed(1)}M VNĐ`,
-                                    `${name}: ${props.payload[percentKey]}%`,
+                                    `${
+                                      INVOICE_STATUSES.find(
+                                        (s) => s.value === name,
+                                      )?.label
+                                    }: ${props.payload[percentKey]}%`,
                                   ];
                                 }}
                                 wrapperClassName={styles.chartTooltip}
@@ -888,102 +903,33 @@ const AdminStatis = () => {
                               <Legend
                                 wrapperStyle={{ className: styles.chartLegend }}
                               />
-                              <Bar
-                                dataKey="PAID"
-                                stackId="a"
-                                fill={COLORS.PAID}
-                                barSize={40}
-                                onClick={handleBarClick}
-                              >
-                                {enhancedPaymentData.map((entry, index) => (
-                                  <motion.g
-                                    key={`bar-paid-${index}`}
-                                    initial={{ scaleY: 0 }}
-                                    animate={{ scaleY: 1 }}
-                                    transition={{
-                                      duration: 1,
-                                      delay: index * 0.2,
-                                    }}
-                                  >
-                                    <Bar
-                                      className={styles.chartBar}
-                                      style={{ transform: "rotateX(45deg)" }}
-                                    />
-                                  </motion.g>
-                                ))}
-                              </Bar>
-                              <Bar
-                                dataKey="PENDING"
-                                stackId="a"
-                                fill={COLORS.PENDING}
-                                barSize={40}
-                                onClick={handleBarClick}
-                              >
-                                {enhancedPaymentData.map((entry, index) => (
-                                  <motion.g
-                                    key={`bar-pending-${index}`}
-                                    initial={{ scaleY: 0 }}
-                                    animate={{ scaleY: 1 }}
-                                    transition={{
-                                      duration: 1,
-                                      delay: index * 0.2 + 0.1,
-                                    }}
-                                  >
-                                    <Bar
-                                      className={styles.chartBar}
-                                      style={{ transform: "rotateX(45deg)" }}
-                                    />
-                                  </motion.g>
-                                ))}
-                              </Bar>
-                              <Bar
-                                dataKey="CANCELLED"
-                                stackId="a"
-                                fill={COLORS.CANCELLED}
-                                barSize={40}
-                                onClick={handleBarClick}
-                              >
-                                {enhancedPaymentData.map((entry, index) => (
-                                  <motion.g
-                                    key={`bar-cancelled-${index}`}
-                                    initial={{ scaleY: 0 }}
-                                    animate={{ scaleY: 1 }}
-                                    transition={{
-                                      duration: 1,
-                                      delay: index * 0.2 + 0.2,
-                                    }}
-                                  >
-                                    <Bar
-                                      className={styles.chartBar}
-                                      style={{ transform: "rotateX(45deg)" }}
-                                    />
-                                  </motion.g>
-                                ))}
-                              </Bar>
-                              <Bar
-                                dataKey="FAILED"
-                                stackId="a"
-                                fill={COLORS.FAILED}
-                                barSize={40}
-                                onClick={handleBarClick}
-                              >
-                                {enhancedPaymentData.map((entry, index) => (
-                                  <motion.g
-                                    key={`bar-failed-${index}`}
-                                    initial={{ scaleY: 0 }}
-                                    animate={{ scaleY: 1 }}
-                                    transition={{
-                                      duration: 1,
-                                      delay: index * 0.2 + 0.3,
-                                    }}
-                                  >
-                                    <Bar
-                                      className={styles.chartBar}
-                                      style={{ transform: "rotateX(45deg)" }}
-                                    />
-                                  </motion.g>
-                                ))}
-                              </Bar>
+                              {INVOICE_STATUSES.map((status, index) => (
+                                <Bar
+                                  key={status.value}
+                                  dataKey={status.value}
+                                  stackId="a"
+                                  fill={COLORS[status.value]}
+                                  barSize={40}
+                                  onClick={handleBarClick}
+                                >
+                                  {enhancedPaymentData.map((entry, barIndex) => (
+                                    <motion.g
+                                      key={`bar-${status.value}-${barIndex}`}
+                                      initial={{ scaleY: 0 }}
+                                      animate={{ scaleY: 1 }}
+                                      transition={{
+                                        duration: 1,
+                                        delay: barIndex * 0.2 + index * 0.1,
+                                      }}
+                                    >
+                                      <Bar
+                                        className={styles.chartBar}
+                                        style={{ transform: "rotateX(45deg)" }}
+                                      />
+                                    </motion.g>
+                                  ))}
+                                </Bar>
+                              ))}
                             </BarChart>
                           </ResponsiveContainer>
                         </>
