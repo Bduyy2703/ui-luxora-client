@@ -434,7 +434,7 @@ const AdminCategoryList = () => {
           .flatMap((cat) => cat.children)
           .find((cat) => cat.id === currentCategoryId);
       if (currentCategory && currentCategory.slug === slug) {
-        return true; 
+        return true;
       }
     }
 
@@ -484,6 +484,11 @@ const AdminCategoryList = () => {
                         handleParentCateClick(record.id);
                       },
                     })}
+                    expandable={{
+                      rowExpandable: () => false, // Tắt tính năng mở rộng hàng
+                      showExpandColumn: false, // Ẩn cột chứa dấu "+" (quan trọng)
+                      expandIcon: () => null, // Đảm bảo không hiển thị bất kỳ biểu tượng mở rộng nào
+                    }}
                   />
                 </div>
               </div>

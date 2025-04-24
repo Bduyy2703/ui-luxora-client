@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Modal,
   Button,
@@ -411,9 +412,7 @@ const AdminReviewList = () => {
                         data={data}
                         validData={validData}
                         setValidData={setValidData}
-                        standardSort={[
-                          { name: "Bình luận", type: "comment" },
-                        ]}
+                        standardSort={[{ name: "Bình luận", type: "comment" }]}
                         searchFields={[
                           {
                             key: "comment",
@@ -660,7 +659,7 @@ const AdminReviewList = () => {
           </Tabs>
 
           <Modal
-            title="Chi tiết đánh giá"
+            title={null}
             open={detailModalVisible}
             onCancel={() => {
               setDetailModalVisible(false);
@@ -670,96 +669,205 @@ const AdminReviewList = () => {
             }}
             footer={null}
             className={styles.reviewDetailModal}
-            width={900}
+            width={800}
+            centered
+            bodyStyle={{ padding: 0 }}
           >
-            {currentReview ? (
-              <div className={styles.reviewDetailContent}>
-                <div className={styles.reviewInfo}>
-                  <h3>Tên sản phẩm: {currentReview.product?.name || "N/A"}</h3>
-                  <p>
-                    <strong>Rating:</strong>{" "}
-                    <Rate
-                      disabled
-                      value={currentReview.rating}
-                      style={{ color: "#fadb14", fontSize: 24 }}
-                    />
-                  </p>
-                  <p>
-                    <strong>Bình luận:</strong> {currentReview.comment}
-                  </p>
-                  <p>
-                    <strong>Ngày tạo:</strong>{" "}
-                    {new Date(currentReview.createdAt).toLocaleString()}
-                  </p>
-                  <p>
-                    <strong>Trạng thái:</strong>{" "}
-                    {currentReview.isHidden ? "Ẩn" : "Hiển thị"}
-                  </p>
-                </div>
-                {productStatistics && (
-                  <div className={styles.statisticsSection}>
-                    <h3>Thống kê đánh giá sản phẩm</h3>
-                    <div className={styles.ratingCircle}>
-                      <Progress
-                        type="circle"
-                        percent={(productStatistics.averageRating / 5) * 100}
-                        format={() =>
-                          `${productStatistics.averageRating.toFixed(2)}/5`
-                        }
-                        strokeColor="#fadb14"
-                        width={120}
-                        clockwise={false}
-                      />
-                    </div>
-                    <Statistic
-                      title="Số lượng đánh giá"
-                      value={productStatistics.totalReviews}
-                    />
-                    <div className={styles.ratingDistribution}>
-                      <h4>Phân bố đánh giá:</h4>
-                      {[5, 4, 3, 2, 1].map((star) => (
-                        <div
-                          key={star}
-                          className={styles.ratingDistributionItem}
-                        >
-                          <Rate
-                            disabled
-                            value={star}
-                            style={{
-                              color: "#fadb14",
-                              fontSize: 20,
-                              marginRight: 8,
-                            }}
-                          />
-                          <span>
-                            {productStatistics.ratingDistribution?.[star] || 0}
-                          </span>
+            <AnimatePresence>
+              {detailModalVisible && (
+                <motion.div
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 50 }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                  className={styles.modalContentWrapper}
+                >
+                  {/* Header tùy chỉnh */}
+                  <div className={styles.modalHeader}>
+                    <h2>Chi tiết đánh giá</h2>
+                    <Button
+                      type="text"
+                      icon={<DeleteOutlined />}
+                      onClick={() => {
+                        setCheckedRow([currentReview.id]);
+                        handleDeleteReview();
+                        setDetailModalVisible(false);
+                      }}
+                      className={styles.deleteBtn}
+                    >
+                      Xóa đánh giá
+                    </Button>
+                  </div>
+
+                  {currentReview ? (
+                    <div className={styles.reviewDetailContent}>
+                      {/* Phần thông tin đánh giá */}
+                      <motion.div
+                        className={styles.reviewInfo}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.2, duration: 0.5 }}
+                      >
+                        <h3>{currentReview.product?.name || "N/A"}</h3>
+                        <div className={styles.infoGrid}>
+                          <div className={styles.infoItem}>
+                            <span className={styles.label}>Rating:</span>
+                            <Rate
+                              disabled
+                              value={currentReview.rating}
+                              style={{ color: "#fadb14", fontSize: 20 }}
+                            />
+                          </div>
+                          <div className={styles.infoItem}>
+                            <span className={styles.label}>Bình luận:</span>
+                            <p>{currentReview.comment}</p>
+                          </div>
+                          <div className={styles.infoItem}>
+                            <span className={styles.label}>Ngày tạo:</span>
+                            <p>
+                              {new Date(
+                                currentReview.createdAt,
+                              ).toLocaleString()}
+                            </p>
+                          </div>
+                          <div className={styles.infoItem}>
+                            <span className={styles.label}>Trạng thái:</span>
+                            <p
+                              className={
+                                currentReview.isHidden
+                                  ? styles.hiddenStatus
+                                  : styles.visibleStatus
+                              }
+                            >
+                              {currentReview.isHidden ? "Ẩn" : "Hiển thị"}
+                            </p>
+                          </div>
                         </div>
-                      ))}
+                      </motion.div>
+
+                      {/* Phần thống kê và hình ảnh (gộp chung) */}
+                      {(productStatistics ||
+                        currentReviewImages.length > 0) && (
+                        <motion.div
+                          className={styles.combinedSection}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.4, duration: 0.5 }}
+                        >
+                          <h3>Thống kê và hình ảnh</h3>
+                          <div className={styles.combinedContent}>
+                            {/* Thống kê */}
+                            {productStatistics && (
+                              <div className={styles.statsContainer}>
+                                <div className={styles.statsGrid}>
+                                  <motion.div
+                                    className={styles.ratingCircle}
+                                    whileHover={{ scale: 1.1 }}
+                                    transition={{
+                                      type: "spring",
+                                      stiffness: 300,
+                                    }}
+                                  >
+                                    <Progress
+                                      type="circle"
+                                      percent={
+                                        (productStatistics.averageRating / 5) *
+                                        100
+                                      }
+                                      format={() =>
+                                        `${productStatistics.averageRating.toFixed(2)}/5`
+                                      }
+                                      strokeColor="#fadb14"
+                                      width={100}
+                                      trailColor="#e6f7ff"
+                                    />
+                                  </motion.div>
+                                  <div className={styles.statsInfo}>
+                                    <Statistic
+                                      title="Số lượng đánh giá"
+                                      value={productStatistics.totalReviews}
+                                    />
+                                    <div className={styles.ratingDistribution}>
+                                      <h4>Phân bố đánh giá:</h4>
+                                      {[5, 4, 3, 2, 1].map((star, index) => (
+                                        <motion.div
+                                          key={star}
+                                          className={
+                                            styles.ratingDistributionItem
+                                          }
+                                          initial={{ opacity: 0, y: 10 }}
+                                          animate={{ opacity: 1, y: 0 }}
+                                          transition={{
+                                            delay: 0.6 + index * 0.1,
+                                            duration: 0.3,
+                                          }}
+                                        >
+                                          <span className={styles.starLabel}>
+                                            {star} sao:
+                                          </span>
+                                          <Rate
+                                            disabled
+                                            value={star}
+                                            style={{
+                                              color: "#fadb14",
+                                              fontSize: 16,
+                                              marginRight: 8,
+                                            }}
+                                          />
+                                          <span className={styles.ratingCount}>
+                                            {productStatistics
+                                              .ratingDistribution?.[star] || 0}
+                                          </span>
+                                        </motion.div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Hình ảnh */}
+                            {currentReviewImages.length > 0 && (
+                              <div className={styles.imagesContainer}>
+                                <h4>Hình ảnh</h4>
+                                <div className={styles.imageList}>
+                                  {currentReviewImages.map((image, index) => (
+                                    <motion.div
+                                      key={image.fileId}
+                                      initial={{ opacity: 0, scale: 0.8 }}
+                                      animate={{ opacity: 1, scale: 1 }}
+                                      transition={{
+                                        delay: 0.8 + index * 0.1,
+                                        duration: 0.4,
+                                      }}
+                                      whileHover={{ scale: 1.05 }}
+                                      className={styles.imageWrapper}
+                                    >
+                                      <Image
+                                        src={image.fileUrl}
+                                        alt="Review Image"
+                                        width={120}
+                                        height={120}
+                                        style={{
+                                          objectFit: "cover",
+                                          borderRadius: 8,
+                                        }}
+                                      />
+                                    </motion.div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </motion.div>
+                      )}
                     </div>
-                  </div>
-                )}
-                {currentReviewImages.length > 0 && (
-                  <div className={styles.imageSection}>
-                    <h3>Hình ảnh</h3>
-                    <div className={styles.imageList}>
-                      {currentReviewImages.map((image) => (
-                        <Image
-                          key={image.fileId}
-                          src={image.fileUrl}
-                          alt="Review Image"
-                          width={150}
-                          height={150}
-                          style={{ objectFit: "cover" }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <p>Không có dữ liệu đánh giá</p>
-            )}
+                  ) : (
+                    <p>Không có dữ liệu đánh giá</p>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </Modal>
         </div>
       </main>
