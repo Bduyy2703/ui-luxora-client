@@ -10,6 +10,7 @@ import {
   Image,
   Tooltip,
   Table as AntTable,
+  Tag,
 } from "antd";
 import Swal from "sweetalert2";
 import Filter from "../../../components/admin/filter/Filter";
@@ -605,6 +606,8 @@ const AdminProductList = () => {
           <span>Không có hình ảnh</span>
         );
       },
+      width: 100,
+      align: "center",
     },
     {
       title: "Tên sản phẩm",
@@ -616,6 +619,7 @@ const AdminProductList = () => {
         const material = record.material || "N/A";
         return `${name} (Size: ${size}, Color: ${color}, Material: ${material})`;
       },
+      width: 350,
     },
     {
       title: "Giá",
@@ -623,18 +627,48 @@ const AdminProductList = () => {
       key: "finalPrice",
       render: (finalPrice) =>
         finalPrice ? `${parseFloat(finalPrice).toLocaleString()} VNĐ` : "N/A",
+      width: 120,
+      align: "right",
     },
     {
       title: "Số lượng còn",
       dataIndex: "stock",
       key: "stock",
       render: (text) => text || "0",
+      width: 150,
+      align: "center",
     },
     {
       title: "Số lượng đã bán",
       dataIndex: "sold",
       key: "sold",
       render: (text) => text || "0",
+      width: 150,
+      align: "center",
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "stock",
+      key: "stock",
+      render: (text) => {
+        const stock = text || 0;
+        let tagColor, tagText;
+
+        if (stock === 0) {
+          tagColor = "error";
+          tagText = "Hết hàng";
+        } else if (stock < 10) {
+          tagColor = "warning";
+          tagText = "Sắp hết hàng";
+        } else {
+          tagColor = "success";
+          tagText = "Còn hàng";
+        }
+
+        return <Tag color={tagColor}>{tagText}</Tag>;
+      },
+      width: 150,
+      align: "center",
     },
     {
       title: "Hành động",
@@ -657,6 +691,7 @@ const AdminProductList = () => {
           </Tooltip>
         </div>
       ),
+      width: 120,
     },
   ];
 
@@ -665,8 +700,6 @@ const AdminProductList = () => {
       title: "Hình ảnh",
       key: "images",
       render: (record) => {
-        console.log("record", record);
-
         const image = record.images?.[0];
         return image ? (
           <Image
@@ -1078,7 +1111,7 @@ const AdminProductList = () => {
             }}
             footer={null}
             className={styles.productModal}
-            width={800}
+            width={1200}
           >
             {currentProduct ? (
               <div>
