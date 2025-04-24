@@ -925,7 +925,7 @@ const AdminInventoryList = () => {
 
   const columns = [
     {
-      title: "Tên kho",
+      title: "Tên cửa hàng",
       dataIndex: "warehouseName",
       key: "warehouseName",
       render: (text) => text || "N/A",
@@ -1153,7 +1153,12 @@ const AdminInventoryList = () => {
                 <Input placeholder="Nhập địa chỉ kho hàng" />
               </Form.Item>
               <Form.Item className={styles.formActions}>
-                <Button type="primary" htmlType="submit" loading={loading}>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={loading}
+                  style={{ marginRight: "12px" }}
+                >
                   Thêm kho hàng
                 </Button>
                 <Button
@@ -1218,7 +1223,12 @@ const AdminInventoryList = () => {
                 <Input placeholder="Nhập địa chỉ kho hàng" />
               </Form.Item>{" "}
               <Form.Item className={styles.formActions}>
-                <Button type="primary" htmlType="submit" loading={loading}>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={loading}
+                  style={{ marginRight: "12px" }}
+                >
                   Cập nhật kho hàng
                 </Button>
                 <Button
@@ -1277,7 +1287,7 @@ const AdminInventoryList = () => {
             onCancel={() => {
               setStockModalVisible(false);
               setCurrentProductDetail(null);
-              stockForm.resetFields(); 
+              stockForm.resetFields();
             }}
             footer={null}
             className={styles.inventoryModal}
@@ -1299,7 +1309,12 @@ const AdminInventoryList = () => {
                 />
               </Form.Item>
               <Form.Item className={styles.formActions}>
-                <Button type="primary" htmlType="submit" loading={loading}>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={loading}
+                  style={{ marginRight: "12px" }}
+                >
                   Cập nhật
                 </Button>
                 <Button
