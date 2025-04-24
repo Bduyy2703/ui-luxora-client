@@ -63,3 +63,15 @@ export const retryPayment = async ({ invoiceId, paymentMethod = "VNPAY" }) => {
     throw error;
   }
 };
+
+export const cancelPayment = async (invoiceId) => {
+  try {
+    const response = await privateAxios.post(
+      `/v1/payment/${invoiceId}/cancel`,
+    );
+    return response.data || [];
+  } catch (error) {
+    console.error("Error cancel discounts:", error);
+    throw error;
+  }
+};

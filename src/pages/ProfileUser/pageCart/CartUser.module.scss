@@ -168,3 +168,56 @@
     transform: translateY(0);
   }
 }
+
+.successIcon {
+  color: #52c41a; // Màu xanh lá cho "Đã thanh toán"
+}
+
+.pendingIcon {
+  color: #faad14; // Màu vàng cho "Đang chờ"
+}
+
+.confirmedIcon {
+  color: #1890ff; // Màu xanh dương cho "Đã xác nhận"
+}
+
+.shippingIcon {
+  color: #722ed1; // Màu tím cho "Đang giao hàng"
+}
+
+.deliveredIcon {
+  color: #13c2c2; // Màu xanh ngọc cho "Đã giao hàng"
+}
+
+.cancelledIcon {
+  color: #ff4d4f; // Màu đỏ cho "Đã hủy"
+}
+
+.returnedIcon {
+  color: #eb2f96; // Màu hồng cho "Đã trả hàng"
+}
+
+.failedIcon {
+  color: #f5222d; // Màu đỏ đậm cho "Thất bại"
+}
+
+.retryIcon {
+  color: #1890ff;
+  cursor: pointer;
+  margin-left: 8px;
+  &:hover {
+    color: #40a9ff;
+  }
+}
+
+.statusWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.iconGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
