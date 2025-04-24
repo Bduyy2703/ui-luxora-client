@@ -370,7 +370,7 @@ const AdminCategoryList = () => {
     {
       title: "Hành động",
       key: "actions",
-      width: 100,
+      width: 150,
       render: (_, record) => (
         <Button
           type="text"

@@ -493,7 +493,7 @@ const AdminProductList = () => {
       editForm.setFieldsValue({
         name: product.name,
         originalPrice: product.originalPrice,
-        categoryId: product?.category?.id,
+        categoryId: product?.category?.name,
         images,
       });
     } catch (error) {
@@ -672,21 +672,22 @@ const AdminProductList = () => {
           <Image
             src={image}
             alt="Product"
-            width={50}
-            height={50}
+            width={100}
+            height={100}
             style={{ objectFit: "cover" }}
           />
         ) : (
           <span>Không có hình ảnh</span>
         );
       },
-      width: 100,
+      width: 150,
+      align: "center",
     },
     {
       title: "Tên sản phẩm",
       dataIndex: "name",
       key: "name",
-      width: 200,
+      width: 700,
     },
     {
       title: "Giá sản phẩm",
@@ -694,7 +695,8 @@ const AdminProductList = () => {
       key: "finalPrice",
       render: (finalPrice) =>
         finalPrice ? `${parseFloat(finalPrice).toLocaleString()} VNĐ` : "N/A",
-      width: 1100,
+      width: 600,
+      align: "right",
     },
     {
       title: "Hành động",
@@ -718,6 +720,7 @@ const AdminProductList = () => {
         </div>
       ),
       align: "center",
+      width: 150,
     },
   ];
 
@@ -1001,11 +1004,21 @@ const AdminProductList = () => {
                 rules={[{ required: true, message: "Vui lòng chọn danh mục!" }]}
               >
                 <AntSelect placeholder="Chọn danh mục">
-                  {categories.map((cat) => (
-                    <AntSelect.Option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </AntSelect.Option>
-                  ))}
+                  {categories.map((cat) =>
+                    cat.children && cat.children.length > 0 ? (
+                      <OptGroup key={cat.id} label={cat.name}>
+                        {cat.children.map((child) => (
+                          <AntSelect.Option key={child.id} value={child.id}>
+                            {child.name}
+                          </AntSelect.Option>
+                        ))}
+                      </OptGroup>
+                    ) : (
+                      <AntSelect.Option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </AntSelect.Option>
+                    ),
+                  )}
                 </AntSelect>
               </Form.Item>
               <Form.Item
