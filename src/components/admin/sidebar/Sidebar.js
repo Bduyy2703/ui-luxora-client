@@ -82,7 +82,7 @@ const Sidebar = () => {
         },
         {
           key: "inventory",
-          label: <Link to="/admin/inventory">Tồn kho</Link>,
+          label: <Link to="/admin/inventory">Chi nhánh</Link>,
         },
       ],
     },

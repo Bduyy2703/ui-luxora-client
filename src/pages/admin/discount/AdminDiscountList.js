@@ -531,7 +531,12 @@ const AdminDiscountList = () => {
                 <Switch />
               </Form.Item>
               <Form.Item className={styles.formActions}>
-                <Button type="primary" htmlType="submit" loading={loading}>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={loading}
+                  style={{ marginRight: "12px" }}
+                >
                   Thêm mã giảm giá
                 </Button>
                 <Button
@@ -799,7 +804,12 @@ const AdminDiscountList = () => {
                 <Switch />
               </Form.Item>
               <Form.Item className={styles.formActions}>
-                <Button type="primary" htmlType="submit" loading={loading}>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={loading}
+                  style={{ marginRight: "12px" }}
+                >
                   Cập nhật
                 </Button>
                 <Button
@@ -810,7 +820,7 @@ const AdminDiscountList = () => {
                     detailForm.resetFields();
                   }}
                 >
-                  Thoát
+                  Hủy
                 </Button>
               </Form.Item>
             </Form>

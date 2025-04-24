@@ -935,7 +935,12 @@ const AdminProductList = () => {
                 <Input type="number" min={0} step={1000} />
               </Form.Item>
               <Form.Item className={styles.formActions}>
-                <Button type="primary" htmlType="submit" loading={loading}>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={loading}
+                  style={{ marginRight: "12px" }}
+                >
                   Thêm sản phẩm
                 </Button>
                 <Button
@@ -1041,7 +1046,12 @@ const AdminProductList = () => {
                 <Input type="number" min={0} step={1000} />
               </Form.Item>
               <Form.Item className={styles.formActions}>
-                <Button type="primary" htmlType="submit" loading={loading}>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={loading}
+                  style={{ marginRight: "12px" }}
+                >
                   Cập nhật sản phẩm
                 </Button>
                 <Button
@@ -1400,7 +1410,12 @@ const AdminProductList = () => {
                 </div>
                 <div className={styles.modalFooter}>
                   <Form.Item className={styles.formActions}>
-                    <Button type="primary" htmlType="submit" loading={loading}>
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      loading={loading}
+                      style={{ marginRight: "12px" }}
+                    >
                       Thêm chi tiết
                     </Button>
                     <Button
