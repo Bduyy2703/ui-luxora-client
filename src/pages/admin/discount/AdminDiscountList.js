@@ -10,6 +10,7 @@ import {
   Switch,
   Table as AntTable,
   Tooltip,
+  Tag,
 } from "antd";
 import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
@@ -310,10 +311,11 @@ const AdminDiscountList = () => {
       dataIndex: "isActive",
       key: "isActive",
       render: (isActive) => (
-        <span className={isActive ? styles.active : styles.inactive}>
+        <Tag color={isActive ? "success" : "error"}>
           {isActive ? "Kích hoạt" : "Không kích hoạt"}
-        </span>
+        </Tag>
       ),
+      align: "center",
     },
     {
       title: "Chi tiết",

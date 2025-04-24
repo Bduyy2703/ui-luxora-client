@@ -4,9 +4,9 @@ import {
   PercentageOutlined,
   ShoppingOutlined,
   StarOutlined,
-  UserOutlined
+  UserOutlined,
 } from "@ant-design/icons";
-import { Menu } from "antd";
+import { Menu, notification } from "antd";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { logOut } from "../../../services/api/authService";
@@ -14,7 +14,7 @@ import "./sidebar.css";
 
 const Sidebar = () => {
   const location = useLocation();
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   const lastPathSegment = location.pathname.split("/").pop();
 
   const [selectedKeys, setSelectedKeys] = useState([lastPathSegment]);
@@ -41,8 +41,19 @@ const Sidebar = () => {
   const handleLogout = async () => {
     const result = await logOut();
     if (!result.error) {
-      navigate("/"); 
+      localStorage.clear();
+      notification.success({
+        message: "Thông báo",
+        description: "Đăng xuất thành công",
+        duration: 3,
+      });
+      navigate("/");
     } else {
+      notification.error({
+        message: "Thông báo",
+        description: "Đăng xuất thất bại",
+        duration: 3,
+      });
       console.error("Logout failed:", result.error);
     }
   };
