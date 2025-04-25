@@ -2,6 +2,7 @@ import {
   LoginOutlined,
   LogoutOutlined,
   ShoppingCartOutlined,
+  BellOutlined,
 } from "@ant-design/icons";
 import {
   faCartShopping,
@@ -11,14 +12,32 @@ import {
   faUserAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import "tippy.js/dist/tippy.css";
 import { getAllCategories } from "../../../../services/api/categoryService";
 import { getProductList } from "../../../../services/api/productService";
 import styles from "./Header.module.scss";
 import { Link, useNavigate } from "react-router-dom";
-import { message, notification } from "antd";
+import {
+  message,
+  notification,
+  Dropdown,
+  Badge,
+  Button,
+  Typography,
+  Space,
+} from "antd";
 import { logOut } from "../../../../services/api/authService";
+import {
+  getNotifications,
+  markNotificationAsRead,
+} from "../../../../services/api/notifications";
+import io from "socket.io-client";
+import { toast } from "react-toastify";
+import Swal from "sweetalert2";
+import { motion, AnimatePresence } from "framer-motion";
+
+const { Text } = Typography;
 
 const removeVietnameseTones = (str) => {
   str = str.toLowerCase();
@@ -52,6 +71,10 @@ function Header() {
   const accessToken = localStorage.getItem("accessToken");
   const isVerified = localStorage.getItem("isVerified") === "true";
   const [cartItems, setCartItems] = useState([]);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [notifications, setNotifications] = useState([]);
+  const [notificationPage, setNotificationPage] = useState(1);
+  const notificationLimit = 10;
 
   useEffect(() => {
     const email = localStorage.getItem("userEmail");
@@ -114,6 +137,80 @@ function Header() {
     fetchMenuItems();
   }, []);
 
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const response = await getNotifications(
+        notificationPage,
+        0,
+        "INVOICE_UPDATE",
+      );
+      setNotifications(response.notifications || []);
+      setUnreadNotifications(response.unreadCount || 0);
+    } catch (error) {
+      Swal.fire({
+        title: "Lỗi!",
+        text: "Không thể tải danh sách thông báo.",
+        icon: "error",
+      });
+    }
+  }, [notificationPage]);
+
+  useEffect(() => {
+    if (accessToken) {
+      fetchNotifications();
+
+      // Kết nối WebSocket
+      const socket = io("http://35.247.185.8", {
+        auth: { token: `Bearer ${accessToken}` },
+      });
+
+      socket.on("connect", () => {
+        console.log("Connected to WebSocket");
+      });
+
+      socket.on("notification", (data) => {
+        if (data.type === "INVOICE_UPDATE" && data.source === "ADMIN") {
+          toast.info(data.message, { autoClose: 3000 });
+          setNotifications((prev) => [
+            {
+              id: data.notificationId,
+              message: data.message,
+              type: data.type,
+              source: data.source,
+              isRead: false,
+              createdAt: data.createdAt || new Date().toISOString(),
+            },
+            ...prev,
+          ]);
+          setUnreadNotifications((prev) => prev + 1);
+        }
+      });
+
+      socket.on("disconnect", () => {
+        console.log("Disconnected from WebSocket");
+      });
+
+      return () => socket.disconnect();
+    }
+  }, [fetchNotifications, accessToken]);
+
+  // Đánh dấu thông báo đã đọc
+  const handleMarkAsRead = async (notificationId) => {
+    try {
+      await markNotificationAsRead(notificationId);
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n)),
+      );
+      setUnreadNotifications((prev) => Math.max(prev - 1, 0));
+    } catch (error) {
+      Swal.fire({
+        title: "Lỗi!",
+        text: "Không thể đánh dấu thông báo đã đọc.",
+        icon: "error",
+      });
+    }
+  };
+
   const handleSaleClick = () => {
     navigate("/list-product", {
       state: { isCategory: false, isSale: true },
@@ -170,6 +267,75 @@ function Header() {
     }
   };
 
+  // Nội dung của Dropdown thông báo
+  const notificationMenu = (
+    <div className={styles.notificationDropdown}>
+      <div className={styles.notificationHeader}>
+        <Text strong style={{ fontSize: "16px", color: "#fff" }}>
+          Thông báo
+        </Text>
+      </div>
+      <div className={styles.notificationList}>
+        {notifications.length > 0 ? (
+          <AnimatePresence>
+            {notifications.map((notification, index) => (
+              <motion.div
+                key={notification.id}
+                className={styles.notificationItemContent}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+              >
+                <Space direction="vertical" style={{ width: "100%" }}>
+                  <Text strong className={styles.notificationMessage}>
+                    {notification.message}
+                  </Text>
+                  <Text type="secondary" className={styles.notificationTime}>
+                    {new Date(notification.createdAt).toLocaleString("vi-VN", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    })}
+                  </Text>
+                  <Space>
+                    <Button
+                      type={notification.isRead ? "default" : "primary"}
+                      size="small"
+                      disabled
+                      className={
+                        notification.isRead
+                          ? styles.readButton
+                          : styles.unreadButton
+                      }
+                    >
+                      {notification.isRead ? "Đã đọc" : "Chưa đọc"}
+                    </Button>
+                    {!notification.isRead && (
+                      <Button
+                        type="link"
+                        size="small"
+                        onClick={() => handleMarkAsRead(notification.id)}
+                        className={styles.markAsReadButton}
+                      >
+                        Đánh dấu đã đọc
+                      </Button>
+                    )}
+                  </Space>
+                </Space>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        ) : (
+          <Text className={styles.noNotification}>Không có thông báo nào</Text>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <div className={styles.wrapper}>
       <Link to="/" className={styles.logo}>
@@ -187,7 +353,7 @@ function Header() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            marginLeft: "200px",
+            marginLeft: "20px",
           }}
         >
           <div className={styles.search}>
@@ -277,7 +443,7 @@ function Header() {
                         src={
                           categoryImages[item.name] ||
                           "https://bizweb.dktcdn.net/100/461/213/themes/870653/assets/mega-1-image-2.jpg"
-                        } // Sử dụng mapping, fallback về hình ảnh mặc định nếu không tìm thấy
+                        }
                         alt={`Ảnh ${item.name}`}
                       />
                     </div>
@@ -298,7 +464,6 @@ function Header() {
           <div className={styles.circle}>
             <FontAwesomeIcon className={styles.iconUser} icon={faUserAlt} />
           </div>
-          <div className={styles.taikhoan}>Tài khoản</div>
           {showDropdown && (
             <div className={styles.dropdownMenu}>
               {accessToken ? (
@@ -342,6 +507,22 @@ function Header() {
           )}
         </div>
 
+        {accessToken && (
+          <div className={styles.notification}>
+            <Dropdown
+              overlay={notificationMenu}
+              trigger={["click"]}
+              placement="bottomRight"
+            >
+              <div className={styles.circle}>
+                <Badge count={unreadNotifications} size="small" offset={[5, 0]}>
+                  <BellOutlined style={{ fontSize: "20px" }} />
+                </Badge>
+              </div>
+            </Dropdown>
+          </div>
+        )}
+
         <div
           className={styles.box}
           onMouseEnter={() => setShowCartDropdown(true)}
@@ -355,9 +536,6 @@ function Header() {
             {cartCount > 0 && (
               <span className={styles.cartCount}>{cartCount}</span>
             )}
-          </div>
-          <div className={styles.giohang} onClick={handleCart}>
-            Giỏ hàng
           </div>
           {showCartDropdown && (
             <div className={styles.cartDropdownMenu}>

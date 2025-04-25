@@ -1,9 +1,7 @@
-
 import { useEffect, useState, useCallback } from "react";
 import { getAllBlogs } from "../../services/api/blogService";
 import { getProductList } from "../../services/api/productService";
 import { getAllSales } from "../../services/api/promotionService";
-import { getNotifications, markNotificationAsRead } from "../../services/api/notifications";
 import styles from "./Home.module.scss";
 import { Badge, Button, Table, Modal, Tag, Typography } from "antd";
 import { BellOutlined } from "@ant-design/icons";
@@ -28,98 +26,14 @@ function Home() {
   const [newsLoading, setNewsLoading] = useState(true);
   const [newsError, setNewsError] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [unreadNotifications, setUnreadNotifications] = useState(0);
-  const [notifications, setNotifications] = useState([]);
-  const [notificationModalVisible, setNotificationModalVisible] = useState(false);
-  const [notificationPage, setNotificationPage] = useState(1);
-  const [notificationTotal, setNotificationTotal] = useState(0);
 
   const limit = 10;
-  const notificationLimit = 10;
 
-  // Lấy danh sách thông báo
-  const fetchNotifications = useCallback(async () => {
-    try {
-      const response = await getNotifications(notificationPage, notificationLimit, "INVOICE_UPDATE");
-      setNotifications(response.notifications || []);
-      setNotificationTotal(response.total || 0);
-      setUnreadNotifications(response.unreadCount || 0);
-    } catch (error) {
-      Swal.fire({
-        title: "Lỗi!",
-        text: "Không thể tải danh sách thông báo.",
-        icon: "error",
-      });
-    }
-  }, [notificationPage]);
-
-  // Kiểm tra trạng thái đăng nhập và xử lý thông báo
+  // Kiểm tra trạng thái đăng nhập
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
     setIsLoggedIn(!!token);
-
-    if (token) {
-      fetchNotifications();
-
-      // Kết nối WebSocket
-      const socket = io("http://35.247.185.8", {
-        auth: { token: `Bearer ${token}` },
-      });
-
-      socket.on("connect", () => {
-        console.log("Connected to WebSocket");
-      });
-
-      socket.on("notification", (data) => {
-        if (data.type === "INVOICE_UPDATE" && data.source === "ADMIN") {
-          toast.info(data.message, { autoClose: 3000 });
-          setNotifications((prev) => [
-            {
-              id: data.notificationId,
-              message: data.message,
-              type: data.type,
-              source: data.source,
-              isRead: false,
-              createdAt: data.createdAt || new Date().toISOString(),
-            },
-            ...prev,
-          ]);
-          setNotificationTotal((prev) => prev + 1);
-          setUnreadNotifications((prev) => prev + 1);
-        }
-      });
-
-      socket.on("disconnect", () => {
-        console.log("Disconnected from WebSocket");
-      });
-
-      return () => socket.disconnect();
-    }
-  }, [fetchNotifications]);
-
-  // Đánh dấu thông báo đã đọc
-  const handleMarkAsRead = async (notificationId) => {
-    try {
-      await markNotificationAsRead(notificationId);
-      setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === notificationId ? { ...n, isRead: true } : n
-        )
-      );
-      setUnreadNotifications((prev) => Math.max(prev - 1, 0));
-    } catch (error) {
-      Swal.fire({
-        title: "Lỗi!",
-        text: "Không thể đánh dấu thông báo đã đọc.",
-        icon: "error",
-      });
-    }
-  };
-
-  // Xử lý khi nhấn nút thông báo
-  const handleNotificationsClick = () => {
-    setNotificationModalVisible(true);
-  };
+  }, []);
 
   const getFlashSaleData = async () => {
     try {
@@ -129,7 +43,7 @@ function Home() {
       // Lọc các sale đang hoạt động và chưa hết thời gian
       const now = new Date().getTime();
       const activeSales = salesResponse.filter(
-        (sale) => sale.isActive && new Date(sale.endDate).getTime() > now
+        (sale) => sale.isActive && new Date(sale.endDate).getTime() > now,
       );
 
       if (activeSales.length === 0) {
@@ -140,7 +54,7 @@ function Home() {
 
       // Tìm thời gian kết thúc sớm nhất
       const endTimes = activeSales.map((sale) =>
-        new Date(sale.endDate).getTime()
+        new Date(sale.endDate).getTime(),
       );
       const earliestEndTime = Math.min(...endTimes);
       setFlashSaleEndTime(new Date(earliestEndTime));
@@ -154,7 +68,7 @@ function Home() {
           productsToProcess = allProducts;
         } else {
           productsToProcess = sale.productStrategySales.map(
-            (item) => item.product
+            (item) => item.product,
           );
         }
 
@@ -244,7 +158,7 @@ function Home() {
         console.error("Lỗi khi lấy toàn bộ sản phẩm:", error);
         setProductsError("Không thể tải sản phẩm. Vui lòng thử lại sau.");
         setSaleProductsError(
-          "Không thể tải sản phẩm sale. Vui lòng thử lại sau."
+          "Không thể tải sản phẩm sale. Vui lòng thử lại sau.",
         );
         setAllProducts([]);
         setProducts([]);
@@ -300,62 +214,8 @@ function Home() {
     window.location.href = `/blog/${blogId}`;
   };
 
-  const notificationColumns = [
-    {
-      title: "Thông báo",
-      dataIndex: "message",
-      key: "message",
-      render: (text) => <Text>{text}</Text>,
-    },
-    {
-      title: "Thời gian",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      render: (text) => new Date(text).toLocaleString("vi-VN"),
-    },
-    {
-      title: "Trạng thái",
-      dataIndex: "isRead",
-      key: "isRead",
-      render: (isRead) => (
-        <Tag color={isRead ? "default" : "blue"}>
-          {isRead ? "Đã đọc" : "Chưa đọc"}
-        </Tag>
-      ),
-    },
-    {
-      title: "Hành động",
-      key: "actions",
-      render: (row) =>
-        !row.isRead && (
-          <Button
-            type="link"
-            onClick={() => handleMarkAsRead(row.id)}
-          >
-            Đánh dấu đã đọc
-          </Button>
-        ),
-    },
-  ];
-
   return (
     <div className={styles.wrapper}>
-      {/* Nút thông báo cố định ở góc trên bên phải */}
-      {isLoggedIn && (
-        <div className={styles.notificationButton}>
-          <Badge count={unreadNotifications} offset={[-5, 5]}>
-            <Button
-              type="primary"
-              shape="circle"
-              icon={<BellOutlined />}
-              size="large"
-              onClick={handleNotificationsClick}
-              aria-label="Xem thông báo"
-            />
-          </Badge>
-        </div>
-      )}
-
       <div>
         <img
           className={styles.img}
@@ -485,13 +345,13 @@ function Home() {
                   <div className={styles.flashSalePriceWrapper}>
                     <h4 className={styles.flashSalePrice}>
                       {new Intl.NumberFormat("vi-VN").format(
-                        product.finalPrice
+                        product.finalPrice,
                       )}{" "}
                       <span className={styles.dong}>đ</span>
                     </h4>
                     <span className={styles.flashSaleOriginalPrice}>
                       {new Intl.NumberFormat("vi-VN").format(
-                        product.originalPrice
+                        product.originalPrice,
                       )}{" "}
                       đ
                     </span>
@@ -549,7 +409,7 @@ function Home() {
                   <div className={styles.priceWrapper}>
                     <h4 className={styles.price}>
                       {new Intl.NumberFormat("vi-VN").format(
-                        product.finalPrice
+                        product.finalPrice,
                       )}{" "}
                       <span className={styles.dong}>đ</span>
                     </h4>
@@ -557,7 +417,7 @@ function Home() {
                       parseFloat(product.originalPrice) && (
                       <span className={styles.originalPrice}>
                         {new Intl.NumberFormat("vi-VN").format(
-                          product.originalPrice
+                          product.originalPrice,
                         )}{" "}
                         đ
                       </span>
@@ -615,7 +475,7 @@ function Home() {
                   <div className={styles.priceWrapper}>
                     <h4 className={styles.price}>
                       {new Intl.NumberFormat("vi-VN").format(
-                        product.finalPrice
+                        product.finalPrice,
                       )}{" "}
                       <span className={styles.dong}>đ</span>
                     </h4>
@@ -623,7 +483,7 @@ function Home() {
                       parseFloat(product.originalPrice) && (
                       <span className={styles.originalPrice}>
                         {new Intl.NumberFormat("vi-VN").format(
-                          product.originalPrice
+                          product.originalPrice,
                         )}{" "}
                         đ
                       </span>
@@ -749,27 +609,6 @@ function Home() {
           </div>
         )}
       </div>
-
-      {/* Modal hiển thị thông báo */}
-      <Modal
-        title="Thông báo"
-        visible={notificationModalVisible}
-        onCancel={() => setNotificationModalVisible(false)}
-        footer={null}
-        width={800}
-      >
-        <Table
-          dataSource={notifications}
-          columns={notificationColumns}
-          rowKey="id"
-          pagination={{
-            current: notificationPage,
-            pageSize: notificationLimit,
-            total: notificationTotal,
-            onChange: (page) => setNotificationPage(page),
-          }}
-        />
-      </Modal>
     </div>
   );
 }
