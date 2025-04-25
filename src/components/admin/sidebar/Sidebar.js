@@ -10,13 +10,11 @@ import {
 import {
   Menu,
   notification,
-  Table as AntTable,
+  Dropdown,
   Button,
-  Modal,
-  Pagination,
   Badge,
-  Tag,
   Typography,
+  Space,
 } from "antd";
 import { useEffect, useState, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -28,6 +26,7 @@ import {
 import io from "socket.io-client";
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
+import { motion, AnimatePresence } from "framer-motion";
 import "./sidebar.css";
 
 const { Text } = Typography;
@@ -40,27 +39,17 @@ const Sidebar = () => {
   const [selectedKeys, setSelectedKeys] = useState([lastPathSegment]);
   const [openKeys, setOpenKeys] = useState([]);
   const [notifications, setNotifications] = useState([]);
-  const [notificationTotal, setNotificationTotal] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [notificationPage, setNotificationPage] = useState(1);
-  const [notificationModalVisible, setNotificationModalVisible] =
-    useState(false);
-  const notificationLimit = 10;
 
   // Token và URL API
   const token = localStorage.getItem("accessToken") || "your-jwt-token";
   const API_BASE_URL = "http://35.247.185.8/";
 
-  // Lấy danh sách thông báo
+  // Lấy tất cả thông báo
   const fetchNotifications = useCallback(async () => {
     try {
-      const response = await getAllNotifications(
-        notificationPage,
-        notificationLimit,
-        "",
-      );
+      const response = await getAllNotifications(1, 0, "");
       setNotifications(response.notifications);
-      setNotificationTotal(response.total);
       setUnreadCount(response.unreadCount);
     } catch (error) {
       Swal.fire({
@@ -69,7 +58,7 @@ const Sidebar = () => {
         icon: "error",
       });
     }
-  }, [notificationPage]);
+  }, []);
 
   // Đánh dấu thông báo đã đọc
   const handleMarkAsRead = async (notificationId) => {
@@ -117,7 +106,6 @@ const Sidebar = () => {
           },
           ...prev,
         ]);
-        setNotificationTotal((prev) => prev + 1);
         setUnreadCount((prev) => prev + 1);
       }
     });
@@ -172,40 +160,71 @@ const Sidebar = () => {
     }
   };
 
-  const notificationColumns = [
-    {
-      title: "Thông báo",
-      dataIndex: "message",
-      key: "message",
-      render: (text) => <Text>{text}</Text>,
-    },
-    {
-      title: "Thời gian",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      render: (text) => new Date(text).toLocaleString("vi-VN"),
-    },
-    {
-      title: "Trạng thái",
-      dataIndex: "isRead",
-      key: "isRead",
-      render: (isRead) => (
-        <Tag color={isRead ? "default" : "blue"}>
-          {isRead ? "Đã đọc" : "Chưa đọc"}
-        </Tag>
-      ),
-    },
-    {
-      title: "Hành động",
-      key: "actions",
-      render: (row) =>
-        !row.isRead && (
-          <Button type="link" onClick={() => handleMarkAsRead(row.id)}>
-            Đánh dấu đã đọc
-          </Button>
-        ),
-    },
-  ];
+  // Nội dung của Dropdown
+  const notificationMenu = (
+    <div className="notification-dropdown">
+      <div className="notification-list">
+        {notifications.length > 0 ? (
+          <AnimatePresence>
+            {notifications.map((notification, index) => (
+              <motion.div
+                key={notification.id}
+                className="notification-item-content"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+              >
+                <Space direction="vertical" style={{ width: "100%" }}>
+                  <Text strong>{notification.message}</Text>
+                  <Text type="secondary" style={{ fontSize: "12px" }}>
+                    {new Date(notification.createdAt).toLocaleString("vi-VN", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    })}
+                  </Text>
+                  <Space>
+                    <Button
+                      type={notification.isRead ? "default" : "primary"}
+                      size="small"
+                      style={{
+                        backgroundColor: notification.isRead
+                          ? "#f5f5f5"
+                          : "#e6f7ff",
+                        borderColor: notification.isRead
+                          ? "#d9d9d9"
+                          : "#91d5ff",
+                        color: notification.isRead ? "#000" : "#1890ff",
+                      }}
+                    >
+                      {notification.isRead ? "Đã đọc" : "Chưa đọc"}
+                    </Button>
+                    {!notification.isRead && (
+                      <Button
+                        type="link"
+                        size="small"
+                        onClick={() => handleMarkAsRead(notification.id)}
+                      >
+                        Đánh dấu đã đọc
+                      </Button>
+                    )}
+                  </Space>
+                </Space>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        ) : (
+          <Text style={{ padding: "16px", display: "block" }}>
+            Không có thông báo nào
+          </Text>
+        )}
+      </div>
+    </div>
+  );
 
   const items = [
     {
@@ -286,17 +305,20 @@ const Sidebar = () => {
         </div>
       </div>
       <div className="notification-section">
-        <div
-          className="notification-item"
-          onClick={() => setNotificationModalVisible(true)}
+        <Dropdown
+          overlay={notificationMenu}
+          trigger={["click"]}
+          placement="bottomLeft"
         >
-          <Badge count={unreadCount} size="small" offset={[5, 0]}>
-            <BellOutlined
-              style={{ fontSize: "20px", marginRight: "8px", color: "white" }}
-            />
-          </Badge>
-          <span>Thông báo</span>
-        </div>
+          <div className="notification-item">
+            <Badge count={unreadCount} size="small" offset={[5, 0]}>
+              <BellOutlined
+                style={{ fontSize: "20px", marginRight: "8px", color: "white" }}
+              />
+            </Badge>
+            <span>Thông báo</span>
+          </div>
+        </Dropdown>
       </div>
       <Menu
         mode="inline"
@@ -317,29 +339,6 @@ const Sidebar = () => {
           Đăng xuất
         </a>
       </div>
-      <Modal
-        title="Thông báo"
-        open={notificationModalVisible}
-        onCancel={() => setNotificationModalVisible(false)}
-        footer={null}
-        width={800}
-      >
-        <AntTable
-          dataSource={notifications}
-          columns={notificationColumns}
-          rowKey="id"
-          pagination={false}
-        />
-        {notificationTotal > notificationLimit && (
-          <Pagination
-            current={notificationPage}
-            pageSize={notificationLimit}
-            total={notificationTotal}
-            onChange={(page) => setNotificationPage(page)}
-            style={{ marginTop: 16, textAlign: "right" }}
-          />
-        )}
-      </Modal>
     </aside>
   );
 };

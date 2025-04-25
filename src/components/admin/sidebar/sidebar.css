@@ -44,11 +44,8 @@ a:link {
 }
 
 .sidebar {
-  /* background-image: linear-gradient(135deg, #879db0, #4987a5); */
   background-image: linear-gradient(135deg, #000000, #000000);
   background-color: white;
-
-  /* Nếu có hình ảnh nền, thay bằng: background-image: url('path-to-your-image.jpg'); */
   background-size: cover;
   background-position: center;
   color: #ffffff;
@@ -78,7 +75,6 @@ a:link {
 
 .notification-section {
   padding: 16px 24px;
-  /* border-bottom: 1px solid #4A6A8A; */
 }
 
 .notification-item {
@@ -96,6 +92,35 @@ a:link {
 
 .notification-item span {
   font-size: 16px;
+}
+
+.notification-dropdown {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  width: 350px;
+  max-height: 400px;
+  overflow: hidden;
+  color: #000000;
+}
+
+.notification-list {
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.notification-item-content {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.notification-item-content:last-child {
+  border-bottom: none;
+}
+
+.notification-item-content:hover {
+  background: #f5f5f5;
 }
 
 .logout-section {
