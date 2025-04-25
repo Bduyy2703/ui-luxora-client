@@ -271,7 +271,7 @@ function Header() {
   const notificationMenu = (
     <div className={styles.notificationDropdown}>
       <div className={styles.notificationHeader}>
-        <Text strong style={{ fontSize: "16px", color: "#fff" }}>
+        <Text strong style={{ fontSize: "16px", color: "black" }}>
           Thông báo
         </Text>
       </div>
@@ -513,6 +513,14 @@ function Header() {
               overlay={notificationMenu}
               trigger={["click"]}
               placement="bottomRight"
+              overlayStyle={{
+                background: "#fff",
+                padding: " 10px  ",
+                borderRadius: "10px",
+                boxShadow: "0 6px 16px rgba(0, 0, 0, 0.15)",
+              }}
+              className={styles.customNotification}
+              overlayClassName={styles.customNotificationDropdown} // Thêm class tùy chỉnh cho container ngoài
             >
               <div className={styles.circle}>
                 <Badge count={unreadNotifications} size="small" offset={[5, 0]}>
