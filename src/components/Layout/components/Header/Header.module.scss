@@ -321,13 +321,12 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     border-radius: 4px;
     z-index: 1000;
-    min-width: 250px;
-    max-height: 300px;
+    min-width: 200px;
+    max-height: 200px;
     overflow-y: auto;
 
     .cartItem {
       display: flex;
-      padding: 10px;
       border-bottom: 1px solid #f0f0f0;
 
       .cartItemImage {
@@ -358,9 +357,11 @@
     }
 
     .dropDownMenuCart {
-      padding: 10px;
+      padding: 8px;
       text-align: center;
-
+      &:hover {
+        background-color: #f5f5f5;
+      }
       .menuCart {
         font-size: 14px;
         color: black;
@@ -375,7 +376,6 @@
       justify-content: center;
     }
 
-    // Style cho container ngoài của Ant Design Dropdown
     .customNotificationDropdown {
       background: #ffffff !important;
       border-radius: 8px;
@@ -388,12 +388,13 @@
       width: 350px;
       max-height: 400px;
       overflow: hidden;
+      border-radius: 8px;
     }
 
     .notificationHeader {
-      background: linear-gradient(90deg, #1890ff, #40c4ff) !important;
       padding: 12px 16px;
       border-bottom: 1px solid #e8e8e8;
+      background: #fff !important;
     }
 
     .notificationList {
@@ -404,53 +405,61 @@
     }
 
     .notificationItemContent {
+      display: flex;
+      align-items: center;
       padding: 12px 16px;
-      border-bottom: 1px solid #f0f0f0;
+      border-bottom: 1px solid #e8e8e8;
       transition: background 0.3s ease;
-      background: #fff !important;
+      cursor: pointer;
 
       &:last-child {
         border-bottom: none;
       }
 
       &:hover {
-        background: #f9f9f9 !important;
+        background: #f0f7ff !important;
       }
+    }
+
+    .unread {
+      background: #e6f7ff !important;
+    }
+
+    .read {
+      background: #fff !important;
+    }
+
+    .notificationMessageWrapper {
+      display: flex;
+      justify-content: space-between;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
     }
 
     .notificationMessage {
       font-size: 14px;
       color: #333;
-      line-height: 1.5;
+      line-height: 1.4;
+      flex: 1;
     }
 
     .notificationTime {
-      font-size: 12px;
+      font-size: 11px;
       color: #888;
+      white-space: nowrap;
     }
 
-    .readButton {
-      background-color: #f5f5f5;
-      border-color: #d9d9d9;
-      color: #666;
-      font-size: 12px;
+    .readTag {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 12px;
     }
 
-    .unreadButton {
-      background-color: #e6f7ff;
-      border-color: #91d5ff;
-      color: #1890ff;
-      font-size: 12px;
-    }
-
-    .markAsReadButton {
-      font-size: 12px;
-      color: #1890ff;
-      padding: 0;
-
-      &:hover {
-        color: #40a9ff;
-      }
+    .unreadTag {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 12px;
     }
 
     .noNotification {
@@ -461,5 +470,12 @@
       font-size: 14px;
       background: #fff !important;
     }
+  }
+}
+
+.spaceNoti {
+  &:hover {
+    background-color: rgb(241, 241, 241);
+    cursor: pointer;
   }
 }

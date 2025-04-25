@@ -23,9 +23,9 @@ import {
   notification,
   Dropdown,
   Badge,
-  Button,
   Typography,
   Space,
+  Tag,
 } from "antd";
 import { logOut } from "../../../../services/api/authService";
 import {
@@ -271,7 +271,16 @@ function Header() {
   const notificationMenu = (
     <div className={styles.notificationDropdown}>
       <div className={styles.notificationHeader}>
-        <Text strong style={{ fontSize: "16px", color: "black" }}>
+        <Text
+          strong
+          style={{
+            fontSize: "16px",
+            color: "#333",
+            padding: "5px 0px 8px 10px",
+            display: "flex",
+            width: "100%",
+          }}
+        >
           Thông báo
         </Text>
       </div>
@@ -281,50 +290,66 @@ function Header() {
             {notifications.map((notification, index) => (
               <motion.div
                 key={notification.id}
-                className={styles.notificationItemContent}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3, delay: index * 0.1 }}
+                className={`${styles.notificationItemContent} ${
+                  notification.isRead ? styles.read : styles.unread
+                }`}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2, delay: index * 0.05 }}
+                onClick={() =>
+                  !notification.isRead && handleMarkAsRead(notification.id)
+                }
+                style={{ borderTop: "1px solid #e8e8e8" }}
               >
-                <Space direction="vertical" style={{ width: "100%" }}>
-                  <Text strong className={styles.notificationMessage}>
-                    {notification.message}
-                  </Text>
-                  <Text type="secondary" className={styles.notificationTime}>
-                    {new Date(notification.createdAt).toLocaleString("vi-VN", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      second: "2-digit",
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                    })}
-                  </Text>
-                  <Space>
-                    <Button
-                      type={notification.isRead ? "default" : "primary"}
-                      size="small"
-                      disabled
-                      className={
-                        notification.isRead
-                          ? styles.readButton
-                          : styles.unreadButton
-                      }
-                    >
-                      {notification.isRead ? "Đã đọc" : "Chưa đọc"}
-                    </Button>
-                    {!notification.isRead && (
-                      <Button
-                        type="link"
-                        size="small"
-                        onClick={() => handleMarkAsRead(notification.id)}
-                        className={styles.markAsReadButton}
+                <Space
+                  align="start"
+                  style={{ width: "100%", padding: "10px 10px 10px 10px" }}
+                  className={styles.spaceNoti}
+                >
+                  <BellOutlined
+                    style={{
+                      fontSize: "16px",
+                      color: "#1890ff",
+                      marginTop: "4px",
+                    }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <div className={styles.notificationMessageWrapper}>
+                      <div>
+                        <Text className={styles.notificationMessage}>
+                          {notification.message}
+                        </Text>
+                      </div>
+                      <Text
+                        type="secondary"
+                        className={styles.notificationTime}
                       >
-                        Đánh dấu đã đọc
-                      </Button>
-                    )}
-                  </Space>
+                        {new Date(notification.createdAt).toLocaleString(
+                          "vi-VN",
+                          {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                          },
+                        )}
+                      </Text>
+                    </div>
+                    <Space style={{ marginTop: "4px" }}>
+                      <Tag
+                        color={notification.isRead ? "default" : "blue"}
+                        className={
+                          notification.isRead
+                            ? styles.readTag
+                            : styles.unreadTag
+                        }
+                      >
+                        {notification.isRead ? "Đã đọc" : "Chưa đọc"}
+                      </Tag>
+                    </Space>
+                  </div>
                 </Space>
               </motion.div>
             ))}
@@ -515,12 +540,12 @@ function Header() {
               placement="bottomRight"
               overlayStyle={{
                 background: "#fff",
-                padding: " 10px  ",
-                borderRadius: "10px",
-                boxShadow: "0 6px 16px rgba(0, 0, 0, 0.15)",
+                padding: "10px 0px 0px 0px",
+                borderRadius: "8px",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                zIndex: 1000,
               }}
               className={styles.customNotification}
-              overlayClassName={styles.customNotificationDropdown} // Thêm class tùy chỉnh cho container ngoài
             >
               <div className={styles.circle}>
                 <Badge count={unreadNotifications} size="small" offset={[5, 0]}>
