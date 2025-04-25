@@ -37,6 +37,8 @@ import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import { motion, AnimatePresence } from "framer-motion";
 
+import "react-toastify/dist/ReactToastify.css";
+
 const { Text } = Typography;
 
 const removeVietnameseTones = (str) => {
@@ -75,6 +77,8 @@ function Header() {
   const [notifications, setNotifications] = useState([]);
   const [notificationPage, setNotificationPage] = useState(1);
   const notificationLimit = 10;
+
+  const notificationSound = new Audio("/assets/sounds/notification.mp3");
 
   useEffect(() => {
     const email = localStorage.getItem("userEmail");
@@ -170,7 +174,41 @@ function Header() {
 
       socket.on("notification", (data) => {
         if (data.type === "INVOICE_UPDATE" && data.source === "ADMIN") {
-          toast.info(data.message, { autoClose: 3000 });
+          toast.info(
+            <div>
+              <strong>Thông báo mới!</strong>
+              <p>{data.message}</p>
+              <button
+                style={{
+                  background: "#1890ff",
+                  color: "#fff",
+                  border: "none",
+                  padding: "5px 10px",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                }}
+                onClick={() => navigate("/account")} 
+              >
+                Xem chi tiết
+              </button>
+            </div>,
+            {
+              position: "top-right",
+              autoClose: 5000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              className: styles.customToast,
+            },
+          );
+
+          // Phát âm thanh thông báo
+          notificationSound.play().catch((error) => {
+            console.error("Error playing notification sound:", error);
+          });
+
+          // Cập nhật danh sách thông báo trong dropdown
           setNotifications((prev) => [
             {
               id: data.notificationId,
@@ -192,7 +230,7 @@ function Header() {
 
       return () => socket.disconnect();
     }
-  }, [fetchNotifications, accessToken]);
+  }, [fetchNotifications, accessToken, navigate, notificationSound]);
 
   // Đánh dấu thông báo đã đọc
   const handleMarkAsRead = async (notificationId) => {
@@ -310,7 +348,7 @@ function Header() {
                   <BellOutlined
                     style={{
                       fontSize: "16px",
-                      color: "#1890ff",
+                      theme: "#1890ff",
                       marginTop: "4px",
                     }}
                   />
