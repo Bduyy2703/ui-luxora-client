@@ -1,121 +1,172 @@
 /* ADMIN SIDEBAR */
 .admin-layout .sidebar {
-    background-color: var(--color-bg-primary);
-    width: 265px;
-    min-width: 265px;
-    z-index: 3;
+  width: 265px;
+  min-width: 265px;
+  z-index: 3;
 }
 
 .admin-layout .info a {
-    background-color: var(--color-bg-quaternary);
-    color: #fff !important;
-    padding: 16px 25px;
-    height: 70px;
-    box-sizing: border-box;
-    font-size: 20px;
-    display: flex;
-    align-items: center;
+  background-color: white;
+  color: #fff !important;
+  padding: 16px 25px;
+  height: 70px;
+  box-sizing: border-box;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
 }
 
 .admin-layout .toolbar {
-    border-top: 1px dashed #1f212a;
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
+  border-top: 1px dashed #4A6A8A;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
 }
 
 .admin-layout .toolbar a:visited,
 a:link {
-    text-decoration: none;
-    color: var(--color-text-primary) !important;
-    padding: 10px 20px;
-    border-radius: 5px;
-    transition: all 0.15s ease;
+  text-decoration: none;
+  color: #ffffff !important;
+  padding: 10px 20px;
+  border-radius: 5px;
+  transition: all 0.15s ease;
 }
 
 .admin-layout .toolbar a.active {
-    background-color: #1b84ff;
-    color: #fff !important;
-    font-weight: bold;
+  background-color: #3B82F6;
+  color: #FFFFFF !important;
+  font-weight: bold;
 }
 
 .admin-layout .toolbar a:hover {
-    color: #fff;
-    font-weight: bold;
+  color: #FFFFFF;
+  font-weight: bold;
 }
-.sidebar {
-    background-color: #001529; 
-    color: #fff;
-    height: 100vh;
-    width: 200px;
-    position: fixed;
-    top: 0;
-    left: 0;
-    overflow-y: hidden;
-  }
-  .logo {
-    background: white;
-    width: 245px;
-    height: 70px;
-    padding: 10px;
-    border-radius: 5px;
-    margin-left: -5px;
-  }
-  .info {
-    padding: 16px;
-    text-align: center;
-  }
-  
-  .info a {
-    color: #fff;
-    text-decoration: none;
-    font-size: 16px;
-  }
-  
-  .ant-menu {
-    background: transparent !important;
-    color: #fff !important;
-  }
-  
-  .ant-menu-submenu-title {
-    color: #a6adb4 !important;
-  }
-  
-  .ant-menu-submenu-open > .ant-menu-submenu-title,
-  .ant-menu-submenu-selected > .ant-menu-submenu-title {
-    color: #fff !important; 
-  }
-  
-  .ant-menu-sub {
-    background: #000c17 !important; 
-  }
-  
-  .ant-menu-item {
-    color: #a6adb4 !important; 
-  }
-  
-  .ant-menu-item-selected {
-    background-color: #1890ff !important;
-    color: #fff !important;
-  }
-  
-  .ant-menu-item:hover,
-  .ant-menu-submenu-title:hover {
-    color: #fff !important;
-  }
-  
-  .ant-menu-submenu-arrow {
-    color: #a6adb4 !important;
-  }
-  
-  .ant-menu-submenu-open > .ant-menu-submenu-title > .ant-menu-submenu-arrow,
-  .ant-menu-submenu-selected > .ant-menu-submenu-title > .ant-menu-submenu-arrow {
-    color: #fff !important;
-  }
 
-  .ant-menu-sub .ant-menu-item {
-    padding-left: 35px !important; 
-    padding-right: 16px !important;
-    padding-top: 8px !important;
-    padding-bottom: 8px !important;
-  }
+.sidebar {
+  /* background-image: linear-gradient(135deg, #879db0, #4987a5); */
+  background-image: linear-gradient(135deg, #000000, #000000);
+  background-color: white;
+
+  /* Nếu có hình ảnh nền, thay bằng: background-image: url('path-to-your-image.jpg'); */
+  background-size: cover;
+  background-position: center;
+  color: #ffffff;
+  height: 100vh;
+  width: 265px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.logo {
+  background: white;
+  width: 245px;
+  height: 70px;
+  padding: 10px;
+  border-radius: 5px;
+  margin-left: -5px;
+}
+
+.info {
+  padding: 16px;
+  text-align: center;
+}
+
+.notification-section {
+  padding: 16px 24px;
+  /* border-bottom: 1px solid #4A6A8A; */
+}
+
+.notification-item {
+  display: flex;
+  align-items: center;
+  color: #ffffff;
+  cursor: pointer;
+  padding: 8px 0;
+  transition: all 0.15s ease;
+}
+
+.notification-item:hover {
+  color: #FFFFFF;
+}
+
+.notification-item span {
+  font-size: 16px;
+}
+
+.logout-section {
+  padding: 16px 24px;
+  border-top: 1px solid #4A6A8A;
+}
+
+.logout-section a {
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  transition: all 0.15s ease;
+}
+
+.logout-section a:hover {
+  color: #FFFFFF;
+}
+
+.ant-menu {
+  background: transparent !important;
+  color: #ffffff !important;
+}
+
+.ant-menu-submenu-title {
+  color: #ffffff !important;
+}
+
+.ant-menu-submenu-open > .ant-menu-submenu-title,
+.ant-menu-submenu-selected > .ant-menu-submenu-title {
+  color: #FFFFFF !important;
+}
+
+.ant-menu-sub {
+  background: rgba(0, 0, 0, 0.2) !important;
+}
+
+.ant-menu-item {
+  color: #ffffff !important;
+}
+
+.ant-menu-item-selected {
+  background-color: #3B82F6 !important;
+  color: #FFFFFF !important;
+}
+
+.ant-menu-item:hover,
+.ant-menu-submenu-title:hover {
+  color: #FFFFFF !important;
+}
+
+.ant-menu-submenu-arrow {
+  color: #ffffff !important;
+}
+
+.ant-menu-submenu-open > .ant-menu-submenu-title > .ant-menu-submenu-arrow,
+.ant-menu-submenu-selected > .ant-menu-submenu-title > .ant-menu-submenu-arrow {
+  color: #FFFFFF !important;
+}
+
+.ant-menu-sub .ant-menu-item {
+  padding-left: 35px !important;
+  padding-right: 16px !important;
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+}
+
+.ant-badge-count {
+  font-size: 10px !important;
+  min-width: 16px !important;
+  height: 16px !important;
+  line-height: 16px !important;
+}

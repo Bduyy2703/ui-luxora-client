@@ -5,12 +5,32 @@ import {
   ShoppingOutlined,
   StarOutlined,
   UserOutlined,
+  BellOutlined,
 } from "@ant-design/icons";
-import { Menu, notification } from "antd";
-import { useEffect, useState } from "react";
+import {
+  Menu,
+  notification,
+  Table as AntTable,
+  Button,
+  Modal,
+  Pagination,
+  Badge,
+  Tag,
+  Typography,
+} from "antd";
+import { useEffect, useState, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { logOut } from "../../../services/api/authService";
+import {
+  getAllNotifications,
+  markNotificationAsReadAdmin,
+} from "../../../services/api/notifications";
+import io from "socket.io-client";
+import Swal from "sweetalert2";
+import { toast } from "react-toastify";
 import "./sidebar.css";
+
+const { Text } = Typography;
 
 const Sidebar = () => {
   const location = useLocation();
@@ -19,6 +39,100 @@ const Sidebar = () => {
 
   const [selectedKeys, setSelectedKeys] = useState([lastPathSegment]);
   const [openKeys, setOpenKeys] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [notificationTotal, setNotificationTotal] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationPage, setNotificationPage] = useState(1);
+  const [notificationModalVisible, setNotificationModalVisible] =
+    useState(false);
+  const notificationLimit = 10;
+
+  // Token và URL API
+  const token = localStorage.getItem("accessToken") || "your-jwt-token";
+  const API_BASE_URL = "http://35.247.185.8/";
+
+  // Lấy danh sách thông báo
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const response = await getAllNotifications(
+        notificationPage,
+        notificationLimit,
+        "",
+      );
+      setNotifications(response.notifications);
+      setNotificationTotal(response.total);
+      setUnreadCount(response.unreadCount);
+    } catch (error) {
+      Swal.fire({
+        title: "Lỗi!",
+        text: "Không thể tải danh sách thông báo.",
+        icon: "error",
+      });
+    }
+  }, [notificationPage]);
+
+  // Đánh dấu thông báo đã đọc
+  const handleMarkAsRead = async (notificationId) => {
+    try {
+      await markNotificationAsReadAdmin(notificationId);
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n)),
+      );
+      setUnreadCount((prev) => Math.max(prev - 1, 0));
+    } catch (error) {
+      Swal.fire({
+        title: "Lỗi!",
+        text: "Không thể đánh dấu thông báo đã đọc.",
+        icon: "error",
+      });
+    }
+  };
+
+  // Kết nối WebSocket để nhận thông báo thời gian thực
+  useEffect(() => {
+    const socket = io(API_BASE_URL, {
+      auth: { token: `Bearer ${token}` },
+    });
+
+    socket.on("connect", () => {
+      console.log("Connected to WebSocket");
+    });
+
+    socket.on("notification", (data) => {
+      if (
+        (data.type === "INVOICE_CREATED" ||
+          data.type === "INVOICE_CANCELLED" ||
+          data.type === "INVOICE_PAYMENT") &&
+        data.source === "USER"
+      ) {
+        toast.info(data.message, { autoClose: 3000 });
+        setNotifications((prev) => [
+          {
+            id: data.notificationId,
+            message: data.message,
+            type: data.type,
+            source: data.source,
+            isRead: false,
+            createdAt: data.createdAt || new Date().toISOString(),
+          },
+          ...prev,
+        ]);
+        setNotificationTotal((prev) => prev + 1);
+        setUnreadCount((prev) => prev + 1);
+      }
+    });
+
+    socket.on("disconnect", () => {
+      console.log("Disconnected from WebSocket");
+    });
+
+    return () => socket.disconnect();
+  }, [token]);
+
+  // Lấy thông báo ban đầu
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
 
   useEffect(() => {
     setSelectedKeys([lastPathSegment]);
@@ -57,6 +171,41 @@ const Sidebar = () => {
       console.error("Logout failed:", result.error);
     }
   };
+
+  const notificationColumns = [
+    {
+      title: "Thông báo",
+      dataIndex: "message",
+      key: "message",
+      render: (text) => <Text>{text}</Text>,
+    },
+    {
+      title: "Thời gian",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      render: (text) => new Date(text).toLocaleString("vi-VN"),
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "isRead",
+      key: "isRead",
+      render: (isRead) => (
+        <Tag color={isRead ? "default" : "blue"}>
+          {isRead ? "Đã đọc" : "Chưa đọc"}
+        </Tag>
+      ),
+    },
+    {
+      title: "Hành động",
+      key: "actions",
+      render: (row) =>
+        !row.isRead && (
+          <Button type="link" onClick={() => handleMarkAsRead(row.id)}>
+            Đánh dấu đã đọc
+          </Button>
+        ),
+    },
+  ];
 
   const items = [
     {
@@ -135,10 +284,19 @@ const Sidebar = () => {
             alt="Caraluna"
           />
         </div>
-        <a href="#" onClick={handleLogout}>
-          <LogoutOutlined style={{ marginRight: "8px" }} />
-          Đăng xuất
-        </a>
+      </div>
+      <div className="notification-section">
+        <div
+          className="notification-item"
+          onClick={() => setNotificationModalVisible(true)}
+        >
+          <Badge count={unreadCount} size="small" offset={[5, 0]}>
+            <BellOutlined
+              style={{ fontSize: "20px", marginRight: "8px", color: "white" }}
+            />
+          </Badge>
+          <span>Thông báo</span>
+        </div>
       </div>
       <Menu
         mode="inline"
@@ -147,12 +305,41 @@ const Sidebar = () => {
         onSelect={handleMenuSelect}
         onOpenChange={handleOpenChange}
         style={{
-          height: "100%",
+          flex: 1,
           borderRight: 0,
           marginTop: "-15px",
         }}
         items={items}
       />
+      <div className="logout-section">
+        <a href="#" onClick={handleLogout}>
+          <LogoutOutlined style={{ marginRight: "8px" }} />
+          Đăng xuất
+        </a>
+      </div>
+      <Modal
+        title="Thông báo"
+        open={notificationModalVisible}
+        onCancel={() => setNotificationModalVisible(false)}
+        footer={null}
+        width={800}
+      >
+        <AntTable
+          dataSource={notifications}
+          columns={notificationColumns}
+          rowKey="id"
+          pagination={false}
+        />
+        {notificationTotal > notificationLimit && (
+          <Pagination
+            current={notificationPage}
+            pageSize={notificationLimit}
+            total={notificationTotal}
+            onChange={(page) => setNotificationPage(page)}
+            style={{ marginTop: 16, textAlign: "right" }}
+          />
+        )}
+      </Modal>
     </aside>
   );
 };
