@@ -1,12 +1,65 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Breadcrumb, notification, Tooltip } from "antd";
-import { PayCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
+import {
+  PayCircleOutlined,
+  CloseCircleOutlined,
+  CheckCircleOutlined,
+  IssuesCloseOutlined,
+  ClockCircleOutlined,
+  CarOutlined,
+  GiftOutlined,
+  RollbackOutlined,
+  WarningOutlined,
+} from "@ant-design/icons";
 import {
   retryPayment,
   cancelPayment,
 } from "../../services/api/checkoutService";
 import styles from "./invoiceDetail.module.scss";
+
+const statusTimeline = [
+  {
+    status: "PENDING",
+    display: "Đang chờ",
+    icon: <IssuesCloseOutlined />,
+  },
+  {
+    status: "PAID",
+    display: "Đã thanh toán",
+    icon: <CheckCircleOutlined />,
+  },
+  {
+    status: "CONFIRMED",
+    display: "Đã xác nhận",
+    icon: <ClockCircleOutlined />,
+  },
+  {
+    status: "SHIPPING",
+    display: "Đang giao hàng",
+    icon: <CarOutlined />,
+  },
+  {
+    status: "DELIVERED",
+    display: "Đã giao hàng",
+    icon: <GiftOutlined />,
+  },
+  {
+    status: "RETURNED",
+    display: "Đã trả hàng",
+    icon: <RollbackOutlined />,
+  },
+  {
+    status: "CANCELLED",
+    display: "Đã hủy",
+    icon: <CloseCircleOutlined />,
+  },
+  {
+    status: "FAILED",
+    display: "Thất bại",
+    icon: <WarningOutlined />,
+  },
+];
 
 const InvoiceDetail = () => {
   const [invoiceDetail, setInvoiceDetail] = useState(null);
@@ -29,10 +82,9 @@ const InvoiceDetail = () => {
     }
     setInvoiceDetail(invoiceDetail);
 
-    // Kiểm tra thời gian createdAt để vô hiệu hóa nút Hủy
     const createdAt = new Date(invoiceDetail.createdAt).getTime();
     const now = new Date().getTime();
-    const thirtyMinutes = 30 * 60 * 1000; // 30 phút tính bằng milliseconds
+    const thirtyMinutes = 30 * 60 * 1000;
     if (now - createdAt > thirtyMinutes) {
       setIsCancelDisabled(true);
     }
@@ -86,6 +138,10 @@ const InvoiceDetail = () => {
     }
   };
 
+  const currentStatusIndex = statusTimeline.findIndex(
+    (item) => item.status === invoiceDetail?.status,
+  );
+
   const breadcrumbItems = [
     { label: "Trang chủ", path: "/" },
     { label: "Đơn hàng của bạn", path: "/account/orders" },
@@ -110,6 +166,35 @@ const InvoiceDetail = () => {
       </div>
       <Breadcrumb items={breadcrumbItems} className={styles.breadcrumb} />
       <div className={styles.orderDetail}>
+        <div className={styles.timeline}>
+          {statusTimeline.map((step, index) => {
+            const isActive = index <= currentStatusIndex;
+            const isLastStep = index === statusTimeline.length - 1;
+            const isException =
+              step.status === "CANCELLED" ||
+              step.status === "FAILED" ||
+              step.status === "RETURNED";
+            const shouldDisplay =
+              !isException ||
+              (isException && step.status === invoiceDetail.status);
+
+            return shouldDisplay ? (
+              <div
+                key={step.status}
+                className={`${styles.timelineStep} ${
+                  isActive ? styles.active : ""
+                }`}
+              >
+                <div className={styles.timelineIcon}>{step.icon}</div>
+                <div className={styles.timelineLabel}>{step.display}</div>
+                {!isLastStep && !isException && (
+                  <div className={styles.timelineArrow}>→</div>
+                )}
+              </div>
+            ) : null;
+          })}
+        </div>
+
         <div className={styles.status}>
           <div className={styles.statusItem}>
             <span>Trạng thái thanh toán: </span>
@@ -133,7 +218,7 @@ const InvoiceDetail = () => {
               <div className={styles.actionButtons}>
                 {invoiceDetail.status === "PENDING" &&
                   invoiceDetail.paymentMethod === "VNPAY" && (
-                    <Tooltip>
+                    <Tooltip title="Thử thanh toán lại bằng VNPAY">
                       <div
                         className={`${styles.retryIcon} ${
                           paymentLoading ? styles.disabledIcon : ""
@@ -174,10 +259,6 @@ const InvoiceDetail = () => {
                 </Tooltip>
               </div>
             )}
-          </div>
-          <div className={styles.statusItem}>
-            <span>Trạng thái vận chuyển: </span>
-            <span>Đang vận chuyển</span>
           </div>
           <div className={styles.statusItem}>
             <span>Ngày tạo: </span>
