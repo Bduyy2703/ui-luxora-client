@@ -414,7 +414,7 @@ const AdminInvoiceList = () => {
     <div className="wrapper">
       <header className={styles.adminHeader}>
         <div className="container">
-          <h2>QUẢN LÝ ĐƠN HÀNG</h2>
+          <h2>QUẢN LÝ HÓA ĐƠN</h2>
           {/* <Badge count={unreadCount}>
             <Button
               icon={<BellOutlined />}

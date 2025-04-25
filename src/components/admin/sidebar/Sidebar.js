@@ -257,7 +257,7 @@ const Sidebar = () => {
         },
         {
           key: "invoice",
-          label: <Link to="/admin/invoice">Đơn hàng</Link>,
+          label: <Link to="/admin/invoice">Hóa đơn</Link>,
         },
         {
           key: "inventory",
