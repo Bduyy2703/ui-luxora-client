@@ -316,7 +316,7 @@ const Sidebar = () => {
                 style={{ fontSize: "20px", marginRight: "8px", color: "white" }}
               />
             </Badge>
-            <span>Thông báo</span>
+            {/* <span>Thông báo</span> */}
           </div>
         </Dropdown>
       </div>

@@ -325,12 +325,16 @@ function Header() {
               ) : (
                 <>
                   <Link to="/login" className={styles.dropdownItem}>
-                    <LoginOutlined style={{ marginRight: "10px" }} />
-                    Đăng nhập
+                    <LoginOutlined
+                      style={{ marginRight: "10px", color: "black" }}
+                    />
+                    <span style={{ color: "black" }}>Đăng nhập</span>
                   </Link>
                   <Link to="/register" className={styles.dropdownItem}>
-                    <LogoutOutlined style={{ marginRight: "27px" }} />
-                    Đăng ký
+                    <LogoutOutlined
+                      style={{ marginRight: "27px", color: "black" }}
+                    />
+                    <span style={{ color: "black" }}>Đăng ký</span>
                   </Link>
                 </>
               )}
@@ -377,10 +381,14 @@ function Header() {
                 : null}
               <div className={styles.dropDownMenuCart}>
                 <ShoppingCartOutlined
-                  style={{ marginRight: "10px", marginTop: "5px" }}
+                  style={{
+                    marginRight: "10px",
+                    marginTop: "5px",
+                    color: "black",
+                  }}
                 />
                 <Link to="/cart/gio-hang-cua-ban" className={styles.menuCart}>
-                  Xem giỏ hàng
+                  <span style={{ color: "black" }}>Xem giỏ hàng</span>
                 </Link>
               </div>
             </div>

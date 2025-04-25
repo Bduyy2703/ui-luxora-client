@@ -74,7 +74,9 @@ a:link {
 }
 
 .notification-section {
-  padding: 16px 24px;
+  padding-left: 26px;
+  margin-top: -6px;
+  margin-bottom: 13px;
 }
 
 .notification-item {
