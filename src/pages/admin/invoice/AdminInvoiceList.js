@@ -415,7 +415,7 @@ const AdminInvoiceList = () => {
       <header className={styles.adminHeader}>
         <div className="container">
           <h2>QUẢN LÝ ĐƠN HÀNG</h2>
-          <Badge count={unreadCount}>
+          {/* <Badge count={unreadCount}>
             <Button
               icon={<BellOutlined />}
               onClick={() => setNotificationModalVisible(true)}
@@ -423,7 +423,7 @@ const AdminInvoiceList = () => {
             >
               Thông báo
             </Button>
-          </Badge>
+          </Badge> */}
         </div>
       </header>
       <main className="main">
