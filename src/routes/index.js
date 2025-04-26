@@ -21,6 +21,7 @@ import InvoiceDetail from "../pages/invoiceDetail";
 import ThankYou from "../pages/ConfirmSuccess";
 import BlogsListPage from "../pages/blogs";
 import PaymentSuccess from "../pages/PaymentSuccess";
+import WishListPage from "../pages/ProfileUser/pageWishList/wishList";
 
 function requireAuth(to, from, next) {
   const token = localStorage.getItem("decodedToken");
@@ -76,6 +77,12 @@ const privateRoutes = [
   {
     path: "/account/orders",
     component: CartUser,
+    layout: DefaultProfile,
+    beforeEnter: requireAuth,
+  },
+  {
+    path: "/account/wishlist",
+    component: WishListPage,
     layout: DefaultProfile,
     beforeEnter: requireAuth,
   },

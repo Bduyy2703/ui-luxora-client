@@ -26,7 +26,7 @@ export const DetailProduct = () => {
   const [selectedSize, setSelectedSize] = useState("");
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [activeTab, setActiveTab] = useState("description");
-  const [isFavorite, setIsFavorite] = useState(false); // State để lưu trạng thái yêu thích
+  const [isFavorite, setIsFavorite] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const { id } = useParams();
   const navigate = useNavigate();
@@ -61,7 +61,6 @@ export const DetailProduct = () => {
     fetchProductDetail();
   }, [id]);
 
-  // Kiểm tra trạng thái yêu thích mỗi khi thay đổi màu sắc hoặc kích thước
   useEffect(() => {
     const checkWishlistStatus = async () => {
       const selectedDetail = product.productDetails?.find(
@@ -76,7 +75,7 @@ export const DetailProduct = () => {
           setIsFavorite(response.isFavorite || false);
         } catch (error) {
           console.error("Error checking wishlist status:", error);
-          setIsFavorite(false); // Fallback nếu lỗi
+          setIsFavorite(false);
         }
       }
     };
@@ -118,7 +117,6 @@ export const DetailProduct = () => {
     return !!(accessToken && email);
   };
 
-  // Xử lý toggle yêu thích
   const handleToggleWishlist = async () => {
     if (!checkLoginStatus()) {
       notification.error({
@@ -148,7 +146,7 @@ export const DetailProduct = () => {
     try {
       setWishlistLoading(true);
       await addWishList(selectedDetail.id);
-      setIsFavorite(!isFavorite); // Toggle trạng thái yêu thích
+      setIsFavorite(!isFavorite);
       notification.success({
         message: "Thông báo",
         description: isFavorite

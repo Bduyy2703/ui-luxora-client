@@ -1,16 +1,23 @@
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lora:wght@400;500&display=swap");
+
 .wrapper {
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  background: linear-gradient(180deg, #ffffff 0%, #f9f9f9 100%);
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+  width: 280px; // Increased from 218px to match screenshot proportions
 }
 
 .account {
-  font-size: 18px;
-  font-weight: 300;
-  color: #4a4a4a;
-  margin-bottom: 20px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #0a1a3a;
+  margin-bottom: 25px;
   display: block;
-  padding: 10px 20px;
+  padding: 0 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  white-space: nowrap; // Prevent line break
 }
 
 .navList {
@@ -20,37 +27,38 @@
 }
 
 .navList li {
-  margin-bottom: 5px;
+  margin-bottom: 8px;
 }
 
 .navList a {
   display: flex;
   align-items: center;
-  padding: 10px 20px;
-  color: #4a4a4a;
+  padding: 12px 15px;
+  color: #333;
   text-decoration: none;
-  font-size: 14px;
-  transition:
-    background-color 0.3s ease,
-    color 0.3s ease;
-  border-radius: 4px;
+  font-size: 15px;
+  font-weight: 400;
+  transition: all 0.3s ease;
+  border-radius: 8px;
 }
 
 .navList a:hover {
-  background-color: #f9fafb;
-  color: #1890ff;
+  background: rgba(212, 165, 91, 0.1);
+  color: #d4a55b;
+  transform: translateX(5px);
 }
 
 .navList a.active {
-  background-color: #fff;
-  color: #1890ff; /* Màu xanh giống hình mẫu */
+  background: #fff;
+  color: #1890ff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  font-weight: 500;
 }
 
 .icon {
-  margin-right: 10px;
-  font-size: 16px;
-  color: #4a4a4a;
+  margin-right: 12px;
+  font-size: 18px;
+  color: #333;
   transition: color 0.3s ease;
 }
 

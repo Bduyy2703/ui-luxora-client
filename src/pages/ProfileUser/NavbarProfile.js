@@ -7,6 +7,7 @@ import {
   ShoppingCartOutlined,
   LockOutlined,
   EnvironmentOutlined,
+  HeartFilled,
 } from "@ant-design/icons";
 
 function NavbarProfile({ className }) {
@@ -36,6 +37,7 @@ function NavbarProfile({ className }) {
     if (path === "/account/orders") return "orders";
     if (path === "/account/changepassword") return "changepassword";
     if (path === "/account/addresses") return "addresses";
+    if (path === "/account/wishlist") return "wishlist";
     return "";
   };
 
@@ -61,21 +63,6 @@ function NavbarProfile({ className }) {
                     })}
                   />
                   Thông tin tài khoản
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/account/orders"
-                  className={classNames({
-                    [styles.active]: activeTab === "orders",
-                  })}
-                >
-                  <ShoppingCartOutlined
-                    className={classNames(styles.icon, {
-                      [styles.activeIcon]: activeTab === "orders",
-                    })}
-                  />
-                  Đơn hàng của bạn
                 </Link>
               </li>
               <li>
@@ -106,6 +93,37 @@ function NavbarProfile({ className }) {
                     })}
                   />
                   Sổ địa chỉ
+                </Link>
+              </li>
+
+              <li>
+                <Link
+                  to="/account/wishlist"
+                  className={classNames({
+                    [styles.active]: activeTab === "wishlist",
+                  })}
+                >
+                  <HeartFilled
+                    className={classNames(styles.icon, {
+                      [styles.activeIcon]: activeTab === "wishlist",
+                    })}
+                  />
+                  Sản phẩm yêu thích
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/account/orders"
+                  className={classNames({
+                    [styles.active]: activeTab === "orders",
+                  })}
+                >
+                  <ShoppingCartOutlined
+                    className={classNames(styles.icon, {
+                      [styles.activeIcon]: activeTab === "orders",
+                    })}
+                  />
+                  Đơn hàng của bạn
                 </Link>
               </li>
             </ul>
