@@ -47,7 +47,7 @@ const Sidebar = () => {
   const API_BASE_URL = "http://35.247.185.8/";
   console.log("Access token in Sidebar:", token); // Log token để kiểm tra
 
-  const notificationSound = new Audio("/assets/sounds/notification.mp3");
+  const notificationSound = new Audio("/assets/sounds/soundGoat.mp3");
 
   useEffect(() => {
     const handleInteraction = () => {

@@ -386,7 +386,7 @@
 
     .notificationDropdown {
       width: 350px;
-      max-height: 400px;
+      height: 400px; 
       overflow: hidden;
       border-radius: 8px;
     }
@@ -398,7 +398,7 @@
     }
 
     .notificationList {
-      max-height: 350px;
+      height: 350px; 
       overflow-y: auto;
       padding: 0;
       background: #fff !important;

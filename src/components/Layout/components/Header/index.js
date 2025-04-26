@@ -80,13 +80,12 @@ function Header() {
   const [hasInteracted, setHasInteracted] = useState(false); // State để theo dõi tương tác người dùng
 
   // Sử dụng URL âm thanh trực tuyến để thử nghiệm
-  const notificationSound = new Audio("/assets/sounds/notification.mp3");
+  const notificationSound = new Audio("/assets/sounds/soundGoat.mp3");
 
   // Theo dõi tương tác người dùng để cho phép phát âm thanh
   useEffect(() => {
     const handleInteraction = () => {
       setHasInteracted(true);
-      console.log("User has interacted with the page. Audio can now play.");
     };
 
     document.addEventListener("click", handleInteraction);
@@ -180,14 +179,11 @@ function Header() {
   useEffect(() => {
     if (accessToken) {
       fetchNotifications();
-      console.log("Checking notification permission...");
 
       // Kiểm tra quyền thông báo
       if (window.Notification) {
-        console.log("Current notification permission:", Notification.permission);
         if (Notification.permission === "default") {
           Notification.requestPermission().then((permission) => {
-            console.log("Notification permission result:", permission);
             if (permission === "denied") {
               Swal.fire({
                 title: "Thông báo bị chặn",
@@ -204,10 +200,10 @@ function Header() {
             icon: "warning",
           });
         } else {
-          console.log("Notification permission is granted.");
+          // console.log("Notification permission is granted.");
         }
       } else {
-        console.error("Notification API is not supported in this browser.");
+        // console.error("Notification API is not supported in this browser.");
       }
 
       // Kết nối WebSocket
@@ -216,23 +212,25 @@ function Header() {
       });
 
       socket.on("connect", () => {
-        console.log("WebSocket connected successfully");
+        // console.log("WebSocket connected successfully");
       });
 
       socket.on("connect_error", (error) => {
-        console.error("WebSocket connection error:", error.message);
+        // console.error("WebSocket connection error:", error.message);
       });
 
       socket.on("notification", (data) => {
-        console.log("Received notification data:", data);
         // Loại bỏ khoảng trắng và ký tự thừa
         const notificationType = data.type?.trim();
         const notificationSource = data.source?.trim();
 
-        console.log("Trimmed type:", notificationType);
-        console.log("Trimmed source:", notificationSource);
+        // console.log("Trimmed type:", notificationType);
+        // console.log("Trimmed source:", notificationSource);
 
-        if (notificationType === "INVOICE_UPDATE" && notificationSource === "ADMIN") {
+        if (
+          notificationType === "INVOICE_UPDATE" &&
+          notificationSource === "ADMIN"
+        ) {
           // Hiển thị thông báo toast
           toast.info(
             <div>
@@ -260,12 +258,11 @@ function Header() {
               pauseOnHover: true,
               draggable: true,
               className: styles.customToast,
-            }
+            },
           );
 
           // Hiển thị thông báo hệ thống
           if (window.Notification && Notification.permission === "granted") {
-            console.log("Creating system notification...");
             const systemNotification = new Notification("Thông báo mới!", {
               body: data.message,
               icon: "/assets/icon/bell.png",
@@ -273,28 +270,28 @@ function Header() {
             });
 
             systemNotification.onclick = () => {
-              console.log("Notification clicked, navigating to orders...");
               window.focus();
               navigate("/account/orders");
             };
           } else {
-            console.warn("Cannot show notification: Permission not granted or Notification API not supported.");
+            console.warn(
+              "Cannot show notification: Permission not granted or Notification API not supported.",
+            );
           }
 
           // Phát âm thanh thông báo chỉ khi người dùng đã tương tác
           if (hasInteracted) {
-            console.log("Attempting to play notification sound...");
-            notificationSound
-              .play()
-              .catch((error) => {
-                console.error("Error playing notification sound:", error.message);
-                toast.error("Không thể phát âm thanh thông báo. Vui lòng kiểm tra tệp âm thanh hoặc cài đặt trình duyệt.", {
+            notificationSound.play().catch((error) => {
+              console.error("Error playing notification sound:", error.message);
+              toast.error(
+                "Không thể phát âm thanh thông báo. Vui lòng kiểm tra tệp âm thanh hoặc cài đặt trình duyệt.",
+                {
                   position: "top-right",
                   autoClose: 5000,
-                });
-              });
+                },
+              );
+            });
           } else {
-            console.log("Cannot play sound: User has not interacted with the page yet.");
             toast.info("Vui lòng nhấp vào trang để bật âm thanh thông báo.", {
               position: "top-right",
               autoClose: 5000,
@@ -315,19 +312,19 @@ function Header() {
           ]);
           setUnreadNotifications((prev) => prev + 1);
         } else {
-          console.log("Notification ignored: Invalid type or source", {
-            type: notificationType,
-            source: notificationSource,
-          });
+          // console.log("Notification ignored: Invalid type or source", {
+          //   type: notificationType,
+          //   source: notificationSource,
+          // });
         }
       });
 
       socket.on("disconnect", () => {
-        console.log("WebSocket disconnected");
+        // console.log("WebSocket disconnected");
       });
 
       return () => {
-        console.log("Cleaning up WebSocket connection...");
+        // console.log("Cleaning up WebSocket connection...");
         socket.disconnect();
       };
     }

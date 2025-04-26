@@ -24,11 +24,7 @@ const statusTimeline = [
     display: "Đang chờ",
     icon: <IssuesCloseOutlined />,
   },
-  {
-    status: "PAID",
-    display: "Đã thanh toán",
-    icon: <CheckCircleOutlined />,
-  },
+
   {
     status: "CONFIRMED",
     display: "Đã xác nhận",
@@ -59,6 +55,11 @@ const statusTimeline = [
     display: "Thất bại",
     icon: <WarningOutlined />,
   },
+  {
+    status: "PAID",
+    display: "Đã thanh toán",
+    icon: <CheckCircleOutlined />,
+  },
 ];
 
 const InvoiceDetail = () => {
@@ -72,11 +73,11 @@ const InvoiceDetail = () => {
   useEffect(() => {
     const { invoiceDetail } = location.state || {};
     if (!invoiceDetail) {
-      notification.error({
-        message: "Thông báo",
-        description: "Không tìm thấy chi tiết hóa đơn",
-        duration: 3,
-      });
+      // notification.error({
+      //   message: "Thông báo",
+      //   description: "Không tìm thấy chi tiết hóa đơn",
+      //   duration: 3,
+      // });
       navigate("/account/orders");
       return;
     }
@@ -138,6 +139,8 @@ const InvoiceDetail = () => {
     }
   };
 
+  console.log("statusTimeline", statusTimeline);
+
   const currentStatusIndex = statusTimeline.findIndex(
     (item) => item.status === invoiceDetail?.status,
   );
@@ -155,6 +158,8 @@ const InvoiceDetail = () => {
   const totalDiscount =
     (invoiceDetail.productDiscount || 0) +
     (invoiceDetail.shippingFeeDiscount || 0);
+
+  console.log("currentStatusIndex", currentStatusIndex);
 
   return (
     <div className={styles.wrapper}>
