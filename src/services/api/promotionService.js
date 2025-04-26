@@ -24,6 +24,18 @@ export const getSaleById = async (id) => {
   }
 };
 
+export const getNotiUserId = async (saleId) => {
+  try {
+    const response = await privateAxios.post(`/v1/sales/notify-users/${saleId}`);
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message ||
+        "Lỗi khi lấy thông tin chương trình khuyến mãi",
+    );
+  }
+};
+
 export const createSale = async (data) => {
   try {
     const response = await privateAxios.post("/v1/sales", data);

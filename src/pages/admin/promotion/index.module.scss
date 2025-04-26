@@ -156,7 +156,17 @@
 .detailContent {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 0px;
+}
+
+.seoButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 200px;
+  height: 40px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
 }
 
 .detailInfo {
@@ -173,4 +183,35 @@
   .ant-btn {
     margin-bottom: 16px;
   }
+}
+
+.detailContent {
+  padding: 16px;
+}
+
+.detailInfo {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.detailLeft {
+  flex: 1;
+  min-width: 0;
+}
+
+.detailRight {
+  flex: 1;
+  min-width: 0;
+  border-left: 1px solid #e8e8e8;
+  padding-left: 24px;
+}
+
+.detailSection {
+  margin-top: 24px;
+}
+
+.table {
+  margin-top: 16px;
 }

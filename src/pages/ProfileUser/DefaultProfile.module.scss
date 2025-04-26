@@ -6,19 +6,19 @@
 
 .container {
   display: flex;
-  padding: 50px 125px;
+  padding: 50px 100px; // Adjusted padding to balance the wider navbar
   flex: 1;
 }
 
 .navbar {
-  width: 218px;
+  width: 280px; // Increased from 218px to match NavbarProfile.module.scss
   margin-right: 50px;
 }
 
 .contentWrapper {
   flex: 1;
-  height: 100%; /* Chiều cao cố định cho tất cả các menu */
-  overflow-y: auto; /* Cho phép cuộn nếu nội dung vượt quá chiều cao */
+  height: 100%;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
 }
@@ -28,7 +28,7 @@
   border-radius: 8px;
   padding: 10px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-  flex: 1; /* Đảm bảo nội dung lấp đầy không gian của contentWrapper */
+  flex: 1;
 }
 
 .loginPrompt {

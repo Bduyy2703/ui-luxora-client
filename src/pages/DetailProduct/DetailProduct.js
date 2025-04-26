@@ -15,6 +15,7 @@ import {
 } from "../../services/api/productService";
 import { addToCart } from "../../services/api/cartService";
 import { motion, AnimatePresence } from "framer-motion";
+import { addWishList, checkWishList } from "../../services/api/wishListService";
 
 export const DetailProduct = () => {
   const [loading, setLoading] = useState(false);
@@ -25,6 +26,8 @@ export const DetailProduct = () => {
   const [selectedSize, setSelectedSize] = useState("");
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [activeTab, setActiveTab] = useState("description");
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -59,6 +62,30 @@ export const DetailProduct = () => {
   }, [id]);
 
   useEffect(() => {
+    const checkWishlistStatus = async () => {
+      const selectedDetail = product.productDetails?.find(
+        (detail) =>
+          detail.color === selectedColor && detail.size === selectedSize,
+      );
+      if (selectedDetail) {
+        try {
+          const response = await checkWishList(selectedDetail.id);
+          console.log("Response:", response);
+
+          setIsFavorite(response.isFavorite || false);
+        } catch (error) {
+          console.error("Error checking wishlist status:", error);
+          setIsFavorite(false);
+        }
+      }
+    };
+
+    if (selectedColor && selectedSize) {
+      checkWishlistStatus();
+    }
+  }, [selectedColor, selectedSize, product.productDetails]);
+
+  useEffect(() => {
     const fetchRelatedProducts = async () => {
       try {
         const response = await getProductList(1, 10);
@@ -88,6 +115,55 @@ export const DetailProduct = () => {
     const accessToken = localStorage.getItem("accessToken");
     const email = localStorage.getItem("userEmail");
     return !!(accessToken && email);
+  };
+
+  const handleToggleWishlist = async () => {
+    if (!checkLoginStatus()) {
+      notification.error({
+        message: "Thông báo",
+        description:
+          "Vui lòng đăng nhập để thêm sản phẩm vào danh sách yêu thích",
+        duration: 3,
+      });
+      navigate("/login");
+      return;
+    }
+
+    const selectedDetail = product.productDetails?.find(
+      (detail) =>
+        detail.color === selectedColor && detail.size === selectedSize,
+    );
+
+    if (!selectedDetail) {
+      notification.error({
+        message: "Thông báo",
+        description: "Không tìm thấy thông tin sản phẩm phù hợp",
+        duration: 3,
+      });
+      return;
+    }
+
+    try {
+      setWishlistLoading(true);
+      await addWishList(selectedDetail.id);
+      setIsFavorite(!isFavorite);
+      notification.success({
+        message: "Thông báo",
+        description: isFavorite
+          ? "Đã bỏ yêu thích sản phẩm"
+          : "Đã thêm sản phẩm vào danh sách yêu thích",
+        duration: 3,
+      });
+    } catch (error) {
+      console.error("Error toggling wishlist:", error);
+      notification.error({
+        message: "Thông báo",
+        description: "Thao tác thất bại, vui lòng thử lại",
+        duration: 3,
+      });
+    } finally {
+      setWishlistLoading(false);
+    }
   };
 
   const handleAddToCart = async () => {
@@ -176,6 +252,8 @@ export const DetailProduct = () => {
   );
   const variantStock = selectedVariant ? selectedVariant.stock : 0;
   const isOutOfStock = variantStock === 0;
+
+  console.log("isFavorite", isFavorite);
 
   return (
     <motion.div
@@ -339,10 +417,18 @@ export const DetailProduct = () => {
                 <motion.button
                   type="button"
                   className={`${styles.btn} ${styles.chatBtn}`}
+                  onClick={handleToggleWishlist}
+                  disabled={wishlistLoading}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <h1 className={styles.titleBtn}>Chat tư vấn</h1>
+                  <h1 className={styles.titleBtn}>
+                    {wishlistLoading
+                      ? "Đang xử lý..."
+                      : isFavorite
+                        ? "Bỏ yêu thích"
+                        : "Yêu thích"}
+                  </h1>
                 </motion.button>
               </div>
             </div>
@@ -365,6 +451,8 @@ export const DetailProduct = () => {
     </motion.div>
   );
 };
+
+// Các component khác (Image, DescProduct, RelatedProducts) giữ nguyên
 
 export const Image = ({ product }) => {
   const [mainImageIndex, setMainImageIndex] = useState(0);

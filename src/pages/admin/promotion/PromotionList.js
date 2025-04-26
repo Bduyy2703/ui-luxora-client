@@ -32,6 +32,7 @@ import {
   createSale,
   deleteSale,
   getAllSales,
+  getNotiUserId,
   getSaleActive,
   getSaleById,
   getSaleCategories,
@@ -75,6 +76,7 @@ const PromotionList = () => {
   const [allProducts, setAllProducts] = useState([]);
   const [productsForModal, setProductsForModal] = useState([]);
   const [selectedProductIds, setSelectedProductIds] = useState([]);
+  const [seoData, setSeoData] = useState(null);
   const [categoriesForModal, setCategoriesForModal] = useState([]);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState([]);
   const limit = config.LIMIT || 10;
@@ -394,10 +396,25 @@ const PromotionList = () => {
 
       setCurrentPromotion(saleDetails);
       setCurrentPromotionId(Number(saleDetails?.id));
-
+      setSeoData(null); // Reset seoData khi mở modal
       setDetailModalVisible(true);
     } catch (error) {
       message.error("Không thể tải chi tiết chương trình khuyến mãi.");
+    }
+  };
+
+  const handleFetchSeoData = async () => {
+    if (!currentPromotion?.id) {
+      message.error("Không tìm thấy ID chương trình khuyến mãi!");
+      return;
+    }
+
+    try {
+      const seoResponse = await getNotiUserId(currentPromotion.id);
+      setSeoData(seoResponse);
+    } catch (error) {
+      message.error(error.message || "Không thể lấy thông tin SEO.");
+      setSeoData(null);
     }
   };
 
@@ -1010,28 +1027,50 @@ const PromotionList = () => {
           {currentPromotion ? (
             <div className={styles.detailContent}>
               <div className={styles.detailInfo}>
-                <h3>Tên chương trình: {currentPromotion.name}</h3>
-                <p>
-                  <strong>Số tiền giảm giá:</strong>{" "}
-                  {currentPromotion.discountAmount}%
-                </p>
-                <p>
-                  <strong>Ngày bắt đầu:</strong>{" "}
-                  {new Date(currentPromotion.startDate).toLocaleDateString()}
-                </p>
-                <p>
-                  <strong>Ngày kết thúc:</strong>{" "}
-                  {new Date(currentPromotion.endDate).toLocaleDateString()}
-                </p>
-                <p>
-                  <strong>Trạng thái:</strong>{" "}
-                  {currentPromotion.isActive ? "Đang diễn ra" : "Đã kết thúc"}
-                </p>
-                <p>
-                  <strong>Áp dụng toàn bộ sản phẩm:</strong>{" "}
-                  {currentPromotion.isGlobalSale ? "Có" : "Không"}
-                </p>
+                <div className={styles.detailLeft}>
+                  <h3>Tên chương trình: {currentPromotion.name}</h3>
+                  <p>
+                    <strong>Số tiền giảm giá:</strong>{" "}
+                    {currentPromotion.discountAmount}%
+                  </p>
+                  <p>
+                    <strong>Ngày bắt đầu:</strong>{" "}
+                    {new Date(currentPromotion.startDate).toLocaleDateString()}
+                  </p>
+                  <p>
+                    <strong>Ngày kết thúc:</strong>{" "}
+                    {new Date(currentPromotion.endDate).toLocaleDateString()}
+                  </p>
+                  <p>
+                    <strong>Trạng thái:</strong>{" "}
+                    {currentPromotion.isActive ? "Đang diễn ra" : "Đã kết thúc"}
+                  </p>
+                  <p>
+                    <strong>Áp dụng toàn bộ sản phẩm:</strong>{" "}
+                    {currentPromotion.isGlobalSale ? "Có" : "Không"}
+                  </p>
+                </div>
+
+                <div className={styles.detailRight}>
+                  <h4
+                    style={{ cursor: "pointer" }}
+                    onClick={handleFetchSeoData}
+                    className={styles.seoButton}
+                  >
+                    SEO cho khách hàng
+                  </h4>
+                  {seoData ? (
+                    <div>
+                      <p>
+                        <strong>Trạng thái gửi mail:</strong> Đã gửi mail
+                      </p>
+                    </div>
+                  ) : (
+                    <p>Nhấn để xem thông tin SEO.</p>
+                  )}
+                </div>
               </div>
+
               <div className={styles.detailSection}>
                 <h3>Sản phẩm trong chương trình</h3>
                 {!currentPromotion.isGlobalSale && (
@@ -1058,6 +1097,7 @@ const PromotionList = () => {
                   scroll={{ x: "max-content" }}
                 />
               </div>
+
               {!currentPromotion.isGlobalSale && (
                 <div className={styles.detailSection}>
                   <h3>Danh mục trong chương trình</h3>

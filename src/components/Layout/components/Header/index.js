@@ -80,7 +80,7 @@ function Header() {
   const [hasInteracted, setHasInteracted] = useState(false); // State để theo dõi tương tác người dùng
 
   // Sử dụng URL âm thanh trực tuyến để thử nghiệm
-  const notificationSound = new Audio("/assets/sounds/soundGoat.mp3");
+  const notificationSound = new Audio("/assets/sounds/notificationFinal.mp3");
 
   // Theo dõi tương tác người dùng để cho phép phát âm thanh
   useEffect(() => {
