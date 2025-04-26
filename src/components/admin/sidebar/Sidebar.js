@@ -16,7 +16,7 @@ import {
   Typography,
   Space,
 } from "antd";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { logOut } from "../../../services/api/authService";
 import {
@@ -40,27 +40,170 @@ const Sidebar = () => {
   const [openKeys, setOpenKeys] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [hasInteracted, setHasInteracted] = useState(false);
+  const prevNotificationsRef = useRef([]);
 
-  // Token và URL API
   const token = localStorage.getItem("accessToken") || "your-jwt-token";
   const API_BASE_URL = "http://35.247.185.8/";
+  console.log("Access token in Sidebar:", token); // Log token để kiểm tra
 
-  // Lấy tất cả thông báo
+  const notificationSound = new Audio("/assets/sounds/notification.mp3");
+
+  useEffect(() => {
+    const handleInteraction = () => {
+      setHasInteracted(true);
+      console.log("User has interacted with the page. Audio can now play.");
+    };
+
+    document.addEventListener("click", handleInteraction);
+    document.addEventListener("keydown", handleInteraction);
+
+    return () => {
+      document.removeEventListener("click", handleInteraction);
+      document.removeEventListener("keydown", handleInteraction);
+    };
+  }, []);
+
   const fetchNotifications = useCallback(async () => {
     try {
       const response = await getAllNotifications(1, 0, "");
-      setNotifications(response.notifications);
-      setUnreadCount(response.unreadCount);
+      console.log("Fetched notifications via polling:", response);
+      return response;
     } catch (error) {
       Swal.fire({
         title: "Lỗi!",
         text: "Không thể tải danh sách thông báo.",
         icon: "error",
       });
+      return null;
     }
   }, []);
 
-  // Đánh dấu thông báo đã đọc
+  const handleNewNotification = (data) => {
+    toast.info(
+      <div>
+        <strong>Thông báo mới!</strong>
+        <p>{data.message}</p>
+        <button
+          style={{
+            background: "#1890ff",
+            color: "#fff",
+            border: "none",
+            padding: "5px 10px",
+            borderRadius: "4px",
+            cursor: "pointer",
+          }}
+          onClick={() => navigate("/admin/invoice")}
+        >
+          Xem chi tiết
+        </button>
+      </div>,
+      {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      }
+    );
+
+    if (window.Notification && Notification.permission === "granted") {
+      console.log("Creating system notification...");
+      try {
+        const systemNotification = new Notification("Thông báo mới!", {
+          body: data.message,
+          icon: "/assets/icon/bell.png",
+          tag: data.notificationId || "default-tag",
+        });
+
+        systemNotification.onclick = () => {
+          console.log("Notification clicked, navigating to invoice...");
+          window.focus();
+          navigate("/admin/invoice");
+        };
+
+        systemNotification.onerror = (error) => {
+          console.error("System notification error:", error);
+        };
+      } catch (error) {
+        console.error("Failed to create system notification:", error);
+        toast.error("Không thể hiển thị thông báo hệ thống. Vui lòng kiểm tra cài đặt thông báo trên Windows và trình duyệt.", {
+          position: "top-right",
+          autoClose: 5000,
+        });
+      }
+    } else {
+      console.warn("Cannot show notification: Permission not granted or Notification API not supported.");
+      if (Notification.permission !== "granted") {
+        toast.warn("Quyền thông báo chưa được cấp. Vui lòng bật quyền thông báo trong cài đặt trình duyệt.", {
+          position: "top-right",
+          autoClose: 5000,
+        });
+      }
+    }
+
+    if (hasInteracted) {
+      console.log("Attempting to play notification sound...");
+      notificationSound
+        .play()
+        .catch((error) => {
+          console.error("Error playing notification sound:", error.message);
+          toast.error("Không thể phát âm thanh thông báo. Vui lòng kiểm tra tệp âm thanh hoặc cài đặt trình duyệt.", {
+            position: "top-right",
+            autoClose: 5000,
+          });
+        });
+    } else {
+      console.log("Cannot play sound: User has not interacted with the page yet.");
+      toast.info("Vui lòng nhấp vào trang để bật âm thanh thông báo.", {
+        position: "top-right",
+        autoClose: 5000,
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications().then((response) => {
+      if (response) {
+        setNotifications(response.notifications || []);
+        setUnreadCount(response.unreadCount || 0);
+        prevNotificationsRef.current = response.notifications || [];
+      }
+    });
+
+    const interval = setInterval(async () => {
+      const response = await fetchNotifications();
+      if (response) {
+        const newNotifications = response.notifications || [];
+        const newUnreadCount = response.unreadCount || 0;
+
+        const currentIds = prevNotificationsRef.current.map((n) => n.id);
+        const newItems = newNotifications.filter((n) => !currentIds.includes(n.id));
+
+        newItems.forEach((item) => {
+          const notificationType = item.type?.trim();
+          const notificationSource = item.source?.trim();
+
+          if (
+            (notificationType === "INVOICE_CREATED" ||
+              notificationType === "INVOICE_CANCELLED" ||
+              notificationType === "INVOICE_PAYMENT") &&
+            notificationSource === "USER"
+          ) {
+            handleNewNotification(item);
+          }
+        });
+
+        setNotifications(newNotifications);
+        setUnreadCount(newUnreadCount);
+        prevNotificationsRef.current = newNotifications;
+      }
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [fetchNotifications, hasInteracted, navigate]);
+
   const handleMarkAsRead = async (notificationId) => {
     try {
       await markNotificationAsReadAdmin(notificationId);
@@ -68,6 +211,9 @@ const Sidebar = () => {
         prev.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n)),
       );
       setUnreadCount((prev) => Math.max(prev - 1, 0));
+      prevNotificationsRef.current = prevNotificationsRef.current.map((n) =>
+        n.id === notificationId ? { ...n, isRead: true } : n,
+      );
     } catch (error) {
       Swal.fire({
         title: "Lỗi!",
@@ -77,50 +223,96 @@ const Sidebar = () => {
     }
   };
 
-  // Kết nối WebSocket để nhận thông báo thời gian thực
   useEffect(() => {
+    if (window.Notification) {
+      console.log("Checking notification permission...");
+      console.log("Current notification permission:", Notification.permission);
+      if (Notification.permission === "default") {
+        Notification.requestPermission().then((permission) => {
+          console.log("Notification permission result:", permission);
+          if (permission === "denied") {
+            Swal.fire({
+              title: "Thông báo bị chặn",
+              text: "Vui lòng bật quyền thông báo trong cài đặt trình duyệt để nhận thông báo.",
+              icon: "warning",
+            });
+          }
+        });
+      } else if (Notification.permission === "denied") {
+        console.warn("Notification permission is denied.");
+        Swal.fire({
+          title: "Thông báo bị chặn",
+          text: "Vui lòng bật quyền thông báo trong cài đặt trình duyệt.",
+          icon: "warning",
+        });
+      } else {
+        console.log("Notification permission is granted.");
+      }
+    } else {
+      console.error("Notification API is not supported in this browser.");
+    }
+
     const socket = io(API_BASE_URL, {
       auth: { token: `Bearer ${token}` },
     });
 
     socket.on("connect", () => {
-      console.log("Connected to WebSocket");
+      console.log("WebSocket connected successfully");
+    });
+
+    socket.on("connect_error", (error) => {
+      console.error("WebSocket connection error:", error.message);
     });
 
     socket.on("notification", (data) => {
+      console.log("Received notification data:", data);
+      const notificationType = data.type?.trim();
+      const notificationSource = data.source?.trim();
+
+      console.log("Trimmed type:", notificationType);
+      console.log("Trimmed source:", notificationSource);
+
       if (
-        (data.type === "INVOICE_CREATED" ||
-          data.type === "INVOICE_CANCELLED" ||
-          data.type === "INVOICE_PAYMENT") &&
-        data.source === "USER"
+        (notificationType === "INVOICE_CREATED" ||
+          notificationType === "INVOICE_CANCELLED" ||
+          notificationType === "INVOICE_PAYMENT") &&
+        notificationSource === "USER"
       ) {
-        toast.info(data.message, { autoClose: 3000 });
-        setNotifications((prev) => [
-          {
-            id: data.notificationId,
-            message: data.message,
-            type: data.type,
-            source: data.source,
-            isRead: false,
-            createdAt: data.createdAt || new Date().toISOString(),
-          },
-          ...prev,
-        ]);
+        handleNewNotification(data);
+
+        setNotifications((prev) => {
+          const updatedNotifications = [
+            {
+              id: data.notificationId || `temp-id-${Date.now()}`,
+              message: data.message,
+              type: data.type || "UNKNOWN",
+              source: data.source || "UNKNOWN",
+              isRead: false,
+              createdAt: data.createdAt || new Date().toISOString(),
+            },
+            ...prev,
+          ];
+          prevNotificationsRef.current = updatedNotifications;
+          return updatedNotifications;
+        });
         setUnreadCount((prev) => prev + 1);
+      } else {
+        console.log("Notification ignored: Invalid type or source", {
+          type: notificationType,
+          source: notificationSource,
+        });
       }
     });
 
     socket.on("disconnect", () => {
-      console.log("Disconnected from WebSocket");
+      console.log("WebSocket disconnected");
     });
 
-    return () => socket.disconnect();
-  }, [token]);
-
-  // Lấy thông báo ban đầu
-  useEffect(() => {
-    fetchNotifications();
-  }, [fetchNotifications]);
+    return () => {
+      console.log("Cleaning up WebSocket connection...");
+      socket.disconnect();
+    };
+  }, [token, navigate, hasInteracted]);
 
   useEffect(() => {
     setSelectedKeys([lastPathSegment]);
@@ -141,26 +333,34 @@ const Sidebar = () => {
   };
 
   const handleLogout = async () => {
-    const result = await logOut();
-    if (!result.error) {
-      localStorage.clear();
-      notification.success({
-        message: "Thông báo",
-        description: "Đăng xuất thành công",
-        duration: 3,
-      });
-      navigate("/");
-    } else {
+    try {
+      const result = await logOut();
+      if (!result.error) {
+        localStorage.clear();
+        notification.success({
+          message: "Thông báo",
+          description: "Đăng xuất thành công",
+          duration: 3,
+        });
+        navigate("/");
+      } else {
+        notification.error({
+          message: "Thông báo",
+          description: "Đăng xuất thất bại",
+          duration: 3,
+        });
+        console.error("Logout failed:", result.error);
+      }
+    } catch (error) {
       notification.error({
         message: "Thông báo",
-        description: "Đăng xuất thất bại",
+        description: "Đã có lỗi xảy ra khi đăng xuất",
         duration: 3,
       });
-      console.error("Logout failed:", result.error);
+      console.error("Logout error:", error);
     }
   };
 
-  // Nội dung của Dropdown
   const notificationMenu = (
     <div className="notification-dropdown">
       <div className="notification-list">
@@ -316,7 +516,6 @@ const Sidebar = () => {
                 style={{ fontSize: "20px", marginRight: "8px", color: "white" }}
               />
             </Badge>
-            {/* <span>Thông báo</span> */}
           </div>
         </Dropdown>
       </div>
