@@ -180,49 +180,57 @@ const CartUser = () => {
                 </td>
               </tr>
             ) : (
-              currentOrders.map((order, index) => (
-                <tr
-                  key={order._id}
-                  className={styles.orderRow}
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  <td
-                    className={styles.orderCode}
-                    onClick={() => handleInvoiceDetail(order._id)}
+              currentOrders.map((order, index) => {
+                console.log("order:", order);
+
+                return (
+                  <tr
+                    key={order._id}
+                    className={styles.orderRow}
+                    style={{ animationDelay: `${index * 0.1}s` }}
                   >
-                    {order.orderCode}
-                  </td>
-                  <td>
-                    {new Date(order.purchaseDate).toLocaleDateString("vi-VN")}
-                  </td>
-                  <td>{order.paymentMethod}</td>
-                  <td>
-                    {new Intl.NumberFormat("vi-VN").format(order.amountToPay)}
-                    <span className={styles.dong}>đ</span>
-                  </td>
-                  <td className={styles.status}>
-                    <div className={styles.statusWrapper}>
-                      <span>
-                        {statusConfig[order.status]?.display ||
-                          "Trạng thái không xác định"}
-                      </span>
-                      <div className={styles.iconGroup}>
-                        {statusConfig[order.status]?.icon || null}
-                        {order.status === "PENDING" && (
-                          <Tooltip title="Thanh toán lại">
-                            <PayCircleOutlined
-                              className={styles.retryIcon}
-                              onClick={() =>
-                                handlePayment(order._id, order.paymentMethod)
-                              }
-                            />
-                          </Tooltip>
-                        )}
+                    <td
+                      className={styles.orderCode}
+                      onClick={() => handleInvoiceDetail(order._id)}
+                    >
+                      {order.orderCode}
+                    </td>
+                    <td>
+                      {new Date(order.purchaseDate).toLocaleDateString("vi-VN")}
+                    </td>
+                    <td>{order.paymentMethod}</td>
+                    <td>
+                      {new Intl.NumberFormat("vi-VN").format(order.amountToPay)}
+                      <span className={styles.dong}>đ</span>
+                    </td>
+                    <td className={styles.status}>
+                      <div className={styles.statusWrapper}>
+                        <span>
+                          {statusConfig[order.status]?.display ||
+                            "Trạng thái không xác định"}
+                        </span>
+                        <div className={styles.iconGroup}>
+                          {statusConfig[order.status]?.icon || null}
+                          {order.status === "PENDING" ||
+                            (order?.paymentMethod === "VNPAY" && (
+                              <Tooltip title="Thanh toán lại">
+                                <PayCircleOutlined
+                                  className={styles.retryIcon}
+                                  onClick={() =>
+                                    handlePayment(
+                                      order._id,
+                                      order.paymentMethod,
+                                    )
+                                  }
+                                />
+                              </Tooltip>
+                            ))}
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                </tr>
-              ))
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

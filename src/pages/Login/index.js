@@ -144,7 +144,6 @@ export default function Login() {
         {showForgotPassword && (
           <div className={styles.forgotPasswordForm}>
             <div className={styles.inputGroup}>
-              <UserOutlined className={styles.inputIcon} />
               <input
                 type="email"
                 placeholder="Nhập email để lấy lại mật khẩu"
