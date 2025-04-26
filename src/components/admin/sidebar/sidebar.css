@@ -100,8 +100,8 @@ a:link {
   background: #ffffff;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  width: 350px;
-  max-height: 400px;
+  width: 405px;
+  max-height: 438px;
   overflow: hidden;
   color: #000000;
 }
@@ -114,7 +114,21 @@ a:link {
 
 .notification-item-content {
   padding: 12px 16px;
-  border-bottom: 1px solid #e8e8e8;
+  border-top: 1px solid #e8e8e8;
+}
+
+.notification-item-contentt {
+  padding: 0px 4px;
+  border-top: 1px solid #e8e8e8;
+}
+
+.notification-item-contentt:last-child {
+  border-bottom: none;
+}
+
+.notification-item-contentt:hover {
+  background: #f5f5f5;
+  cursor: pointer;
 }
 
 .notification-item-content:last-child {
@@ -123,6 +137,7 @@ a:link {
 
 .notification-item-content:hover {
   background: #f5f5f5;
+  cursor: pointer;
 }
 
 .logout-section {

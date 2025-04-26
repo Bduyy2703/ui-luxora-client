@@ -105,7 +105,7 @@ const Sidebar = () => {
         closeOnClick: true,
         pauseOnHover: true,
         draggable: true,
-      }
+      },
     );
 
     if (window.Notification && Notification.permission === "granted") {
@@ -128,34 +128,45 @@ const Sidebar = () => {
         };
       } catch (error) {
         console.error("Failed to create system notification:", error);
-        toast.error("Không thể hiển thị thông báo hệ thống. Vui lòng kiểm tra cài đặt thông báo trên Windows và trình duyệt.", {
-          position: "top-right",
-          autoClose: 5000,
-        });
+        toast.error(
+          "Không thể hiển thị thông báo hệ thống. Vui lòng kiểm tra cài đặt thông báo trên Windows và trình duyệt.",
+          {
+            position: "top-right",
+            autoClose: 5000,
+          },
+        );
       }
     } else {
-      console.warn("Cannot show notification: Permission not granted or Notification API not supported.");
+      console.warn(
+        "Cannot show notification: Permission not granted or Notification API not supported.",
+      );
       if (Notification.permission !== "granted") {
-        toast.warn("Quyền thông báo chưa được cấp. Vui lòng bật quyền thông báo trong cài đặt trình duyệt.", {
-          position: "top-right",
-          autoClose: 5000,
-        });
+        toast.warn(
+          "Quyền thông báo chưa được cấp. Vui lòng bật quyền thông báo trong cài đặt trình duyệt.",
+          {
+            position: "top-right",
+            autoClose: 5000,
+          },
+        );
       }
     }
 
     if (hasInteracted) {
       console.log("Attempting to play notification sound...");
-      notificationSound
-        .play()
-        .catch((error) => {
-          console.error("Error playing notification sound:", error.message);
-          toast.error("Không thể phát âm thanh thông báo. Vui lòng kiểm tra tệp âm thanh hoặc cài đặt trình duyệt.", {
+      notificationSound.play().catch((error) => {
+        console.error("Error playing notification sound:", error.message);
+        toast.error(
+          "Không thể phát âm thanh thông báo. Vui lòng kiểm tra tệp âm thanh hoặc cài đặt trình duyệt.",
+          {
             position: "top-right",
             autoClose: 5000,
-          });
-        });
+          },
+        );
+      });
     } else {
-      console.log("Cannot play sound: User has not interacted with the page yet.");
+      console.log(
+        "Cannot play sound: User has not interacted with the page yet.",
+      );
       toast.info("Vui lòng nhấp vào trang để bật âm thanh thông báo.", {
         position: "top-right",
         autoClose: 5000,
@@ -179,7 +190,9 @@ const Sidebar = () => {
         const newUnreadCount = response.unreadCount || 0;
 
         const currentIds = prevNotificationsRef.current.map((n) => n.id);
-        const newItems = newNotifications.filter((n) => !currentIds.includes(n.id));
+        const newItems = newNotifications.filter(
+          (n) => !currentIds.includes(n.id),
+        );
 
         newItems.forEach((item) => {
           const notificationType = item.type?.trim();
@@ -363,6 +376,20 @@ const Sidebar = () => {
 
   const notificationMenu = (
     <div className="notification-dropdown">
+      <div>
+        <Text
+          strong
+          style={{
+            fontSize: "16px",
+            color: "#333",
+            padding: "5px 0px 8px 10px",
+            display: "flex",
+            width: "100%",
+          }}
+        >
+          Thông báo
+        </Text>
+      </div>
       <div className="notification-list">
         {notifications.length > 0 ? (
           <AnimatePresence>
@@ -374,6 +401,9 @@ const Sidebar = () => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3, delay: index * 0.1 }}
+                onClick={() =>
+                  !notification.isRead && handleMarkAsRead(notification.id)
+                }s
               >
                 <Space direction="vertical" style={{ width: "100%" }}>
                   <Text strong>{notification.message}</Text>
@@ -403,7 +433,7 @@ const Sidebar = () => {
                     >
                       {notification.isRead ? "Đã đọc" : "Chưa đọc"}
                     </Button>
-                    {!notification.isRead && (
+                    {/* {!notification.isRead && (
                       <Button
                         type="link"
                         size="small"
@@ -411,7 +441,7 @@ const Sidebar = () => {
                       >
                         Đánh dấu đã đọc
                       </Button>
-                    )}
+                    )} */}
                   </Space>
                 </Space>
               </motion.div>
