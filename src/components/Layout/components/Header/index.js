@@ -405,7 +405,7 @@ function Header() {
 
   // Nội dung của Dropdown thông báo
   const notificationMenu = (
-    <div className={styles.notificationDropdown}>
+    <div className="notification-dropdown" style={{ padding: "0px" }}>
       <div className={styles.notificationHeader}>
         <Text
           strong
@@ -420,23 +420,21 @@ function Header() {
           Thông báo
         </Text>
       </div>
-      <div className={styles.notificationList}>
+      <div className="notification-list">
         {notifications.length > 0 ? (
           <AnimatePresence>
             {notifications.map((notification, index) => (
               <motion.div
-                key={notification.id}
-                className={`${styles.notificationItemContent} ${
-                  notification.isRead ? styles.read : styles.unread
-                }`}
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2, delay: index * 0.05 }}
                 onClick={() =>
                   !notification.isRead && handleMarkAsRead(notification.id)
                 }
                 style={{ borderTop: "1px solid #e8e8e8" }}
+                key={notification.id}
+                className="notification-item-contentt"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
               >
                 <Space
                   align="start"
@@ -482,7 +480,9 @@ function Header() {
                             : styles.unreadTag
                         }
                       >
-                        {notification.isRead ? "Đã đọc" : "Chưa đọc"}
+                        <span>
+                          {notification.isRead ? "Đã đọc" : "Chưa đọc"}
+                        </span>
                       </Tag>
                     </Space>
                   </div>
@@ -676,7 +676,7 @@ function Header() {
               placement="bottomRight"
               overlayStyle={{
                 background: "#fff",
-                padding: "10px 0px 0px 0px",
+                padding: "0px 0px 0px 0px",
                 borderRadius: "8px",
                 boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
                 zIndex: 1000,
