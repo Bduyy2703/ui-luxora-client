@@ -155,7 +155,19 @@ const CartUser = () => {
   return (
     <div className={styles.profile}>
       <div className={styles.profileUser}>
-        <span className={styles.title}>ĐƠN HÀNG CỦA BẠN</span>
+        <div className={styles.title}>
+          <div>ĐƠN HÀNG CỦA BẠN</div>
+          <span
+            style={{
+              color: "rgb(175 161 161)",
+              fontStyle: "italic",
+              fontSize: "12px",
+              marginLeft: "10px",
+            }}
+          >
+            (Lưu ý: Bạn chỉ có thể hủy đơn trong vòng 30 phút sau khi đặt hàng)
+          </span>
+        </div>
         <table className={styles.orderTable}>
           <thead>
             <tr>
@@ -211,7 +223,7 @@ const CartUser = () => {
                         </span>
                         <div className={styles.iconGroup}>
                           {statusConfig[order.status]?.icon || null}
-                          {order.status === "PENDING" ||
+                          {/* {order.status === "PENDING" ||
                             (order?.paymentMethod === "VNPAY" && (
                               <Tooltip title="Thanh toán lại">
                                 <PayCircleOutlined
@@ -224,7 +236,7 @@ const CartUser = () => {
                                   }
                                 />
                               </Tooltip>
-                            ))}
+                            ))} */}
                         </div>
                       </div>
                     </td>
