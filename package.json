@@ -12,6 +12,8 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "@tippyjs/react": "^4.2.6",
+    "@tsparticles/all": "^3.8.1",
+    "@tsparticles/react": "^3.0.0",
     "antd": "^5.24.8",
     "axios": "^1.8.4",
     "bootstrap": "^5.3.3",
