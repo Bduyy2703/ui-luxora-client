@@ -1,7 +1,6 @@
 import privateAxios from "./privateAxios";
 import publicAxios from "./publicAxios";
 import config from "../../config";
-
 const API_URL = config.API_URL;
 
 export const getAllReviews = async (
@@ -39,28 +38,16 @@ export const getMyReviews = async (page = 1, limit = 10) => {
 };
 
 // Tạo đánh giá mới
-export const createReview = async (createReviewDto, files) => {
+export const createReview = async (formData) => {
   try {
-    const formData = new FormData();
-    formData.append("productId", createReviewDto.productId);
-    formData.append("rating", createReviewDto.rating);
-    formData.append("comment", createReviewDto.comment);
-    if (files && files.length > 0) {
-      files.forEach((file) => {
-        formData.append("files", file);
-      });
-    }
-
-    const response = await privateAxios.post(`/v1/reviews`, formData, {
+    const response = await privateAxios.post("/v1/reviews", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
     });
-    return response.data; // { message: string, review: ReviewResponseDto }
+    return response.data;
   } catch (error) {
-    return {
-      error: error.response?.data?.message || "Lỗi khi tạo đánh giá",
-    };
+    return { error: error.response?.data?.message || "Lỗi không xác định" };
   }
 };
 
@@ -83,28 +70,23 @@ export const getReviewsByProductId = async (
 };
 
 // Cập nhật đánh giá
-export const updateReview = async (id, updateReviewDto, files, keepFiles) => {
+export const updateReview = async (reviewId, formData) => {
   try {
-    const formData = new FormData();
-    if (updateReviewDto.rating)
-      formData.append("rating", updateReviewDto.rating);
-    if (updateReviewDto.comment)
-      formData.append("comment", updateReviewDto.comment);
-    if (keepFiles && keepFiles.length > 0) {
-      formData.append("keepFiles", JSON.stringify(keepFiles));
-    }
-    if (files && files.length > 0) {
-      files.forEach((file) => {
-        formData.append("files", file);
-      });
-    }
-
-    const response = await privateAxios.put(`/v1/reviews/${id}`, formData);
-    return response.data; // { message: string, review: ReviewResponseDto }
+    formData.forEach((value, key) => {
+      console.log("332131312", `${key}:${value}`);
+    });
+    const response = await privateAxios.put(
+      `/v1/reviews/${reviewId}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
+    return response.data;
   } catch (error) {
-    return {
-      error: error.response?.data?.message || "Lỗi khi cập nhật đánh giá",
-    };
+    return { error: error.response?.data?.message || "Lỗi không xác định" };
   }
 };
 

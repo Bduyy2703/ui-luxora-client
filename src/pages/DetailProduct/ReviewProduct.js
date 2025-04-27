@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { notification, Modal, Image, Upload } from "antd"; // Thêm Image từ antd
+import { notification, Modal, Upload, Image } from "antd";
 import {
   StarFilled,
   StarOutlined,
-  UploadOutlined,
+  DeleteOutlined,
   EyeOutlined,
   EyeInvisibleOutlined,
+  PlusOutlined,
 } from "@ant-design/icons";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -19,7 +20,6 @@ import {
   adminDeleteReview,
 } from "../../services/api/reviewService";
 import styles from "./ReviewProduct.module.scss";
-import { PlusOutlined } from "@ant-design/icons";
 
 const ReviewProduct = ({ product }) => {
   const navigate = useNavigate();
@@ -30,18 +30,12 @@ const ReviewProduct = ({ product }) => {
   const [limit] = useState(10);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [newReview, setNewReview] = useState({ rating: 0, comment: "" });
-  const [files, setFiles] = useState([]);
+  const [fileList, setFileList] = useState([]); // Sử dụng fileList thay vì files
+  const [existingImages, setExistingImages] = useState([]); // Lưu hình ảnh hiện có
   const [editingReviewId, setEditingReviewId] = useState(null);
   const [helpfulVotes, setHelpfulVotes] = useState({});
   const [loading, setLoading] = useState(false);
   const [adminLoading, setAdminLoading] = useState({});
-  //   const [previewImages, setPreviewImages] = useState([]); // State để lưu danh sách hình ảnh cần xem trước
-  //   const [isPreviewVisible, setIsPreviewVisible] = useState(false); // State để kiểm soát modal xem hình
-
-  const [fileList, setFileList] = useState([]);
-
-  // Cập nhật state cho hình ảnh hiện có khi chỉnh sửa đánh giá
-  const [existingImages, setExistingImages] = useState([]);
 
   const userId = localStorage.getItem("userId");
 
@@ -153,7 +147,6 @@ const ReviewProduct = ({ product }) => {
       return;
     }
 
-    // Kiểm tra product và product.id
     if (!product || !product.id) {
       notification.error({
         message: "Thông báo",
@@ -163,7 +156,6 @@ const ReviewProduct = ({ product }) => {
       return;
     }
 
-    // Chuyển đổi product.id thành số nguyên
     const productId = parseInt(product.id, 10);
     if (isNaN(productId) || !Number.isInteger(productId)) {
       notification.error({
@@ -174,7 +166,6 @@ const ReviewProduct = ({ product }) => {
       return;
     }
 
-    // Kiểm tra rating
     if (
       !Number.isInteger(newReview.rating) ||
       newReview.rating < 1 ||
@@ -188,7 +179,6 @@ const ReviewProduct = ({ product }) => {
       return;
     }
 
-    // Kiểm tra comment
     if (
       !newReview.comment ||
       typeof newReview.comment !== "string" ||
@@ -205,26 +195,24 @@ const ReviewProduct = ({ product }) => {
     setLoading(true);
     try {
       const reviewData = {
-        productId: product.id,
-        rating: newReview.rating,
+        productId: productId,
+        rating: Number(newReview.rating),
         comment: newReview.comment.trim(),
       };
 
+      // Tạo FormData
       const formData = new FormData();
-      formData.append("rating", reviewData.rating);
+      formData.append("rating", reviewData.rating.toString());
       formData.append("comment", reviewData.comment);
+      if (!editingReviewId) {
+        formData.append("productId", reviewData.productId.toString());
+      }
 
       // Xử lý hình ảnh mới
       const newFiles = fileList.filter((file) => file.originFileObj);
       newFiles.forEach((file) => {
         formData.append("files", file.originFileObj);
       });
-
-      // Khi tạo mới
-      if (!editingReviewId) {
-        formData.append("productId", product.id);
-        response = await createReview(formData);
-      }
 
       // Xử lý hình ảnh hiện có khi chỉnh sửa
       let keepFiles = [];
@@ -236,12 +224,14 @@ const ReviewProduct = ({ product }) => {
             fileName: file.fileName,
             bucketName: file.bucketName || "public",
           }));
-        if (keepFiles.length > 0) {
-          formData.append("keepFiles", JSON.stringify(keepFiles));
-        }
+        console.log("keepFiles", keepFiles);
+
+        // if (keepFiles.length > 0) {
+        //   formData.append("keepFiles", JSON.stringify(keepFiles));
+        // }
       }
 
-      // Log FormData để kiểm tra giá trị trước khi gửi
+      // Log FormData để kiểm tra
       for (let pair of formData.entries()) {
         console.log(`${pair[0]}: ${pair[1]}`);
       }
@@ -277,6 +267,7 @@ const ReviewProduct = ({ product }) => {
       fetchReviews();
       fetchStatistics();
     } catch (error) {
+      console.error("Error submitting review:", error);
       notification.error({
         message: "Thông báo",
         description: "Lỗi khi gửi đánh giá",
@@ -291,6 +282,7 @@ const ReviewProduct = ({ product }) => {
     setEditingReviewId(review.id);
     setNewReview({ rating: review.rating, comment: review.comment });
 
+    // Chuyển đổi hình ảnh hiện có thành định dạng fileList của Upload
     const existingImagesFormatted =
       review.images?.map((img, index) => ({
         uid: img.fileId || index,
@@ -452,13 +444,6 @@ const ReviewProduct = ({ product }) => {
     return `${diffInDays} days ago`;
   };
 
-  //   // Hàm xử lý khi nhấn vào hình ảnh để xem trước
-  //   const handleImagePreview = (images) => {
-  //     const imageUrls = images.map((img) => img.fileUrl);
-  //     setPreviewImages(imageUrls);
-  //     setIsPreviewVisible(true);
-  //   };
-
   return (
     <div className={styles.reviewWrapper}>
       {/* Header Section */}
@@ -545,57 +530,60 @@ const ReviewProduct = ({ product }) => {
                   {review.images && review.images.length > 0 && (
                     <div className={styles.reviewImages}>
                       <Image.PreviewGroup>
-                        {review.images.slice(0, 3).map((img, idx) => (
+                        {review.images.slice(0, 4).map((img, idx) => (
                           <div key={idx} className={styles.imageWrapper}>
                             <Image
                               src={img.fileUrl}
                               alt={`review-${idx}`}
                               className={`${styles.reviewImage} ${
-                                idx === 2 && review.images.length > 3
+                                idx === 3 && review.images.length > 4
                                   ? styles.dimmedImage
                                   : ""
                               }`}
                               style={{ cursor: "pointer" }}
+                              onError={(e) =>
+                                (e.target.src =
+                                  "https://via.placeholder.com/60")
+                              }
                             />
-                            {idx === 2 && review.images.length > 3 && (
+                            {idx === 3 && review.images.length > 4 && (
                               <div className={styles.imageOverlay}>
-                                +{review.images.length - 3}
+                                +{review.images.length - 4}
                               </div>
                             )}
                           </div>
                         ))}
-                        {/* Ẩn các hình ảnh còn lại để dùng trong PreviewGroup */}
-                        {review.images.slice(3).map((img, idx) => (
+                        {review.images.slice(4).map((img, idx) => (
                           <Image
                             key={`hidden-${idx}`}
                             src={img.fileUrl}
-                            style={{ display: "none" }} // Ẩn nhưng vẫn có trong PreviewGroup
+                            style={{ display: "none" }}
                           />
                         ))}
                       </Image.PreviewGroup>
                     </div>
                   )}
-                  {review.user?.id === userId && (
-                    <div className={styles.editDeleteActions}>
-                      <motion.button
-                        onClick={() => handleEditReview(review)}
-                        className={styles.editButton}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        Chỉnh sửa
-                      </motion.button>
-                      <motion.button
-                        onClick={() => handleDeleteReview(review.id)}
-                        className={styles.deleteButton}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        Xóa
-                      </motion.button>
-                    </div>
-                  )}
                   <div className={styles.reviewActions}>
+                    {review.user?.id === userId && (
+                      <>
+                        <motion.button
+                          onClick={() => handleEditReview(review)}
+                          className={styles.actionButton}
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          Chỉnh sửa
+                        </motion.button>
+                        <motion.button
+                          onClick={() => handleDeleteReview(review.id)}
+                          className={styles.actionButton}
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          <DeleteOutlined />
+                        </motion.button>
+                      </>
+                    )}
                     {isAdmin() && (
                       <>
                         <motion.button
@@ -626,9 +614,11 @@ const ReviewProduct = ({ product }) => {
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                         >
-                          {adminLoading[review.id]
-                            ? "Đang xử lý..."
-                            : "Xóa (Admin)"}
+                          {adminLoading[review.id] ? (
+                            "Đang xử lý..."
+                          ) : (
+                            <DeleteOutlined />
+                          )}
                         </motion.button>
                       </>
                     )}
