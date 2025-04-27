@@ -4,13 +4,12 @@ import config from "../../config";
 
 const API_URL = config.API_URL;
 
-// Lấy tất cả đánh giá (dành cho admin)
 export const getAllReviews = async (
   page = 1,
   limit = 10,
   isHidden = undefined,
   productId = undefined,
-  userId = undefined
+  userId = undefined,
 ) => {
   try {
     const response = await privateAxios.get(`${API_URL}v1/reviews`, {
@@ -24,16 +23,17 @@ export const getAllReviews = async (
   }
 };
 
-// Lấy danh sách đánh giá của người dùng hiện tại
 export const getMyReviews = async (page = 1, limit = 10) => {
   try {
-    const response = await privateAxios.get(`${API_URL}v1/reviews/my-reviews`, {
+    const response = await privateAxios.get(`/v1/reviews/my-reviews`, {
       params: { page, limit },
     });
     return response.data; // { reviews: [], total: number, page: number, limit: number, totalPages: number }
   } catch (error) {
     return {
-      error: error.response?.data?.message || "Lỗi khi lấy danh sách đánh giá cá nhân",
+      error:
+        error.response?.data?.message ||
+        "Lỗi khi lấy danh sách đánh giá cá nhân",
     };
   }
 };
@@ -51,7 +51,7 @@ export const createReview = async (createReviewDto, files) => {
       });
     }
 
-    const response = await privateAxios.post(`${API_URL}v1/reviews`, formData, {
+    const response = await privateAxios.post(`/v1/reviews`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -65,14 +65,15 @@ export const createReview = async (createReviewDto, files) => {
 };
 
 // Lấy danh sách đánh giá của sản phẩm
-export const getReviewsByProductId = async (productId, page = 1, limit = 10) => {
+export const getReviewsByProductId = async (
+  productId,
+  page = 1,
+  limit = 10,
+) => {
   try {
-    const response = await publicAxios.get(
-      `${API_URL}v1/reviews/product/${productId}`,
-      {
-        params: { page, limit },
-      }
-    );
+    const response = await publicAxios.get(`/v1/reviews/product/${productId}`, {
+      params: { page, limit },
+    });
     return response.data; // { reviews: [], total: number, page: number, limit: number, totalPages: number }
   } catch (error) {
     return {
@@ -85,7 +86,8 @@ export const getReviewsByProductId = async (productId, page = 1, limit = 10) => 
 export const updateReview = async (id, updateReviewDto, files, keepFiles) => {
   try {
     const formData = new FormData();
-    if (updateReviewDto.rating) formData.append("rating", updateReviewDto.rating);
+    if (updateReviewDto.rating)
+      formData.append("rating", updateReviewDto.rating);
     if (updateReviewDto.comment)
       formData.append("comment", updateReviewDto.comment);
     if (keepFiles && keepFiles.length > 0) {
@@ -97,15 +99,7 @@ export const updateReview = async (id, updateReviewDto, files, keepFiles) => {
       });
     }
 
-    const response = await privateAxios.put(
-      `${API_URL}v1/reviews/${id}`,
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
+    const response = await privateAxios.put(`/v1/reviews/${id}`, formData);
     return response.data; // { message: string, review: ReviewResponseDto }
   } catch (error) {
     return {
@@ -117,11 +111,27 @@ export const updateReview = async (id, updateReviewDto, files, keepFiles) => {
 // Xóa đánh giá (dành cho user)
 export const deleteReview = async (id) => {
   try {
-    const response = await privateAxios.delete(`${API_URL}v1/reviews/${id}`);
+    const response = await privateAxios.delete(`/v1/reviews/${id}`);
     return response.data; // { message: string }
   } catch (error) {
     return {
       error: error.response?.data?.message || "Lỗi khi xóa đánh giá",
+    };
+  }
+};
+
+// Lấy thống kê đánh giá của sản phẩm
+export const getProductReviewStatistics = async (productId) => {
+  try {
+    const response = await privateAxios.get(
+      `${API_URL}v1/reviews/product/${productId}/statistics`,
+    );
+    return response.data; // { averageRating: number, totalReviews: number, ratingDistribution: object }
+  } catch (error) {
+    return {
+      error:
+        error.response?.data?.message ||
+        "Lỗi khi lấy thống kê đánh giá sản phẩm",
     };
   }
 };
@@ -133,13 +143,14 @@ export const getTopRatedProduct = async (minReviews = 5) => {
       `${API_URL}v1/reviews/top-rated-product`,
       {
         params: { minReviews },
-      }
+      },
     );
     return response.data; // { product: { id, name, ... }, averageRating: number, totalReviews: number }
   } catch (error) {
     return {
       error:
-        error.response?.data?.message || "Lỗi khi lấy sản phẩm đánh giá cao nhất",
+        error.response?.data?.message ||
+        "Lỗi khi lấy sản phẩm đánh giá cao nhất",
     };
   }
 };
@@ -151,7 +162,7 @@ export const getLowestRatedProduct = async (minReviews = 5) => {
       `${API_URL}v1/reviews/lowest-rated-product`,
       {
         params: { minReviews },
-      }
+      },
     );
     return response.data; // { product: { id, name, ... }, averageRating: number, totalReviews: number }
   } catch (error) {
@@ -167,7 +178,7 @@ export const getLowestRatedProduct = async (minReviews = 5) => {
 export const getMostReviewedProduct = async () => {
   try {
     const response = await privateAxios.get(
-      `${API_URL}v1/reviews/most-reviewed-product`
+      `${API_URL}v1/reviews/most-reviewed-product`,
     );
     return response.data; // { product: { id, name, ... }, totalReviews: number }
   } catch (error) {
@@ -184,35 +195,21 @@ export const getProductsByRating = async (
   order = "DESC",
   page = 1,
   limit = 10,
-  minReviews = 5
+  minReviews = 5,
 ) => {
   try {
     const response = await privateAxios.get(
       `${API_URL}v1/reviews/products-by-rating`,
       {
         params: { order, page, limit, minReviews },
-      }
+      },
     );
     return response.data; // { products: [{ product: { id, name, ... }, averageRating: number, totalReviews: number }], total: number, page: number, limit: number, totalPages: number }
   } catch (error) {
     return {
       error:
-        error.response?.data?.message || "Lỗi khi lấy danh sách sản phẩm theo đánh giá",
-    };
-  }
-};
-
-// Lấy thống kê đánh giá của sản phẩm
-export const getProductReviewStatistics = async (productId) => {
-  try {
-    const response = await privateAxios.get(
-      `${API_URL}v1/reviews/product/${productId}/statistics`
-    );
-    return response.data; // { averageRating: number, totalReviews: number, ratingDistribution: object }
-  } catch (error) {
-    return {
-      error:
-        error.response?.data?.message || "Lỗi khi lấy thống kê đánh giá sản phẩm",
+        error.response?.data?.message ||
+        "Lỗi khi lấy danh sách sản phẩm theo đánh giá",
     };
   }
 };
@@ -221,13 +218,14 @@ export const getProductReviewStatistics = async (productId) => {
 export const toggleHiddenReview = async (id) => {
   try {
     const response = await privateAxios.patch(
-      `${API_URL}v1/reviews/${id}/toggle-hidden`
+      `${API_URL}v1/reviews/${id}/toggle-hidden`,
     );
     return response.data; // { message: string, isHidden: boolean }
   } catch (error) {
     return {
       error:
-        error.response?.data?.message || "Lỗi khi bật/tắt trạng thái ẩn đánh giá",
+        error.response?.data?.message ||
+        "Lỗi khi bật/tắt trạng thái ẩn đánh giá",
     };
   }
 };
@@ -236,7 +234,7 @@ export const toggleHiddenReview = async (id) => {
 export const adminDeleteReview = async (id) => {
   try {
     const response = await privateAxios.delete(
-      `${API_URL}v1/reviews/${id}/admin`
+      `${API_URL}v1/reviews/${id}/admin`,
     );
     return response.data; // { message: string }
   } catch (error) {
