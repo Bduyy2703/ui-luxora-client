@@ -1,0 +1,442 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap");
+
+.reviewWrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+  font-family: "Roboto", sans-serif;
+  background: #ffffff;
+}
+
+.headerSection {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.statsHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333333;
+  margin: 0;
+}
+
+.statsSummary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.avgRating {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333333;
+}
+
+.starRating {
+  display: flex;
+  gap: 2px;
+}
+
+.star {
+  font-size: 12px;
+}
+
+.reviewCount {
+  font-size: 14px;
+  color: #666666;
+}
+
+.writeReviewButton {
+  padding: 8px 16px;
+  border: 1px solid #1a73e8;
+  background: #ffffff;
+  color: #1a73e8;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: #1a73e8;
+    color: #ffffff;
+  }
+}
+
+/* Reviews List Section */
+.reviewsSection {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #e5e5e5 #ffffff;
+
+  &::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #ffffff;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #e5e5e5;
+    border-radius: 4px;
+  }
+}
+
+.reviewList {
+  display: flex;
+  gap: 16px;
+  padding-bottom: 8px;
+  min-width: 100%;
+}
+
+.reviewCard {
+  flex: 0 0 300px;
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+.reviewHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.userAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.userName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333333;
+}
+
+.reviewTime {
+  font-size: 12px;
+  color: #666666;
+}
+
+.reviewComment {
+  font-size: 14px;
+  color: #333333;
+  margin: 8px 0;
+  line-height: 1.5;
+}
+
+.readMore {
+  color: #1a73e8;
+  cursor: pointer;
+  font-size: 14px;
+  margin-left: 4px;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.reviewImages {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* Chỉ hiển thị 3 hình trên 1 hàng */
+  gap: 8px;
+  position: relative;
+}
+
+.imageWrapper {
+  position: relative; /* Để overlay nằm trên hình */
+}
+
+.reviewImage {
+  width: 60px;
+  height: 60px;
+  object-fit: cover; /* Đảm bảo hình ảnh không bị méo */
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.dimmedImage {
+  filter: brightness(50%); /* Làm mờ hình thứ 3 nếu có overlay */
+}
+
+.imageOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5); /* Nền tối cho overlay */
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  cursor: pointer; /* Thêm con trỏ khi hover */
+}
+
+.reviewActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.actionButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #1a73e8;
+  font-size: 12px;
+  transition: color 0.3s ease;
+
+  &:hover {
+    color: #1557b0;
+  }
+
+  &.toggleShow {
+    color: #22c55e;
+  }
+
+  &.toggleHide {
+    color: #666666;
+  }
+}
+
+.helpfulButton {
+  background: none;
+  border: none;
+  color: #1a73e8;
+  cursor: pointer;
+  font-size: 12px;
+  transition: color 0.3s ease;
+
+  &:hover {
+    color: #1557b0;
+  }
+}
+
+/* Nút Chỉnh sửa và Xóa */
+.editDeleteActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  justify-content: flex-start;
+}
+
+.editButton {
+  padding: 6px 12px;
+  background: #1a73e8;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: background 0.3s ease;
+
+  &:hover {
+    background: #1557b0;
+  }
+}
+
+.deleteButton {
+  padding: 6px 12px;
+  background: #ef4444;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: background 0.3s ease;
+
+  &:hover {
+    background: #dc2626;
+  }
+}
+
+.loadingText,
+.noReviews {
+  text-align: center;
+  color: #666666;
+  font-size: 14px;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.pageButton {
+  padding: 6px 12px;
+  background: #1a73e8;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.3s ease;
+
+  &:hover {
+    background: #1557b0;
+  }
+
+  &.disabled {
+    background: #b0b0b0;
+    cursor: not-allowed;
+  }
+}
+
+.pageInfo {
+  font-size: 12px;
+  color: #666666;
+}
+
+/* Review Form Modal */
+.reviewForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.starButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-size: 20px;
+}
+
+.commentInput {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  resize: vertical;
+  font-size: 14px;
+  transition: border-color 0.3s ease;
+
+  &:focus {
+    outline: none;
+    border-color: #1a73e8;
+  }
+}
+
+.formActions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.fileUpload {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fileLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #f0f0f0;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #666666;
+  font-size: 12px;
+  transition: background 0.3s ease;
+
+  &:hover {
+    background: #e0e0e0;
+  }
+}
+
+/* Đảm bảo hình ảnh trong Upload có kích thước đồng nhất */
+.ant-upload-list-picture .ant-upload-list-item {
+  width: 60px !important;
+  height: 60px !important;
+}
+
+.ant-upload-list-picture .ant-upload-list-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fileInput {
+  display: none;
+}
+
+.formButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.submitButton {
+  padding: 8px 16px;
+  background: #1a73e8;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.3s ease;
+
+  &:hover {
+    background: #1557b0;
+  }
+
+  &.disabled {
+    background: #b0b0b0;
+    cursor: not-allowed;
+  }
+}
+
+.cancelButton {
+  padding: 8px 16px;
+  background: #666666;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.3s ease;
+
+  &:hover {
+    background: #4d4d4d;
+  }
+}

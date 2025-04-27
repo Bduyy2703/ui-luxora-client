@@ -16,6 +16,11 @@ import {
 import { addToCart } from "../../services/api/cartService";
 import { motion, AnimatePresence } from "framer-motion";
 import { addWishList, checkWishList } from "../../services/api/wishListService";
+import ReviewProduct from "./ReviewProduct";
+import {
+  getProductReviewStatistics,
+  getReviewsByProductId,
+} from "../../services/api/reviewService";
 
 export const DetailProduct = () => {
   const [loading, setLoading] = useState(false);
@@ -540,6 +545,67 @@ export const Image = ({ product }) => {
 };
 
 export const DescProduct = ({ product, activeTab, setActiveTab }) => {
+  const navigate = useNavigate();
+  const [reviews, setReviews] = useState([]);
+  const [averageRating, setAverageRating] = useState(0);
+  const [totalReviews, setTotalReviews] = useState(0);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      if (activeTab === "reviews" && product.id) {
+        setLoading(true);
+        try {
+          const response = await getReviewsByProductId(product.id, 1, 5); // Limit to 5 reviews for preview
+          if (response.error) {
+            notification.error({
+              message: "Thông báo",
+              description: response.error,
+              duration: 3,
+            });
+            return;
+          }
+          setReviews(response.reviews || []);
+          setTotalReviews(response.total || 0);
+        } catch (error) {
+          notification.error({
+            message: "Thông báo",
+            description: "Lỗi khi tải đánh giá",
+            duration: 3,
+          });
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    const fetchStatistics = async () => {
+      if (product.id) {
+        try {
+          const response = await getProductReviewStatistics(product.id);
+          if (response.error) {
+            notification.error({
+              message: "Thông báo",
+              description: response.error,
+              duration: 3,
+            });
+            return;
+          }
+          setAverageRating(response.averageRating || 0);
+        } catch (error) {
+          notification.error({
+            message: "Thông báo",
+            description: "Lỗi khi tải thống kê đánh giá",
+            duration: 3,
+          });
+        }
+      }
+    };
+
+    fetchReviews();
+    fetchStatistics();
+  }, [product.id, activeTab]);
+
   return (
     <div className={styles.descProduct}>
       <div className={styles.tabs}>
@@ -612,22 +678,79 @@ export const DescProduct = ({ product, activeTab, setActiveTab }) => {
             </table>
           </motion.div>
         ) : (
-          <motion.div
-            key="reviews"
-            className={styles.reviews}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <p>Chưa có đánh giá nào cho sản phẩm này.</p>
-          </motion.div>
+          // <motion.div
+          //   key="reviews"
+          //   className={styles.reviews}
+          //   initial={{ opacity: 0, y: 20 }}
+          //   animate={{ opacity: 1, y: 0 }}
+          //   exit={{ opacity: 0, y: -20 }}
+          //   transition={{ duration: 0.3 }}
+          // >
+          //   <div className="mb-4">
+          //     <p className="text-lg font-semibold">
+          //       Điểm trung bình: {averageRating.toFixed(1)} / 5 ({totalReviews}{" "}
+          //       đánh giá)
+          //     </p>
+          //     {loading ? (
+          //       <p>Đang tải đánh giá...</p>
+          //     ) : reviews.length === 0 ? (
+          //       <p>Chưa có đánh giá nào cho sản phẩm này.</p>
+          //     ) : (
+          //       reviews.map((review) => (
+          //         <div key={review.id} className="border-b py-2">
+          //           <div className="flex">
+          //             {[1, 2, 3, 4, 5].map((star) => (
+          //               <span key={star}>
+          //                 {star <= review.rating ? (
+          //                   <StarFilled style={{ color: "#fadb14" }} />
+          //                 ) : (
+          //                   <StarOutlined style={{ color: "#fadb14" }} />
+          //                 )}
+          //               </span>
+          //             ))}
+          //           </div>
+          //           <p>{review.comment}</p>
+          //           {review.images && review.images.length > 0 && (
+          //             <div className="flex mt-2 space-x-2">
+          //               {review.images.map((img, idx) => (
+          //                 <img
+          //                   key={idx}
+          //                   src={img.fileUrl}
+          //                   alt={`review-${idx}`}
+          //                   className="w-16 h-16 object-cover rounded-md"
+          //                   loading="lazy"
+          //                   onError={(e) =>
+          //                     (e.target.src = "https://via.placeholder.com/100")
+          //                   }
+          //                 />
+          //               ))}
+          //             </div>
+          //           )}
+          //           <p className="text-sm text-gray-500">
+          //             Đăng bởi {review.user?.name || "Người dùng"} vào{" "}
+          //             {new Date(review.createdAt).toLocaleDateString("vi-VN")}
+          //           </p>
+          //         </div>
+          //       ))
+          //     )}
+          //     {totalReviews > 5 && (
+          //       <motion.button
+          //         onClick={() => navigate(`/reviews/${product.id}`)}
+          //         className="mt-4 text-blue-600 hover:underline"
+          //         whileHover={{ scale: 1.05 }}
+          //         whileTap={{ scale: 0.95 }}
+          //       >
+          //         Xem tất cả đánh giá
+          //       </motion.button>
+          //     )}
+          //   </div>
+          // </motion.div>
+          <ReviewProduct product={product} />
         )}
       </AnimatePresence>
     </div>
   );
 };
-
 export const RelatedProducts = ({ products }) => {
   const navigate = useNavigate();
 

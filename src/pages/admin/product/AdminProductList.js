@@ -494,7 +494,7 @@ const AdminProductList = () => {
       editForm.setFieldsValue({
         name: product.name,
         originalPrice: product.originalPrice,
-        categoryId: product?.category?.name,
+        categoryId: product?.category?.id,
         images,
       });
     } catch (error) {
