@@ -570,11 +570,11 @@ const ReviewProduct = ({ product }) => {
                         </motion.button>
                         <motion.button
                           onClick={() => handleDeleteReview(review.id)}
-                          className={styles.actionButton}
+                          className={styles.actionButtonDelete}
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                         >
-                          <DeleteOutlined />
+                          Xóa
                         </motion.button>
                       </>
                     )}
