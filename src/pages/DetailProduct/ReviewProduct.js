@@ -30,8 +30,8 @@ const ReviewProduct = ({ product }) => {
   const [limit] = useState(10);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [newReview, setNewReview] = useState({ rating: 0, comment: "" });
-  const [fileList, setFileList] = useState([]); // Sử dụng fileList thay vì files
-  const [existingImages, setExistingImages] = useState([]); // Lưu hình ảnh hiện có
+  const [fileList, setFileList] = useState([]);
+  const [existingImages, setExistingImages] = useState([]);
   const [editingReviewId, setEditingReviewId] = useState(null);
   const [helpfulVotes, setHelpfulVotes] = useState({});
   const [loading, setLoading] = useState(false);
@@ -200,7 +200,6 @@ const ReviewProduct = ({ product }) => {
         comment: newReview.comment.trim(),
       };
 
-      // Tạo FormData
       const formData = new FormData();
       formData.append("rating", reviewData.rating.toString());
       formData.append("comment", reviewData.comment);
@@ -208,13 +207,11 @@ const ReviewProduct = ({ product }) => {
         formData.append("productId", reviewData.productId.toString());
       }
 
-      // Xử lý hình ảnh mới
       const newFiles = fileList.filter((file) => file.originFileObj);
       newFiles.forEach((file) => {
         formData.append("files", file.originFileObj);
       });
 
-      // Xử lý hình ảnh hiện có khi chỉnh sửa
       let keepFiles = [];
       if (editingReviewId) {
         keepFiles = fileList
@@ -224,14 +221,14 @@ const ReviewProduct = ({ product }) => {
             fileName: file.fileName,
             bucketName: file.bucketName || "public",
           }));
-        console.log("keepFiles", keepFiles);
 
-        // if (keepFiles.length > 0) {
-        //   formData.append("keepFiles", JSON.stringify(keepFiles));
-        // }
+        keepFiles.forEach((file, index) => {
+          formData.append(`keepFiles[${index}][fileId]`, file.fileId);
+          formData.append(`keepFiles[${index}][fileName]`, file.fileName);
+          formData.append(`keepFiles[${index}][bucketName]`, file.bucketName);
+        });
       }
 
-      // Log FormData để kiểm tra
       for (let pair of formData.entries()) {
         console.log(`${pair[0]}: ${pair[1]}`);
       }
@@ -282,7 +279,6 @@ const ReviewProduct = ({ product }) => {
     setEditingReviewId(review.id);
     setNewReview({ rating: review.rating, comment: review.comment });
 
-    // Chuyển đổi hình ảnh hiện có thành định dạng fileList của Upload
     const existingImagesFormatted =
       review.images?.map((img, index) => ({
         uid: img.fileId || index,
@@ -435,18 +431,17 @@ const ReviewProduct = ({ product }) => {
     const reviewDate = new Date(createdAt);
     const diffInSeconds = Math.floor((now - reviewDate) / 1000);
 
-    if (diffInSeconds < 60) return "Just now";
+    if (diffInSeconds < 60) return "Bây giờ";
     const diffInMinutes = Math.floor(diffInSeconds / 60);
-    if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`;
+    if (diffInMinutes < 60) return `${diffInMinutes} phút trước`;
     const diffInHours = Math.floor(diffInMinutes / 60);
-    if (diffInHours < 24) return `${diffInHours} hours ago`;
+    if (diffInHours < 24) return `${diffInHours} giờ trước`;
     const diffInDays = Math.floor(diffInHours / 24);
-    return `${diffInDays} days ago`;
+    return `${diffInDays} ngày trước`;
   };
 
   return (
     <div className={styles.reviewWrapper}>
-      {/* Header Section */}
       <div className={styles.headerSection}>
         <div className={styles.statsHeader}>
           <h2 className={styles.sectionTitle}>Đánh Giá Sản Phẩm</h2>
@@ -477,7 +472,6 @@ const ReviewProduct = ({ product }) => {
         </motion.button>
       </div>
 
-      {/* Reviews List Section */}
       <motion.div
         className={styles.reviewsSection}
         initial={{ opacity: 0, x: 10 }}
@@ -630,7 +624,6 @@ const ReviewProduct = ({ product }) => {
         </AnimatePresence>
       </motion.div>
 
-      {/* Pagination */}
       {totalReviews > limit && (
         <motion.div
           className={styles.pagination}
@@ -664,7 +657,6 @@ const ReviewProduct = ({ product }) => {
         </motion.div>
       )}
 
-      {/* Review Modal */}
       <Modal
         title={editingReviewId ? "Chỉnh Sửa Đánh Giá" : "Viết Đánh Giá Của Bạn"}
         open={isModalVisible}
@@ -712,7 +704,7 @@ const ReviewProduct = ({ product }) => {
               listType="picture"
               fileList={fileList}
               onChange={handleFileChange}
-              beforeUpload={() => false} // Ngăn upload tự động
+              beforeUpload={() => false}
               multiple
               accept="image/*"
             >
