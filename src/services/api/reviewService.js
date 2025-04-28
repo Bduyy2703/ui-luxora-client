@@ -51,24 +51,6 @@ export const createReview = async (formData) => {
   }
 };
 
-// Lấy danh sách đánh giá của sản phẩm
-export const getReviewsByProductId = async (
-  productId,
-  page = 1,
-  limit = 10,
-) => {
-  try {
-    const response = await publicAxios.get(`/v1/reviews/product/${productId}`, {
-      params: { page, limit },
-    });
-    return response.data; // { reviews: [], total: number, page: number, limit: number, totalPages: number }
-  } catch (error) {
-    return {
-      error: error.response?.data?.message || "Lỗi khi lấy đánh giá sản phẩm",
-    };
-  }
-};
-
 // Cập nhật đánh giá
 export const updateReview = async (reviewId, formData) => {
   try {
@@ -87,6 +69,24 @@ export const updateReview = async (reviewId, formData) => {
     return response.data;
   } catch (error) {
     return { error: error.response?.data?.message || "Lỗi không xác định" };
+  }
+};
+
+// Lấy danh sách đánh giá của sản phẩm
+export const getReviewsByProductId = async (
+  productId,
+  page = 1,
+  limit = 10,
+) => {
+  try {
+    const response = await publicAxios.get(`/v1/reviews/product/${productId}`, {
+      params: { page, limit },
+    });
+    return response.data; // { reviews: [], total: number, page: number, limit: number, totalPages: number }
+  } catch (error) {
+    return {
+      error: error.response?.data?.message || "Lỗi khi lấy đánh giá sản phẩm",
+    };
   }
 };
 
