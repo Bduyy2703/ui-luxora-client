@@ -32,27 +32,24 @@ const ThankYou = () => {
       return;
     }
 
-    // Lấy tokenOTP và accessToken từ query parameters
     const queryParams = new URLSearchParams(location.search);
     const tokenOTP = queryParams.get("tokenOTP");
     const token = queryParams.get("accessToken");
 
-    // Hàm gọi API xác minh
     const confirmEmail = async () => {
       try {
         const response = await axios.get(
           `http://35.247.185.8/api/v1/auth/confirm-email?tokenOTP=${tokenOTP}&accessToken=${token}`,
         );
         setResult("Xác minh tài khoản thành công!");
-        setAccessToken(token); // Lưu accessToken vào state
-        sessionStorage.setItem("isEmailVerified", "true"); // Lưu trạng thái xác minh
+        setAccessToken(token); 
+        sessionStorage.setItem("isEmailVerified", "true"); 
       } catch (error) {
         console.error("Lỗi khi xác minh email:", error);
         setResult("Xác minh tài khoản thất bại. Vui lòng thử lại.");
       }
     };
 
-    // Chỉ gọi API nếu có token và chưa gọi trước đó
     if (tokenOTP && token && !hasCalledApi.current) {
       hasCalledApi.current = true;
       confirmEmail();
@@ -60,7 +57,6 @@ const ThankYou = () => {
       setResult("Không tìm thấy token xác minh.");
     }
 
-    // Lấy danh sách sản phẩm gợi ý (giữ nguyên, không thêm accessToken)
     const fetchProducts = async () => {
       try {
         const response = await getProductList(1, 1000);
@@ -73,7 +69,6 @@ const ThankYou = () => {
     fetchProducts();
   }, [location.search]);
 
-  // Hàm gọi API ví dụ (trang cá nhân, giỏ hàng) với accessToken
   const fetchProtectedData = async (endpoint) => {
     if (!accessToken) {
       console.error("Không có accessToken để gọi API");
@@ -102,20 +97,16 @@ const ThankYou = () => {
     navigate(`/detail-product/${productId}`);
   };
 
-  // Ví dụ: Chuyển hướng đến trang cá nhân/giỏ hàng với accessToken
   const handleViewProfile = () => {
-    // Truyền accessToken qua state của react-router-dom
     navigate("/account", { state: { accessToken } });
   };
 
   const handleViewCart = () => {
-    // Truyền accessToken qua state của react-router-dom
     navigate("/cart", { state: { accessToken } });
   };
 
   return (
     <div className={styles.container}>
-      {/* Header Section */}
       <div className={styles.header}>
         <img
           src="https://bizweb.dktcdn.net/100/461/213/themes/870653/assets/slider_3.jpg?1744711547396"
@@ -136,11 +127,9 @@ const ThankYou = () => {
           >
             Tới trang đăng nhập
           </button>
-          {/* Nút ví dụ để xem trang cá nhân hoặc giỏ hàng */}
         </div>
       </div>
 
-      {/* Product Suggestion Section */}
       <div className={styles.productSection}>
         <h2 className={styles.sectionTitle}>
           Vui lòng đăng nhập để có trải nghiệm mua sắm tốt nhất!
