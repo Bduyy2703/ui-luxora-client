@@ -7,12 +7,11 @@ import styles from "./index.module.scss";
 const ThankYou = () => {
   const [result, setResult] = useState("");
   const [products, setProducts] = useState([]);
-  const [accessToken, setAccessToken] = useState(null); // Lưu accessToken trong state
+  const [accessToken, setAccessToken] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
   const hasCalledApi = useRef(false);
 
-  // Tạo axios instance tạm thời với accessToken trong header
   const createAuthAxios = (token) => {
     return axios.create({
       baseURL: "http://35.247.185.8/api/v1",
@@ -24,7 +23,6 @@ const ThankYou = () => {
   };
 
   useEffect(() => {
-    // Kiểm tra xem tài khoản đã được xác minh chưa
     const isVerified = sessionStorage.getItem("isEmailVerified");
 
     if (isVerified) {
@@ -42,8 +40,8 @@ const ThankYou = () => {
           `http://35.247.185.8/api/v1/auth/confirm-email?tokenOTP=${tokenOTP}&accessToken=${token}`,
         );
         setResult("Xác minh tài khoản thành công!");
-        setAccessToken(token); 
-        sessionStorage.setItem("isEmailVerified", "true"); 
+        setAccessToken(token);
+        sessionStorage.setItem("isEmailVerified", "true");
       } catch (error) {
         console.error("Lỗi khi xác minh email:", error);
         setResult("Xác minh tài khoản thất bại. Vui lòng thử lại.");
