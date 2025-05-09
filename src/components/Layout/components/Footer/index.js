@@ -22,7 +22,6 @@ function Footer() {
   const [locationError, setLocationError] = useState(null);
   const navigate = useNavigate();
 
-  // useEffect cho Blog
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
@@ -52,7 +51,6 @@ function Footer() {
     fetchBlogs();
   }, []);
 
-  // useEffect cho Locations
   useEffect(() => {
     const fetchLocations = async () => {
       try {
@@ -74,7 +72,6 @@ function Footer() {
     fetchLocations();
   }, []);
 
-  // useEffect cho Categories
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -124,9 +121,7 @@ function Footer() {
         <ul style={{ listStyle: "none" }}>
           <li>Địa chỉ:</li>
           {locations.map((loc, index) => (
-            <li key={index}>
-              Cơ sở: {loc.location}
-            </li>
+            <li key={index}>Cơ sở: {loc.location}</li>
           ))}
           {locations.length === 0 && locationLoading && (
             <li>Đang tải danh sách cơ sở...</li>
@@ -139,7 +134,7 @@ function Footer() {
         <p>
           <strong>Email:</strong> info@mrDC.vn
         </p>
-        <div>
+        <div className={styles.socialIcons}>
           <a
             className={styles.icon}
             href="https://www.facebook.com/caraluna.vn/"
@@ -184,6 +179,7 @@ function Footer() {
                     height: "60px",
                     marginRight: "10px",
                     objectFit: "cover",
+                    borderRadius: "4px",
                   }}
                 />
               </div>
@@ -203,12 +199,12 @@ function Footer() {
 
       <div className={styles.storeJewelry}>
         <span className={styles.store}>CỬA HÀNG TRANG SỨC</span>
-        <ul className={styles.list} style={{ cursor: "pointer" }}>
+        <ul className={styles.list}>
           {categories.length > 0 ? (
             categories.map((category) => (
               <motion.li
                 key={category.id}
-                whileHover={{ scale: 1.05, color: "#e6ff83" }}
+                whileHover={{ scale: 1.05, color: "#d4af37" }}
                 transition={{ duration: 0.3 }}
                 onClick={() =>
                   navigate(`/list-product?categories=${category.id}`)
