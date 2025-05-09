@@ -78,7 +78,7 @@ const AdminInvoiceList = () => {
 
   // Token và URL API
   const token = localStorage.getItem("accessToken") || "your-jwt-token";
-  const API_BASE_URL = "http://35.247.185.8/";
+  const API_BASE_URL = "https://dclux.store/";
 
   // Lấy danh sách hóa đơn
   const fetchData = useCallback(async () => {

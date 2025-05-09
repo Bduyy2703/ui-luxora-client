@@ -200,7 +200,7 @@ function Header() {
         }
       }
 
-      const socket = io("http://35.247.185.8", {
+      const socket = io("https://dclux.store", {
         auth: { token: `Bearer ${accessToken}` },
       });
 

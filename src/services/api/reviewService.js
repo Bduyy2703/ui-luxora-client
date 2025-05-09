@@ -11,7 +11,7 @@ export const getAllReviews = async (
   userId = undefined,
 ) => {
   try {
-    const response = await privateAxios.get(`${API_URL}v1/reviews`, {
+    const response = await privateAxios.get(`${API_URL}/v1/reviews`, {
       params: { page, limit, isHidden, productId, userId },
     });
     return response.data; // { reviews: [], total: number }
@@ -106,7 +106,7 @@ export const deleteReview = async (id) => {
 export const getProductReviewStatistics = async (productId) => {
   try {
     const response = await privateAxios.get(
-      `${API_URL}v1/reviews/product/${productId}/statistics`,
+      `${API_URL}/v1/reviews/product/${productId}/statistics`,
     );
     return response.data; // { averageRating: number, totalReviews: number, ratingDistribution: object }
   } catch (error) {
@@ -122,7 +122,7 @@ export const getProductReviewStatistics = async (productId) => {
 export const getTopRatedProduct = async (minReviews = 5) => {
   try {
     const response = await privateAxios.get(
-      `${API_URL}v1/reviews/top-rated-product`,
+      `${API_URL}/v1/reviews/top-rated-product`,
       {
         params: { minReviews },
       },
@@ -141,7 +141,7 @@ export const getTopRatedProduct = async (minReviews = 5) => {
 export const getLowestRatedProduct = async (minReviews = 5) => {
   try {
     const response = await privateAxios.get(
-      `${API_URL}v1/reviews/lowest-rated-product`,
+      `${API_URL}/v1/reviews/lowest-rated-product`,
       {
         params: { minReviews },
       },
@@ -160,7 +160,7 @@ export const getLowestRatedProduct = async (minReviews = 5) => {
 export const getMostReviewedProduct = async () => {
   try {
     const response = await privateAxios.get(
-      `${API_URL}v1/reviews/most-reviewed-product`,
+      `${API_URL}/v1/reviews/most-reviewed-product`,
     );
     return response.data; // { product: { id, name, ... }, totalReviews: number }
   } catch (error) {
@@ -181,7 +181,7 @@ export const getProductsByRating = async (
 ) => {
   try {
     const response = await privateAxios.get(
-      `${API_URL}v1/reviews/products-by-rating`,
+      `${API_URL}/v1/reviews/products-by-rating`,
       {
         params: { order, page, limit, minReviews },
       },
@@ -200,7 +200,7 @@ export const getProductsByRating = async (
 export const toggleHiddenReview = async (id) => {
   try {
     const response = await privateAxios.patch(
-      `${API_URL}v1/reviews/${id}/toggle-hidden`,
+      `${API_URL}/v1/reviews/${id}/toggle-hidden`,
     );
     return response.data; // { message: string, isHidden: boolean }
   } catch (error) {
@@ -216,7 +216,7 @@ export const toggleHiddenReview = async (id) => {
 export const adminDeleteReview = async (id) => {
   try {
     const response = await privateAxios.delete(
-      `${API_URL}v1/reviews/${id}/admin`,
+      `${API_URL}/v1/reviews/${id}/admin`,
     );
     return response.data; // { message: string }
   } catch (error) {
