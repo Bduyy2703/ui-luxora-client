@@ -60,7 +60,7 @@ export const getProfile = async () => {
       throw new Error("AccessToken không tồn tại");
     }
 
-    const response = await privateAxios.get(`${API_URL}/v1/profiles/me`, {
+    const response = await privateAxios.get(`${API_URL}v1/profiles/me`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },

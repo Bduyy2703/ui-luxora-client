@@ -46,7 +46,7 @@ const Sidebar = () => {
   const prevNotificationsRef = useRef([]);
 
   const token = localStorage.getItem("accessToken") || "your-jwt-token";
-  const API_BASE_URL = "http://35.247.185.8/";
+  const API_BASE_URL = "https://dclux.store/";
   console.log("Access token in Sidebar:", token); // Log token để kiểm tra
 
   const notificationSound = new Audio("/assets/sounds/notificationFinal.mp3");
