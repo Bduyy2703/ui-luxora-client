@@ -3,7 +3,7 @@ import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import publicAxios from "./publicAxios";
 import privateAxios from "./privateAxios";
-const API_URL = "http://35.247.185.8/api/";
+const API_URL = "https://www.dclux.store/api/";
 
 export const verifyOTP = async (tokenOTP) => {
   try {

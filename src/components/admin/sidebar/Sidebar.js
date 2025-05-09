@@ -17,6 +17,8 @@ import {
   Space,
 } from "antd";
 import { useEffect, useState, useCallback, useRef } from "react";
+// import logoTest from "../../assets/icon/te.png";
+import logoTest from "../../../assets/icon/LogoWeb.jpg";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { logOut } from "../../../services/api/authService";
 import {
@@ -403,7 +405,7 @@ const Sidebar = () => {
                 transition={{ duration: 0.3, delay: index * 0.1 }}
                 onClick={() =>
                   !notification.isRead && handleMarkAsRead(notification.id)
-                }s
+                }
               >
                 <Space direction="vertical" style={{ width: "100%" }}>
                   <Text strong>{notification.message}</Text>
@@ -433,15 +435,6 @@ const Sidebar = () => {
                     >
                       {notification.isRead ? "Đã đọc" : "Chưa đọc"}
                     </Button>
-                    {/* {!notification.isRead && (
-                      <Button
-                        type="link"
-                        size="small"
-                        onClick={() => handleMarkAsRead(notification.id)}
-                      >
-                        Đánh dấu đã đọc
-                      </Button>
-                    )} */}
                   </Space>
                 </Space>
               </motion.div>
@@ -528,9 +521,11 @@ const Sidebar = () => {
         <div className="logo">
           <img
             width="230"
-            height="50"
-            src="//bizweb.dktcdn.net/100/461/213/themes/870653/assets/logo.png"
-            alt="Caraluna"
+            height="90"
+            // src="/src/assets/icon/testLogo.png"
+            src={logoTest}
+            alt="Logo"
+            style={{ marginBottom: "10px" }}
           />
         </div>
       </div>
@@ -543,7 +538,11 @@ const Sidebar = () => {
           <div className="notification-item">
             <Badge count={unreadCount} size="small" offset={[5, 0]}>
               <BellOutlined
-                style={{ fontSize: "20px", marginRight: "8px", color: "white" }}
+                style={{
+                  fontSize: "20px",
+                  marginRight: "8px",
+                  color: "#2b2b2b",
+                }}
               />
             </Badge>
           </div>

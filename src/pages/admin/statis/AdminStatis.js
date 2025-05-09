@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Card,
@@ -48,9 +47,7 @@ import {
   PercentageOutlined,
   StarOutlined,
   BarChartOutlined,
-  DollarOutlined,
 } from "@ant-design/icons";
-import { IconTruckDelivery } from "@tabler/icons-react";
 import styles from "./statistics.module.scss";
 import { getProductDetailsByIdDetails } from "../../../services/api/productDetailService";
 
@@ -59,7 +56,6 @@ const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 const { Option } = Select;
 
-// Định nghĩa tất cả trạng thái hóa đơn
 const INVOICE_STATUSES = [
   { value: "PENDING", label: "Chờ xử lý", color: "orange" },
   { value: "CONFIRMED", label: "Đã xác nhận", color: "blue" },
@@ -101,9 +97,8 @@ const AdminStatis = () => {
   const [growthRate, setGrowthRate] = useState(0);
   const [revenueByMonth, setRevenueByMonth] = useState([]);
   const [conversionRate, setConversionRate] = useState(0);
-  const [productImages, setProductImages] = useState({}); // Lưu URL hình ảnh theo productDetailId
+  const [productImages, setProductImages] = useState({});
 
-  // Cập nhật mảng màu cho tất cả trạng thái
   const COLORS = {
     PENDING: "#B0A0FF",
     CONFIRMED: "#40C4FF",
@@ -113,7 +108,7 @@ const AdminStatis = () => {
     FAILED: "#FFD8A0",
     CANCELLED: "#FFBAD2",
     RETURNED: "#FF8A65",
-    PRODUCT: ["#6B5BFF", "#00C4FF"],
+    PRODUCT: ["#d4af37", "#f8f1e6"],
   };
 
   const fetchData = async () => {
@@ -122,7 +117,6 @@ const AdminStatis = () => {
     const endDate = dateRange[1];
 
     try {
-      // Lấy KPI: Doanh Thu và Tổng Đơn Hàng
       const revenueRes = await getInvoiceRevenue(
         startDate,
         endDate,
@@ -131,7 +125,6 @@ const AdminStatis = () => {
       setRevenue(revenueRes.revenue || 0);
       setTotalInvoice(revenueRes.totalInvoice || 0);
 
-      // Lấy trạng thái hóa đơn và tính tỷ lệ chuyển đổi
       const statusRes = await getStatusStatistics(startDate, endDate);
       const statusStats = statusRes?.statistics || [];
       const statusDataMapped = INVOICE_STATUSES.map((status) => {
@@ -150,14 +143,12 @@ const AdminStatis = () => {
         totalOrders > 0 ? ((paidOrders / totalOrders) * 100).toFixed(2) : 0;
       setConversionRate(calculatedConversionRate);
 
-      // Lấy top sản phẩm
       const topProductsRes = await getTopProducts(
         startDate,
         endDate,
         topProductLimit,
         onlyPaidTopProducts,
       );
-      console.log("Top Products Data:", topProductsRes); // Debug dữ liệu
       const mappedTopProducts = topProductsRes.map((item) => ({
         name: `${item.productName} (ID: ${item.productDetailId})`,
         revenue: item.totalRevenue || 0,
@@ -165,7 +156,6 @@ const AdminStatis = () => {
       }));
       setTopProducts(mappedTopProducts);
 
-      // Lấy hình ảnh sản phẩm
       const imagePromises = mappedTopProducts.map(async (product) => {
         const idMatch = product.name.match(/ID: (\d+)/);
         const productDetailId = idMatch ? parseInt(idMatch[1]) : null;
@@ -193,21 +183,18 @@ const AdminStatis = () => {
       }, {});
       setProductImages(imageMap);
 
-      // Lấy top khách hàng
       const topCustomersRes = await getTopCustomers(
         startDate,
         endDate,
         topCustomerLimit,
         onlyPaidTopCustomers,
       );
-      console.log("Top Customers Data:", topCustomersRes); // Debug dữ liệu
       const mappedTopCustomers = topCustomersRes.map((item) => ({
         name: item.username || "Unknown",
         totalSpent: item.totalSpent || 0,
       }));
       setTopCustomers(mappedTopCustomers);
 
-      // Lấy doanh thu theo phương thức thanh toán
       const paymentRes = await getPaymentMethodStatistics(
         startDate,
         endDate,
@@ -240,7 +227,6 @@ const AdminStatis = () => {
       }, 0);
       setTotalRevenue(total);
 
-      // Lấy số lượng hóa đơn
       const invoiceCountRes = await getInvoiceCountStatistics(
         invoiceCountType,
         selectedYear,
@@ -253,7 +239,6 @@ const AdminStatis = () => {
         })),
       );
 
-      // Tính doanh thu theo tháng
       const monthlyRevenue = [];
       for (let month = 0; month < 12; month++) {
         const monthStart = moment(
@@ -276,7 +261,6 @@ const AdminStatis = () => {
       }
       setRevenueByMonth(monthlyRevenue);
 
-      // Tính tỷ lệ tăng trưởng dựa trên 2 tháng gần nhất
       if (monthlyRevenue.length >= 2) {
         const lastMonthRevenue =
           monthlyRevenue[monthlyRevenue.length - 1].revenue;
@@ -315,7 +299,6 @@ const AdminStatis = () => {
     selectedMonth,
   ]);
 
-  // Tính phần trăm cho từng trạng thái thanh toán
   const enhancedPaymentData = paymentMethods.map((item) => {
     const totalForMethod = INVOICE_STATUSES.reduce(
       (sum, status) => sum + (item[status.value] || 0),
@@ -336,7 +319,6 @@ const AdminStatis = () => {
     console.log("Chi tiết:", data);
   };
 
-  // Custom label để hiển thị hình ảnh phía trên cột
   const CustomBarLabel = (props) => {
     const { x, y, width, height, index } = props;
     const product = (showTopProducts ? topProducts : topCustomers)[index];
@@ -344,13 +326,13 @@ const AdminStatis = () => {
     const productDetailId = idMatch ? parseInt(idMatch[1]) : null;
     const imageUrl = productDetailId ? productImages[productDetailId] : "";
 
-    if (!imageUrl || !showTopProducts) return null; // Chỉ hiển thị hình ảnh cho top sản phẩm
+    if (!imageUrl || !showTopProducts) return null;
 
     return (
       <g>
         <image
-          x={x + width - 12} // Căn giữa hình ảnh ở cuối cột
-          y={y - 36} // Đặt cao hơn cột để tránh che khuất
+          x={x + width - 12}
+          y={y - 36}
           width={24}
           height={24}
           href={imageUrl}
@@ -364,27 +346,84 @@ const AdminStatis = () => {
     <Layout style={{ minHeight: "100vh", background: "#FFFFFF" }}>
       <Sider width={200} className={styles.sider}>
         <div className={styles.logo}>
-          <Title level={4} style={{ color: "#FFFFFF", margin: 0 }}>
-            CARALUNA JEWELRY & GIFTS
-          </Title>
+          <img src="/src/assets/icon/testLogo.png" alt="Logo" />
         </div>
-        <Menu theme="dark" mode="inline" defaultSelectedKeys={["5"]}>
-          <Menu.Item key="1" icon={<LogoutOutlined />}>
+        <Menu
+          mode="inline"
+          defaultSelectedKeys={["5"]}
+          style={{ background: "transparent", color: "#2b2b2b" }}
+          className={styles.menu}
+        >
+          <Menu.Item
+            key="1"
+            icon={<LogoutOutlined style={{ color: "#2b2b2b" }} />}
+            style={{
+              color: "#2b2b2b",
+              position: "relative",
+              overflow: "hidden",
+            }}
+            className={styles.menuItem}
+          >
             Đăng xuất
           </Menu.Item>
-          <Menu.Item key="2" icon={<UserOutlined />}>
+          <Menu.Item
+            key="2"
+            icon={<UserOutlined style={{ color: "#2b2b2b" }} />}
+            style={{
+              color: "#2b2b2b",
+              position: "relative",
+              overflow: "hidden",
+            }}
+            className={styles.menuItem}
+          >
             Quản lý người dùng
           </Menu.Item>
-          <Menu.Item key="3" icon={<ShoppingCartOutlined />}>
+          <Menu.Item
+            key="3"
+            icon={<ShoppingCartOutlined style={{ color: "#2b2b2b" }} />}
+            style={{
+              color: "#2b2b2b",
+              position: "relative",
+              overflow: "hidden",
+            }}
+            className={styles.menuItem}
+          >
             Quản lý sản phẩm
           </Menu.Item>
-          <Menu.Item key="4" icon={<PercentageOutlined />}>
+          <Menu.Item
+            key="4"
+            icon={<PercentageOutlined style={{ color: "#2b2b2b" }} />}
+            style={{
+              color: "#2b2b2b",
+              position: "relative",
+              overflow: "hidden",
+            }}
+            className={styles.menuItem}
+          >
             Quản lý giảm giá
           </Menu.Item>
-          <Menu.Item key="5" icon={<BarChartOutlined />}>
+          <Menu.Item
+            key="5"
+            icon={<BarChartOutlined style={{ color: "#2b2b2b" }} />}
+            style={{
+              color: "#2b2b2b",
+              position: "relative",
+              overflow: "hidden",
+            }}
+            className={styles.menuItem}
+          >
             Thống kê
           </Menu.Item>
-          <Menu.Item key="6" icon={<StarOutlined />}>
+          <Menu.Item
+            key="6"
+            icon={<StarOutlined style={{ color: "#2b2b2b" }} />}
+            style={{
+              color: "#2b2b2b",
+              position: "relative",
+              overflow: "hidden",
+            }}
+            className={styles.menuItem}
+          >
             Đánh giá
           </Menu.Item>
         </Menu>
@@ -400,7 +439,7 @@ const AdminStatis = () => {
               paddingLeft: "50px",
             }}
           >
-            <Title level={3} style={{ color: "#1A1A1A", margin: 0 }}>
+            <Title level={3} style={{ color: "#2b2b2b", margin: 0 }}>
               Tổng Quan
             </Title>
             <RangePicker
@@ -432,7 +471,7 @@ const AdminStatis = () => {
                       formatter={(value) =>
                         `${(value / 1000000).toFixed(1)}M VNĐ`
                       }
-                      valueStyle={{ color: "#6B5BFF", fontSize: "24px" }}
+                      valueStyle={{ color: "#d4af37", fontSize: "24px" }}
                     />
                   </Card>
                 </motion.div>
@@ -450,7 +489,7 @@ const AdminStatis = () => {
                       }
                       value={totalInvoice}
                       precision={0}
-                      valueStyle={{ color: "#6B5BFF", fontSize: "24px" }}
+                      valueStyle={{ color: "#d4af37", fontSize: "24px" }}
                     />
                   </Card>
                 </motion.div>
@@ -473,7 +512,7 @@ const AdminStatis = () => {
                       formatter={(value) =>
                         `${(value / 1000000).toFixed(1)}M VNĐ`
                       }
-                      valueStyle={{ color: "#6B5BFF", fontSize: "24px" }}
+                      valueStyle={{ color: "#d4af37", fontSize: "24px" }}
                     />
                   </Card>
                 </motion.div>
@@ -494,7 +533,7 @@ const AdminStatis = () => {
                       value={conversionRate}
                       precision={2}
                       suffix="%"
-                      valueStyle={{ color: "#6B5BFF", fontSize: "24px" }}
+                      valueStyle={{ color: "#d4af37", fontSize: "24px" }}
                     />
                   </Card>
                 </motion.div>
@@ -614,7 +653,7 @@ const AdminStatis = () => {
                             <Line
                               type="monotone"
                               dataKey="revenue"
-                              stroke="#6B5BFF"
+                              stroke="#d4af37"
                               strokeWidth={3}
                               dot={{ r: 4 }}
                               activeDot={{ r: 6 }}
@@ -627,7 +666,7 @@ const AdminStatis = () => {
                                   cx={entry.cx}
                                   cy={entry.cy}
                                   r={4}
-                                  fill="#6B5BFF"
+                                  fill="#d4af37"
                                   initial={{ scale: 0 }}
                                   animate={{ scale: [1, 1.5, 1] }}
                                   transition={{
@@ -912,22 +951,21 @@ const AdminStatis = () => {
                                   barSize={40}
                                   onClick={handleBarClick}
                                 >
-                                  {enhancedPaymentData.map((entry, barIndex) => (
-                                    <motion.g
-                                      key={`bar-${status.value}-${barIndex}`}
-                                      initial={{ scaleY: 0 }}
-                                      animate={{ scaleY: 1 }}
-                                      transition={{
-                                        duration: 1,
-                                        delay: barIndex * 0.2 + index * 0.1,
-                                      }}
-                                    >
-                                      <Bar
-                                        className={styles.chartBar}
-                                        style={{ transform: "rotateX(45deg)" }}
-                                      />
-                                    </motion.g>
-                                  ))}
+                                  {enhancedPaymentData.map(
+                                    (entry, barIndex) => (
+                                      <motion.g
+                                        key={`bar-${status.value}-${barIndex}`}
+                                        initial={{ scaleY: 0 }}
+                                        animate={{ scaleY: 1 }}
+                                        transition={{
+                                          duration: 1,
+                                          delay: barIndex * 0.2 + index * 0.1,
+                                        }}
+                                      >
+                                        <Bar className={styles.chartBar} />
+                                      </motion.g>
+                                    ),
+                                  )}
                                 </Bar>
                               ))}
                             </BarChart>
@@ -1040,7 +1078,7 @@ const AdminStatis = () => {
                             <Line
                               type="monotone"
                               dataKey="count"
-                              stroke="#6B5BFF"
+                              stroke="#d4af37"
                               strokeWidth={3}
                               dot={{ r: 4 }}
                               activeDot={{ r: 6 }}
@@ -1053,7 +1091,7 @@ const AdminStatis = () => {
                                   cx={entry.cx}
                                   cy={entry.cy}
                                   r={4}
-                                  fill="#6B5BFF"
+                                  fill="#d4af37"
                                   initial={{ scale: 0 }}
                                   animate={{ scale: [1, 1.5, 1] }}
                                   transition={{

@@ -14,7 +14,7 @@ const ThankYou = () => {
 
   const createAuthAxios = (token) => {
     return axios.create({
-      baseURL: "http://35.247.185.8/api/v1",
+      baseURL: "https://www.dclux.store/api/v1",
       headers: {
         "Content-Type": "application/json",
         Authorization: token ? `Bearer ${token}` : undefined,
@@ -37,7 +37,7 @@ const ThankYou = () => {
     const confirmEmail = async () => {
       try {
         const response = await axios.get(
-          `http://35.247.185.8/api/v1/auth/confirm-email?tokenOTP=${tokenOTP}&accessToken=${token}`,
+          `https://www.dclux.store/api/v1/auth/confirm-email?tokenOTP=${tokenOTP}&accessToken=${token}`,
         );
         setResult("Xác minh tài khoản thành công!");
         setAccessToken(token);

@@ -556,7 +556,11 @@ function Header() {
                               <li
                                 key={sub.id}
                                 onClick={() => handleCategoryClick(sub.id)}
-                                style={{ cursor: "pointer" }}
+                                style={{
+                                  cursor: "pointer",
+                                  color: "#333",
+                                  fontWeight: "400",
+                                }}
                               >
                                 {sub.name}
                               </li>

@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosClient = axios.create({
-  baseURL: 'http://35.247.185.8/api', 
+  baseURL: 'https://www.dclux.store/api/', 
   headers: {
     'Content-Type': 'application/json'
   }

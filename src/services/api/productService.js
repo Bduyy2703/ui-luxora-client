@@ -1,6 +1,6 @@
 import privateAxios from "./privateAxios";
 
-const API_BASE_URL = "http://35.247.185.8/api";
+const API_BASE_URL = "https://www.dclux.store/api/";
 
 export const fetchProducts = async (limit, page) => {
   try {
