@@ -198,7 +198,12 @@ function Footer() {
       </div>
 
       <div className={styles.storeJewelry}>
-        <span className={styles.store}>CỬA HÀNG TRANG SỨC</span>
+        <span
+          className={styles.store}
+          style={{ display: "flex", width: "189px", fontSize: "14px" }}
+        >
+          CỬA HÀNG TRANG SỨC
+        </span>
         <ul className={styles.list}>
           {categories.length > 0 ? (
             categories.map((category) => (

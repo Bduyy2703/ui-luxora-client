@@ -2,7 +2,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 15px 30px;
+  padding: 6px 30px;
   background: linear-gradient(90deg, #f5f5f5, #ffffff);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   border-bottom: 1px solid #e0e0e0;
@@ -38,7 +38,6 @@
     border-radius: 25px;
     outline: none;
     font-size: 16px;
-    font-family: "Playfair Display", serif;
     background: #fff;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
@@ -97,7 +96,6 @@
     }
 
     span {
-      font-family: "Playfair Display", serif;
       color: #2b2b2b;
     }
   }
@@ -109,7 +107,6 @@
     font-size: 14px;
     margin-left: 10px;
     margin-top: -10px;
-    font-family: "Playfair Display", serif;
   }
 }
 
@@ -129,7 +126,6 @@
       padding: 12px 20px;
       cursor: pointer;
       font-size: 16px;
-      font-family: "Playfair Display", serif;
       color: #2b2b2b;
       font-weight: 600;
       transition: color 0.3s ease;
@@ -191,14 +187,12 @@
       .headerli {
         color: #2b2b2b;
         border-bottom: 1px solid #d4af37;
-        font-family: "Playfair Display", serif;
         font-weight: 600;
       }
 
       .subcategories {
         li {
           color: #2b2b2b;
-          font-family: "Playfair Display", serif;
           transition: color 0.3s ease;
 
           &:hover {
@@ -285,7 +279,6 @@
       display: flex;
       align-items: center;
       font-size: 14px;
-      font-family: "Playfair Display", serif;
       color: #2b2b2b;
       transition: background 0.3s ease;
 
@@ -309,7 +302,6 @@
     align-items: center;
     justify-content: center;
     font-size: 12px;
-    font-family: "Playfair Display", serif;
   }
 
   .cartDropdownMenu {
@@ -345,20 +337,18 @@
         .cartItemName {
           font-size: 14px;
           font-weight: 600;
-          font-family: "Playfair Display", serif;
+
           color: #2b2b2b;
         }
 
         .cartItemPrice {
           color: #d4af37;
           font-size: 14px;
-          font-family: "Playfair Display", serif;
         }
 
         .cartItemQuantity {
           font-size: 12px;
           color: #888;
-          font-family: "Playfair Display", serif;
         }
       }
     }
@@ -375,7 +365,6 @@
       .menuCart {
         font-size: 14px;
         color: #2b2b2b;
-        font-family: "Playfair Display", serif;
 
         &:hover {
           color: #d4af37;
@@ -457,28 +446,24 @@
       color: #2b2b2b;
       line-height: 1.4;
       flex: 1;
-      font-family: "Playfair Display", serif;
     }
 
     .notificationTime {
       font-size: 11px;
       color: #888;
       white-space: nowrap;
-      font-family: "Playfair Display", serif;
     }
 
     .readTag {
       font-size: 12px;
       padding: 2px 6px;
       border-radius: 12px;
-      font-family: "Playfair Display", serif;
     }
 
     .unreadTag {
       font-size: 12px;
       padding: 2px 6px;
       border-radius: 12px;
-      font-family: "Playfair Display", serif;
     }
 
     .noNotification {
@@ -488,7 +473,6 @@
       color: #888;
       font-size: 14px;
       background: #fff;
-      font-family: "Playfair Display", serif;
     }
   }
 }
@@ -504,7 +488,7 @@
   border: 1px solid #d4af37;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  font-family: "Playfair Display", serif;
+
   color: #2b2b2b;
   padding: 16px;
   min-width: 300px;
