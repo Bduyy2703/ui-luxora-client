@@ -1,162 +1,248 @@
 .wrapper {
   width: 100%;
-  // height: 400px;
   height: 55vh;
   display: flex;
   justify-content: space-between;
-  border-bottom: 1px solid #17a2b8;
-  background-color: #4daeb3;
+  border-top: 1px solid #d4af37;
+  background: linear-gradient(90deg, #f8f1e6, #fff);
+  padding: 30px 50px;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
 
   .introduce {
     display: flex;
-    // justify-content: space-evenly;
     flex-direction: column;
-    line-height: 3.3rem;
-    color: #fff;
-    margin: 30px 0px 0px 125px;
+    line-height: 2.5rem;
+    color: #2b2b2b;
+    margin: 0 125px 0 0;
 
     .intro {
       line-height: normal;
       letter-spacing: 0.5px;
       position: relative;
       font-size: 15px;
-      margin: 0px 0 15px 0;
-      color: #fff;
+      margin: 0 0 15px 0;
+      color: #2b2b2b;
       text-transform: uppercase;
       font-weight: 600;
     }
 
-    .list {
-      text-decoration: none;
+    img {
+      width: 200px;
+      height: 43px;
+      margin-bottom: 15px;
+      transition: transform 0.3s ease;
+
+      &:hover {
+        transform: scale(1.05);
+      }
     }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 15px 0;
+
+      li {
+        font-size: 14px;
+        color: #2b2b2b;
+      }
+    }
+
+    p {
+      font-size: 14px;
+      color: #2b2b2b;
+      margin: 0 0 15px 0;
+
+      strong {
+        color: #d4af37;
+      }
+    }
+
+    .socialIcons {
+      display: flex;
+      gap: 15px;
+    }
+
     .icon {
       font-size: 18px;
-      border: 1px solid #fff;
-      color: #fff;
+      border: 1px solid #d4af37;
+      color: #d4af37;
       border-radius: 50%;
-      margin-right: 18px;
       padding: 10px;
       width: 30px;
       height: 30px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: #d4af37;
+        color: #fff;
+        transform: scale(1.1);
+      }
     }
   }
+
   .newPost {
-    color: #fff;
-    margin-top: 30px;
+    color: #2b2b2b;
+    margin-top: 0;
 
     .new {
       padding-bottom: 12px;
+      font-size: 15px;
+      color: #2b2b2b;
+      text-transform: uppercase;
+      font-weight: 600;
+      border-bottom: 1px solid #d4af37;
     }
 
     .footerFlower {
       display: flex;
       margin-bottom: 10px;
       padding-bottom: 5px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+      border-bottom: 1px solid #e0e0e0;
+
+      img {
+        border-radius: 4px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      }
 
       .footerNote {
         font-size: inherit;
         flex-direction: column;
         display: flex;
-        color: #fff;
+        color: #2b2b2b;
         word-wrap: break-word;
         font-weight: 400;
         line-height: 1.4;
-        -webkit-line-clamp: 2;
         width: 250px;
-        -webkit-box-orient: vertical;
         overflow: hidden;
         text-overflow: ellipsis;
 
         .time {
-          color: #c1c1c1;
+          color: #888;
           font-size: 12px;
           font-style: italic;
-          margin-bottom: 0px;
+          margin-bottom: 0;
           line-height: 22px;
         }
       }
     }
   }
+
   .storeJewelry {
-    color: #fff;
-    margin-top: 30px;
+    color: #2b2b2b;
+    margin-top: 0;
     margin-left: 30px;
     width: 180px;
 
     .store {
       line-height: normal;
       letter-spacing: 0.5px;
-      position: relative;
       font-size: 15px;
-      margin: 0px 0 15px 0;
-      color: #fff;
+      margin: 0 0 15px 0;
+      color: #2b2b2b;
       text-transform: uppercase;
       font-weight: 600;
+      border-bottom: 1px solid #d4af37;
     }
+
     .list {
       line-height: 30px;
-      padding-left: 0px;
+      padding-left: 0;
       margin-top: 10px;
+
+      li {
+        font-size: 14px;
+        color: #2b2b2b;
+        transition: color 0.3s ease;
+
+        &:hover {
+          color: #d4af37;
+        }
+      }
     }
   }
+
   .support {
-    color: #fff;
-    margin-top: 30px;
+    color: #2b2b2b;
+    margin-top: 0;
     margin-left: 30px;
+
     .store {
       line-height: normal;
       letter-spacing: 0.5px;
-      position: relative;
       font-size: 15px;
-      margin: 0px 0 15px 0;
-      color: #fff;
+      margin: 0 0 15px 0;
+      color: #2b2b2b;
       text-transform: uppercase;
       font-weight: 600;
+      border-bottom: 1px solid #d4af37;
     }
+
     .list {
       line-height: 30px;
-      padding-left: 0px;
+      padding-left: 0;
       margin-top: 10px;
+
+      li {
+        font-size: 14px;
+        color: #2b2b2b;
+        transition: color 0.3s ease;
+
+        &:hover {
+          color: #d4af37;
+        }
+      }
     }
   }
+
   .policy {
-    color: #fff;
-    margin: 30px 125px 0px 30px;
+    color: #2b2b2b;
+    margin: 0 125px 0 30px;
+
     .store {
       line-height: normal;
       letter-spacing: 0.5px;
-      position: relative;
       font-size: 15px;
-      margin: 0px 0 15px 0;
-      color: #fff;
+      margin: 0 0 15px 0;
+      color: #2b2b2b;
       text-transform: uppercase;
       font-weight: 600;
+      border-bottom: 1px solid #d4af37;
     }
+
     .list {
       line-height: 30px;
-      padding-left: 0px;
+      padding-left: 0;
       margin-top: 10px;
+
+      li {
+        font-size: 14px;
+        color: #2b2b2b;
+        transition: color 0.3s ease;
+
+        &:hover {
+          color: #d4af37;
+        }
+      }
     }
   }
 }
 
-/* Các style hiện tại giữ nguyên, chỉ thêm style cho blogLink */
 .blogLink {
-  color: white;
+  color: #2b2b2b;
   text-decoration: none;
+  font-size: 14px;
+  line-height: 1.4;
 
   &:hover {
-    color: #e6ff83;
+    color: #d4af37;
     text-decoration: underline;
   }
 
   span {
     display: block;
-    font-size: 14px;
-    line-height: 1.4;
   }
 }
