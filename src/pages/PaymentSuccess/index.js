@@ -49,7 +49,7 @@ const PaymentSuccess = () => {
 
         // Gọi API
         console.log("Calling API /api/v1/invoices/", invoiceIdNum);
-        const response = await axios.get(`http://35.247.185.8/api/v1/invoices/${invoiceIdNum}`, {
+        const response = await axios.get(`https://www.dclux.store/api/v1/invoices/${invoiceIdNum}`, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },

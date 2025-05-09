@@ -1,5 +1,5 @@
 const config = {
-  API_URL: "http://35.247.185.8/api/",
+  API_URL: "https://www.dclux.store/api",
   LIMIT: 10,
   TABLE_USER_COL: [
     {

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://35.247.185.8/api";
+const API_URL = "https://www.dclux.store/api/";
 
 const privateAxios = axios.create({
   baseURL: API_URL,
