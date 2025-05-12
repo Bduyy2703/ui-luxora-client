@@ -11,6 +11,7 @@ import {
 import { getAllBlogs } from "../../../../services/api/blogService";
 import { getInventoryList } from "../../../../services/api/inventoryService";
 import { getProductList } from "../../../../services/api/productService";
+import logo from "../../../../assets/icon/LogoWeb.jpg";
 
 function Footer() {
   const [blogs, setBlogs] = useState([]);
@@ -112,9 +113,8 @@ function Footer() {
       <div className={styles.introduce}>
         <span className={styles.intro}>GIỚI THIỆU</span>
         <img
-          width="200"
-          height="43"
-          src="//bizweb.dktcdn.net/100/461/213/themes/870653/assets/logo.png?1727259903818"
+          style={{ width: "170px", height: "57px" }}
+          src={logo}
           alt="Caraluna Logo"
           className="lazyload loaded"
         />

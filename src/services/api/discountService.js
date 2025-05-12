@@ -1,12 +1,12 @@
 import axios from "axios";
 import privateAxios from "./privateAxios";
 
-const API_BASE_URL = "https://www.dclux.store/api/";
+const API_BASE_URL = "https://www.dclux.store/api";
 
 export const fetchDiscounts = async ({ totalPrice }) => {
   try {
     const response = await axios.get(
-      `${API_BASE_URL}/discounts/validate-total?totalPrice=${totalPrice}`,
+      `${API_BASE_URL}/v1/discounts/validate-total?totalPrice=${totalPrice}`,
     );
     return response.data;
   } catch (error) {
