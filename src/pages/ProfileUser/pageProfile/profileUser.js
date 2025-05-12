@@ -180,6 +180,7 @@ const ProfileUser = () => {
         onOk={handleOk}
         onCancel={handleCancel}
         okText="Lưu"
+        width={690}
         cancelText="Hủy"
         okButtonProps={{
           style: { backgroundColor: "#01567f", borderColor: "#01567f" },
@@ -218,10 +219,14 @@ const ProfileUser = () => {
                 name="phoneNumber"
                 rules={[
                   { required: true, message: "Vui lòng nhập số điện thoại!" },
+                  {
+                    pattern: /^\d{10}$/,
+                    message: "Số điện thoại phải bao gồm đúng 10 chữ số!",
+                  },
                 ]}
                 style={{ flex: 1 }}
               >
-                <Input />
+                <Input maxLength={10} />
               </Form.Item>
               <Form.Item
                 label="Social Media"
