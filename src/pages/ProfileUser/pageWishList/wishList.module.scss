@@ -14,7 +14,7 @@ $shadow-color: rgba(0, 0, 0, 0.12);
   padding: 0;
 
   .header {
-    background: linear-gradient(rgba(10, 26, 58, 0.9), rgba(10, 26, 58, 0.7)),
+    background: linear-gradient(90deg, #f3e0bf, rgb(253 252 243 / 70%)),
       url("https://images.unsplash.com/photo-1518998053901-5348d3961a04?auto=format&fit=crop&w=1920&q=80");
     background-size: cover;
     background-position: center;
@@ -22,13 +22,13 @@ $shadow-color: rgba(0, 0, 0, 0.12);
     text-align: center;
     position: sticky;
     top: 0;
-    z-index: 100;
+    z-index: 0;
     box-shadow: 0 4px 12px $shadow-color;
 
     .title {
       font-size: 36px; // Reduced from 42px
       font-weight: 700;
-      color: $accent-color;
+      color: #2b2b2b;
       text-transform: uppercase;
       letter-spacing: 3px;
       margin-bottom: 12px; // Reduced margin to match smaller header
@@ -45,7 +45,7 @@ $shadow-color: rgba(0, 0, 0, 0.12);
 
       .wishListIcon {
         font-size: 20px;
-        color: $accent-color;
+        color: #2b2b2b;
       }
     }
   }
@@ -325,8 +325,8 @@ $shadow-color: rgba(0, 0, 0, 0.12);
 
     .exploreButton {
       padding: 16px 40px;
-      background: linear-gradient(135deg, $primary-color 0%, #1a2b5a 100%);
-      color: $accent-color;
+      background: linear-gradient(135deg, #f3e0bf, rgb(253 252 243 / 70%));
+      color: #2b2b2b;
       border: none;
       border-radius: 10px;
       font-size: 16px;
@@ -341,6 +341,7 @@ $shadow-color: rgba(0, 0, 0, 0.12);
       &:hover {
         background: linear-gradient(135deg, #1a2b5a 0%, $primary-color 100%);
         transform: translateY(-3px);
+        color: white !important;
         box-shadow: 0 6px 18px rgba(10, 26, 58, 0.5);
       }
     }

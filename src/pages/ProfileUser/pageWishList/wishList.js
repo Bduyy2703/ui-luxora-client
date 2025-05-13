@@ -163,7 +163,9 @@ const WishListPage = () => {
         <h1 className={styles.title}>Sản phẩm yêu thích</h1>
         <div className={styles.headerActions}>
           <HeartOutlined className={styles.wishListIcon} />
-          <span>Sản phẩm yêu thích ({wishList.length})</span>
+          <span style={{ color: "#2b2b2b" }}>
+            Sản phẩm yêu thích ({wishList.length})
+          </span>
         </div>
       </header>
       <div className={styles.profileUser}>
@@ -182,7 +184,7 @@ const WishListPage = () => {
                 onClick={handleExploreProducts}
                 aria-label="Khám phá sản phẩm ngay"
               >
-                Khám Phá Ngay
+                <div>Khám Phá Ngay</div>
               </button>
             </div>
           ) : (

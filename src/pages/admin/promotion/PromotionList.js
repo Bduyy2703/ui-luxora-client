@@ -731,11 +731,18 @@ const PromotionList = () => {
 
   return (
     <div className={styles.wrapper}>
-      <header className={styles.adminHeader}>
-        <div className={styles.container}>
-          <h2>QUẢN LÝ CHƯƠNG TRÌNH KHUYẾN MÃI</h2>
-        </div>
-      </header>
+      <div
+        className={styles.container}
+        style={{
+          background:
+            "linear-gradient(90deg, #f3e0bf, rgba(253, 252, 243, 0.7))",
+          height: "70px",
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        <h2>QUẢN LÝ CHƯƠNG TRÌNH KHUYẾN MÃI</h2>
+      </div>
       <main className={styles.main}>
         <div className={styles.container}>
           <Tabs defaultActiveKey="1">
@@ -823,7 +830,7 @@ const PromotionList = () => {
                 )}
               </div>
             </TabPane>
-            <TabPane tab="Thống kê" key="2">
+            {/* <TabPane tab="Thống kê" key="2">
               <div className={styles.statisticsSection}>
                 <div className={styles.gridContainer}>
                   <Card title="Chương trình khuyến mãi đang diễn ra">
@@ -876,7 +883,7 @@ const PromotionList = () => {
                   </Card>
                 </div>
               </div>
-            </TabPane>
+            </TabPane> */}
           </Tabs>
         </div>
       </main>

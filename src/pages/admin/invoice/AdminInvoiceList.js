@@ -412,20 +412,18 @@ const AdminInvoiceList = () => {
 
   return (
     <div className="wrapper">
-      <header className={styles.adminHeader}>
-        <div className="container">
-          <h2>QUẢN LÝ HÓA ĐƠN</h2>
-          {/* <Badge count={unreadCount}>
-            <Button
-              icon={<BellOutlined />}
-              onClick={() => setNotificationModalVisible(true)}
-              style={{ marginLeft: 16 }}
-            >
-              Thông báo
-            </Button>
-          </Badge> */}
-        </div>
-      </header>
+      <div
+        className="container"
+        style={{
+          background:
+            "linear-gradient(90deg, #f3e0bf, rgba(253, 252, 243, 0.7))",
+          height: "70px",
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        <h2>QUẢN LÝ HÓA ĐƠN</h2>
+      </div>
       <main className="main">
         <div className="container">
           <div className="card">

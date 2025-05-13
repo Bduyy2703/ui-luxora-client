@@ -88,17 +88,7 @@ const AdminCategoryList = () => {
         const endIndex = pageSize;
         setPageData(processedItems.slice(startIndex, endIndex));
       } catch (error) {
-        console.error("Error fetching products by child category:", error);
-        setPageData([]);
-        setValidData([]);
-        Swal.fire({
-          title: "Lỗi!",
-          text: "Không thể lấy danh sách sản phẩm. Vui lòng thử lại.",
-          icon: "error",
-          showConfirmButton: false,
-          timer: 1500,
-          timerProgressBar: true,
-        });
+        // console.error();
       }
     },
     [pageSize],
@@ -443,11 +433,19 @@ const AdminCategoryList = () => {
 
   return (
     <div className={styles.adminWrapper}>
-      <header className={styles.adminHeader}>
-        <div className={styles.container}>
-          <h2>QUẢN LÝ DANH MỤC</h2>
-        </div>
-      </header>
+      <div
+        className={styles.container}
+        style={{
+          background:
+            "linear-gradient(90deg, #f3e0bf, rgba(253, 252, 243, 0.7))",
+          height: "70px",
+          display: "flex",
+          alignItems: "center",
+          marginBottom: "25px",
+        }}
+      >
+        <h2>QUẢN LÝ DANH MỤC</h2>
+      </div>
       <div className={styles.main}>
         <div className={styles.container}>
           <div className={styles.verticalLayout}>

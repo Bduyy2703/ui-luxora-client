@@ -314,7 +314,7 @@ const AdminReviewList = () => {
       title: "Hành động",
       key: "actions",
       render: (record) => (
-        <div style={{ display: "flex", gap: 8 }}>
+        <div>
           <Tooltip title="Xem chi tiết">
             <Button
               icon={<InfoOutlined />}
@@ -322,19 +322,10 @@ const AdminReviewList = () => {
               style={{ border: "none", color: "#1890ff" }}
             />
           </Tooltip>
-          <Tooltip title="Xóa">
-            <Button
-              icon={<DeleteOutlined />}
-              onClick={() => {
-                setCheckedRow([record.id]);
-                handleDeleteReview();
-              }}
-              style={{ border: "none", color: "#ff4d4f" }}
-            />
-          </Tooltip>
         </div>
       ),
-      width: 120,
+      width: 100,
+      align: "center",
     },
   ];
 
@@ -393,11 +384,18 @@ const AdminReviewList = () => {
 
   return (
     <div className={styles.wrapper}>
-      <header className={styles.adminHeader}>
-        <div className={styles.container}>
-          <h2>QUẢN LÝ ĐÁNH GIÁ</h2>
-        </div>
-      </header>
+      <div
+        className={styles.container}
+        style={{
+          background:
+            "linear-gradient(90deg, #f3e0bf, rgba(253, 252, 243, 0.7))",
+          height: "70px",
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        <h2>QUẢN LÝ ĐÁNH GIÁ</h2>
+      </div>
       <main className={styles.main}>
         <div className={styles.container}>
           <Tabs defaultActiveKey="1">

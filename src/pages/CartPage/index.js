@@ -390,7 +390,7 @@ const CartPage = () => {
                 ))}
               </div>
             ) : cartItems.length === 0 ? (
-              <>
+              <div style={{ textAlign: "center" }}>
                 <div>
                   <img
                     className={styles.img}
@@ -398,23 +398,32 @@ const CartPage = () => {
                     alt="Giỏ hàng trống"
                   />
                 </div>
-                <div className={styles.empty}>
+                <div
+                  className={styles.empty}
+                  style={{
+                    color: "#3d3d3d",
+                    fontSize: "18px",
+                    fontWeight: "bold",
+                  }}
+                >
                   Không có sản phẩm nào trong giỏ hàng của bạn
                 </div>
-              </>
+              </div>
             ) : (
               <>
                 <div className={styles.tableHeader}>
                   <div className={styles.headerItem}>
-                    <input
-                      type="checkbox"
-                      checked={selectedItems.length === cartItems.length}
-                      onChange={handleSelectAll}
-                    />
-                    <span style={{ marginLeft: "10px" }}>
-                      THÔNG TIN SẢN PHẨM
-                    </span>
+                    <label className={styles.checkboxWrapper}>
+                      <input
+                        type="checkbox"
+                        checked={selectedItems.length === cartItems.length}
+                        onChange={handleSelectAll}
+                        aria-label="Chọn tất cả sản phẩm"
+                      />
+                      <span className={styles.customCheckbox}></span>
+                    </label>
                   </div>
+                  <div className={styles.headerItem}>THÔNG TIN SẢN PHẨM</div>
                   <div className={styles.headerItem}>ĐƠN GIÁ</div>
                   <div className={styles.headerItem}>SỐ LƯỢNG</div>
                   <div className={styles.headerItem}>THÀNH TIỀN</div>
@@ -469,13 +478,19 @@ const CartPage = () => {
                           productDetailsMap[item.productDetails.product.id];
                         return (
                           <div key={itemKey} className={styles.variantRow}>
+                            <div className={styles.checkboxColumn}>
+                              <label className={styles.checkboxWrapper}>
+                                <input
+                                  type="checkbox"
+                                  checked={selectedItems.includes(itemKey)}
+                                  onChange={() => handleSelectItem(itemKey)}
+                                  aria-label={`Chọn sản phẩm ${item.productDetails.color} - ${item.productDetails.size}`}
+                                />
+                                <span className={styles.customCheckbox}></span>
+                              </label>
+                            </div>
                             <div className={styles.variantInfo}>
-                              <input
-                                type="checkbox"
-                                checked={selectedItems.includes(itemKey)}
-                                onChange={() => handleSelectItem(itemKey)}
-                              />
-                              <span>
+                              <span className={styles.variantText}>
                                 {item.productDetails.color} -{" "}
                                 {item.productDetails.size}
                               </span>
@@ -484,6 +499,7 @@ const CartPage = () => {
                                 className={styles.removeBtn}
                                 onClick={() => showDeleteConfirm(itemKey)}
                               >
+                                <span className={styles.removeIcon}>🗑️</span>{" "}
                                 Xóa
                               </a>
                             </div>
@@ -497,44 +513,28 @@ const CartPage = () => {
                               <span className={styles.dong}>đ</span>
                             </div>
                             <div className={styles.quantityControl}>
-                              <Tooltip
-                                title={
-                                  item.quantity <= 1
-                                    ? "Số lượng tối thiểu"
-                                    : undefined
+                              <button
+                                className={styles.quantityButton}
+                                onClick={() => handleDecrement(itemKey)}
+                                disabled={
+                                  loadingItems[itemKey] || item.quantity <= 1
                                 }
                               >
-                                <button
-                                  className={styles.quantityButton}
-                                  onClick={() => handleDecrement(itemKey)}
-                                  disabled={
-                                    loadingItems[itemKey] || item.quantity <= 1
-                                  }
-                                >
-                                  {loadingItems[itemKey] ? "..." : "-"}
-                                </button>
-                              </Tooltip>
+                                -
+                              </button>
                               <span className={styles.quantity}>
                                 {item.quantity} / {item.productDetails.stock}
                               </span>
-                              <Tooltip
-                                title={
+                              <button
+                                className={styles.quantityButton}
+                                onClick={() => handleIncrement(itemKey)}
+                                disabled={
+                                  loadingItems[itemKey] ||
                                   item.quantity >= item.productDetails.stock
-                                    ? `Tồn kho tối đa: ${item.productDetails.stock}`
-                                    : undefined
                                 }
                               >
-                                <button
-                                  className={styles.quantityButton}
-                                  onClick={() => handleIncrement(itemKey)}
-                                  disabled={
-                                    loadingItems[itemKey] ||
-                                    item.quantity >= item.productDetails.stock
-                                  }
-                                >
-                                  {loadingItems[itemKey] ? "..." : "+"}
-                                </button>
-                              </Tooltip>
+                                +
+                              </button>
                             </div>
                             <div className={styles.price}>
                               {new Intl.NumberFormat("vi-VN").format(
@@ -562,11 +562,7 @@ const CartPage = () => {
                   <p>Bạn có chắc chắn muốn xóa không?</p>
                 </Modal>
                 <div className={styles.bottom}>
-                  <Link
-                    to="/"
-                    className={styles.goOn}
-                    style={{ color: "#71bec2" }}
-                  >
+                  <Link to="/" className={styles.goOn}>
                     Tiếp tục mua hàng
                   </Link>
                   <div className={styles.subTotal}>
@@ -579,19 +575,19 @@ const CartPage = () => {
                         </h4>
                       </div>
                     </div>
-                    <div
+                    <button
                       className={styles.btnCheckout}
                       onClick={handleCheckout}
                     >
                       Thanh toán
-                    </div>
+                    </button>
                     {cartItems.length > 0 && (
-                      <div
+                      <button
                         className={styles.btnDeleteAll}
                         onClick={handleClearCart}
                       >
                         Xóa
-                      </div>
+                      </button>
                     )}
                   </div>
                 </div>
@@ -639,13 +635,6 @@ const DiscountCard = ({ totalAmount, setDiscount_id }) => {
 
   return (
     <div className={styles.discountCard}>
-      <div className={styles.discountCardHeader}>
-        <img
-          src="//bizweb.dktcdn.net/100/461/213/themes/870653/assets/code_dis.gif?1729756726879"
-          alt="Gift Icon"
-        />
-        <button onClick={toggleDiscounts}>MÃ GIẢM GIÁ</button>
-      </div>
       {showDiscounts && (
         <div className={styles.discountCardContent}>
           {discountData.map((discount, index) => (
