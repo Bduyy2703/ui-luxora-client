@@ -436,7 +436,10 @@ const AdminStatis = () => {
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              paddingLeft: "50px",
+              height: "64px",
+              paddingLeft: "60px",
+              background:
+                "linear-gradient(90deg, #f3e0bf, rgba(253, 252, 243, 0.7))",
             }}
           >
             <Title level={3} style={{ color: "#2b2b2b", margin: 0 }}>

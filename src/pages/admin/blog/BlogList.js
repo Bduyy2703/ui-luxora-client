@@ -634,16 +634,6 @@ const AdminBlogList = () => {
               style={{ border: "none", color: "#1890ff" }}
             />
           </Tooltip>
-          <Tooltip title="Xóa">
-            <Button
-              icon={<DeleteOutlined />}
-              onClick={() => {
-                setCheckedRow([record.id]);
-                handleDeleteBlog();
-              }}
-              style={{ border: "none", color: "#ff4d4f" }}
-            />
-          </Tooltip>
         </div>
       ),
     },
@@ -652,7 +642,17 @@ const AdminBlogList = () => {
   return (
     <div className="wrapper">
       <header className="admin-header">
-        <div className="container">
+        <div
+          className="container"
+          style={{
+            background:
+              "linear-gradient(90deg, #f3e0bf, rgba(253, 252, 243, 0.7))",
+            height: "70px",
+            display: "flex",
+            paddingLeft: "280pxs",
+            alignItems: "center",
+          }}
+        >
           <h2>QUẢN LÝ BÀI VIẾT</h2>
         </div>
       </header>

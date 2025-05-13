@@ -16,6 +16,7 @@ import {
   Typography,
   Space,
 } from "antd";
+import { IconBrandDribbble } from "@tabler/icons-react";
 import { useEffect, useState, useCallback, useRef } from "react";
 // import logoTest from "../../assets/icon/te.png";
 import logoTest from "../../../assets/icon/LogoWeb.jpg";
@@ -459,10 +460,6 @@ const Sidebar = () => {
           key: "user",
           label: <Link to="/admin/user">Danh sách người dùng</Link>,
         },
-        {
-          key: "blog",
-          label: <Link to="/admin/blog">Blog</Link>,
-        },
       ],
     },
     {
@@ -512,6 +509,15 @@ const Sidebar = () => {
       key: "statis",
       icon: <BarChartOutlined />,
       label: <Link to="/admin/statis">Thống kê</Link>,
+    },
+    {
+      key: "blog",
+      icon: (
+        <IconBrandDribbble
+          style={{ width: "24px", height: "24px", paddingRight: "9px" }}
+        />
+      ),
+      label: <Link to="/admin/blog">Bài viết</Link>,
     },
   ];
 

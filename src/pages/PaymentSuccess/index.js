@@ -60,8 +60,8 @@ const PaymentSuccess = () => {
         setInvoice(response.data);
 
         // Kiểm tra trạng thái hóa đơn
-        if (response.data.status !== "PAID") {
-          console.log("Invoice status not PAID:", response.data.status);
+        if (response.data.status !== "PENDING") {
+          console.log("Invoice status not PENDING:", response.data.status);
           setResult(`Hóa đơn chưa được thanh toán. Trạng thái: ${response.data.status}`);
           setTimeout(() => navigate("/payment-fail"), 3000);
           return;

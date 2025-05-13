@@ -800,7 +800,16 @@ const AdminProductList = () => {
   return (
     <div className="wrapper">
       <header className="admin-header">
-        <div className="container">
+        <div
+          className="container"
+          style={{
+            background:
+              "linear-gradient(90deg, #f3e0bf, rgba(253, 252, 243, 0.7))",
+            height: "70px",
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
           <h2>QUẢN LÝ SẢN PHẨM</h2>
         </div>
       </header>

@@ -73,8 +73,8 @@ const AdminUserList = () => {
         username: values.username,
         email: values.email,
         password: values.password,
-        role: values.role,
-        phoneNumber: values.phoneNumber, // Thêm số điện thoại vào dữ liệu gửi lên API
+        roleName: values.role,
+        phoneNumber: values.phoneNumber,
       });
 
       setModalVisible(false);
@@ -123,7 +123,7 @@ const AdminUserList = () => {
       } catch (error) {
         Swal.fire({
           title: "Lỗi!",
-          text: "Đã xảy ra lỗi khi xóa người dùng.",
+          text: "Người dùng này không thể bị xóa vì đã có giao dịch/hóa đơn trong hệ thống.",
           icon: "error",
         });
       } finally {
@@ -167,7 +167,7 @@ const AdminUserList = () => {
       } catch (error) {
         Swal.fire({
           title: "Lỗi!",
-          text: "Đã xảy ra lỗi khi xóa người dùng.",
+          text: "Người dùng này không thể bị xóa vì đã có giao dịch/hóa đơn trong hệ thống.",
           icon: "error",
         });
       } finally {
@@ -292,7 +292,16 @@ const AdminUserList = () => {
   return (
     <div className="wrapper">
       <header className="admin-header">
-        <div className="container">
+        <div
+          className="container"
+          style={{
+            background:
+              "linear-gradient(90deg, #f3e0bf, rgba(253, 252, 243, 0.7))",
+            height: "70px",
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
           <h2>QUẢN LÝ NGƯỜI DÙNG</h2>
         </div>
       </header>
