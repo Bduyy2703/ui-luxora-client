@@ -1476,7 +1476,9 @@ const AdminProductList = () => {
           </Modal>
 
           <Modal
-            title="Sửa chi tiết sản phẩm"
+            title={
+              <div className={styles.modalTitle}>Sửa chi tiết sản phẩm</div>
+            }
             visible={editDetailModalVisible}
             onCancel={() => {
               setEditDetailModalVisible(false);
@@ -1484,296 +1486,315 @@ const AdminProductList = () => {
               editDetailForm.resetFields();
             }}
             footer={null}
-            className={`${styles.productModal} ${styles.sideModal}`}
-            width={400}
+            className={`${styles.productModal} ${styles.addDetailModal}`}
+            width={600}
+            centered
+            style={{ height: "80vh" }}
           >
-            <Form
-              form={editDetailForm}
-              layout="vertical"
-              onFinish={handleUpdateProductDetails}
-            >
-              <Form.Item
-                label="Kích thước"
-                name="size"
-                rules={[
-                  { required: true, message: "Vui lòng chọn kích thước!" },
-                  ({ getFieldValue }) => ({
-                    validator: async (_, value) => {
-                      const color = getFieldValue("color");
-                      const material = getFieldValue("material");
-                      if (value && color && material) {
-                        if (
-                          checkDetailUnique(
-                            value,
-                            color,
-                            material,
-                            currentDetail?.id,
-                          )
-                        ) {
+            <div className={styles.modalContentWrapper}>
+              <Form
+                form={editDetailForm}
+                layout="vertical"
+                onFinish={handleUpdateProductDetails}
+                className={styles.formContent}
+              >
+                <div className={styles.scrollableContent}>
+                  <Form.Item
+                    label="Kích thước"
+                    name="size"
+                    rules={[
+                      { required: true, message: "Vui lòng chọn kích thước!" },
+                      ({ getFieldValue }) => ({
+                        validator: async (_, value) => {
+                          const color = getFieldValue("color");
+                          const material = getFieldValue("material");
+                          if (value && color && material) {
+                            if (
+                              checkDetailUnique(
+                                value,
+                                color,
+                                material,
+                                currentDetail?.id,
+                              )
+                            ) {
+                              return Promise.resolve();
+                            }
+                            return Promise.reject(
+                              new Error(
+                                "Tổ hợp Kích thước, Màu sắc, Chất liệu đã tồn tại!",
+                              ),
+                            );
+                          }
                           return Promise.resolve();
-                        }
-                        return Promise.reject(
-                          new Error(
-                            "Tổ hợp Kích thước, Màu sắc, Chất liệu đã tồn tại!",
-                          ),
-                        );
-                      }
-                      return Promise.resolve();
-                    },
-                  }),
-                ]}
-              >
-                <AntSelect placeholder="Chọn kích thước">
-                  {Object.values(ProductSize).map((size) => (
-                    <AntSelect.Option key={size} value={size}>
-                      {size}
-                    </AntSelect.Option>
-                  ))}
-                </AntSelect>
-              </Form.Item>
-              <Form.Item
-                label="Màu sắc"
-                name="color"
-                rules={[
-                  { required: true, message: "Vui lòng chọn màu sắc!" },
-                  ({ getFieldValue }) => ({
-                    validator: async (_, value) => {
-                      const size = getFieldValue("size");
-                      const material = getFieldValue("material");
-                      if (size && value && material) {
-                        if (
-                          checkDetailUnique(
-                            size,
-                            value,
-                            material,
-                            currentDetail?.id,
-                          )
-                        ) {
+                        },
+                      }),
+                    ]}
+                  >
+                    <AntSelect placeholder="Chọn kích thước">
+                      {Object.values(ProductSize).map((size) => (
+                        <AntSelect.Option key={size} value={size}>
+                          {size}
+                        </AntSelect.Option>
+                      ))}
+                    </AntSelect>
+                  </Form.Item>
+                  <Form.Item
+                    label="Màu sắc"
+                    name="color"
+                    rules={[
+                      { required: true, message: "Vui lòng chọn màu sắc!" },
+                      ({ getFieldValue }) => ({
+                        validator: async (_, value) => {
+                          const size = getFieldValue("size");
+                          const material = getFieldValue("material");
+                          if (size && value && material) {
+                            if (
+                              checkDetailUnique(
+                                size,
+                                value,
+                                material,
+                                currentDetail?.id,
+                              )
+                            ) {
+                              return Promise.resolve();
+                            }
+                            return Promise.reject(
+                              new Error(
+                                "Tổ hợp Kích thước, Màu sắc, Chất liệu đã tồn tại!",
+                              ),
+                            );
+                          }
                           return Promise.resolve();
-                        }
-                        return Promise.reject(
-                          new Error(
-                            "Tổ hợp Kích thước, Màu sắc, Chất liệu đã tồn tại!",
-                          ),
-                        );
-                      }
-                      return Promise.resolve();
-                    },
-                  }),
-                ]}
-              >
-                <AntSelect placeholder="Chọn màu sắc">
-                  {Object.values(ProductColor).map((color) => (
-                    <AntSelect.Option key={color} value={color}>
-                      {color}
-                    </AntSelect.Option>
-                  ))}
-                </AntSelect>
-              </Form.Item>
-              <Form.Item
-                label="Chất liệu"
-                name="material"
-                rules={[
-                  { required: true, message: "Vui lòng chọn chất liệu!" },
-                  ({ getFieldValue }) => ({
-                    validator: async (_, value) => {
-                      const size = getFieldValue("size");
-                      const color = getFieldValue("color");
-                      if (size && color && value) {
-                        if (
-                          checkDetailUnique(
-                            size,
-                            color,
-                            value,
-                            currentDetail?.id,
-                          )
-                        ) {
+                        },
+                      }),
+                    ]}
+                  >
+                    <AntSelect placeholder="Chọn màu sắc">
+                      {Object.values(ProductColor).map((color) => (
+                        <AntSelect.Option key={color} value={color}>
+                          {color}
+                        </AntSelect.Option>
+                      ))}
+                    </AntSelect>
+                  </Form.Item>
+                  <Form.Item
+                    label="Chất liệu"
+                    name="material"
+                    rules={[
+                      { required: true, message: "Vui lòng chọn chất liệu!" },
+                      ({ getFieldValue }) => ({
+                        validator: async (_, value) => {
+                          const size = getFieldValue("size");
+                          const color = getFieldValue("color");
+                          if (size && color && value) {
+                            if (
+                              checkDetailUnique(
+                                size,
+                                color,
+                                value,
+                                currentDetail?.id,
+                              )
+                            ) {
+                              return Promise.resolve();
+                            }
+                            return Promise.reject(
+                              new Error(
+                                "Tổ hợp Kích thước, Màu sắc, Chất liệu đã tồn tại!",
+                              ),
+                            );
+                          }
                           return Promise.resolve();
-                        }
-                        return Promise.reject(
-                          new Error(
-                            "Tổ hợp Kích thước, Màu sắc, Chất liệu đã tồn tại!",
-                          ),
-                        );
-                      }
-                      return Promise.resolve();
-                    },
-                  }),
-                ]}
-              >
-                <AntSelect placeholder="Chọn chất liệu">
-                  {Object.values(ProductMaterial).map((material) => (
-                    <AntSelect.Option key={material} value={material}>
-                      {material}
-                    </AntSelect.Option>
-                  ))}
-                </AntSelect>
-              </Form.Item>
-              <Form.Item
-                label="Số lượng tồn kho"
-                name="stock"
-                rules={[
-                  {
-                    required: true,
-                    message: "Vui lòng nhập số lượng tồn kho!",
-                  },
-                  {
-                    validator: (_, value) => {
-                      if (value && Number(value) >= 0) {
-                        return Promise.resolve();
-                      }
-                      return Promise.reject(
-                        new Error("Số lượng tồn kho không được âm!"),
-                      );
-                    },
-                  },
-                ]}
-              >
-                <Input type="number" min={0} />
-              </Form.Item>
-              <Form.Item
-                label="Số lượng đã bán"
-                name="sold"
-                rules={[
-                  {
-                    validator: (_, value) => {
-                      if (!value || Number(value) >= 0) {
-                        return Promise.resolve();
-                      }
-                      return Promise.reject(
-                        new Error("Số lượng đã bán không được âm!"),
-                      );
-                    },
-                  },
-                ]}
-              >
-                <Input type="number" min={0} />
-              </Form.Item>
-              <Form.Item
-                label="Chiều dài (cm)"
-                name="length"
-                rules={[
-                  {
-                    validator: (_, value) => {
-                      if (!value || Number(value) >= 0) {
-                        return Promise.resolve();
-                      }
-                      return Promise.reject(
-                        new Error("Chiều dài không được âm!"),
-                      );
-                    },
-                  },
-                ]}
-              >
-                <Input type="number" min={0} />
-              </Form.Item>
-              <Form.Item
-                label="Chiều rộng (cm)"
-                name="width"
-                rules={[
-                  {
-                    validator: (_, value) => {
-                      if (!value || Number(value) >= 0) {
-                        return Promise.resolve();
-                      }
-                      return Promise.reject(
-                        new Error("Chiều rộng không được âm!"),
-                      );
-                    },
-                  },
-                ]}
-              >
-                <Input type="number" min={0} />
-              </Form.Item>
-              <Form.Item
-                label="Chiều cao (cm)"
-                name="height"
-                rules={[
-                  {
-                    validator: (_, value) => {
-                      if (!value || Number(value) >= 0) {
-                        return Promise.resolve();
-                      }
-                      return Promise.reject(
-                        new Error("Chiều cao không được âm!"),
-                      );
-                    },
-                  },
-                ]}
-              >
-                <Input type="number" min={0} />
-              </Form.Item>
-              <Form.Item
-                label="Trọng lượng (g)"
-                name="weight"
-                rules={[
-                  {
-                    validator: (_, value) => {
-                      if (!value || Number(value) >= 0) {
-                        return Promise.resolve();
-                      }
-                      return Promise.reject(
-                        new Error("Trọng lượng không được âm!"),
-                      );
-                    },
-                  },
-                ]}
-              >
-                <Input type="number" min={0} />
-              </Form.Item>
-              <Form.Item label="Hướng dẫn bảo quản" name="care_instructions">
-                <Input />
-              </Form.Item>
-              <Form.Item label="Kích thước đá" name="stone_size">
-                <Input />
-              </Form.Item>
-              <Form.Item label="Loại đá" name="stone_type">
-                <Input />
-              </Form.Item>
-              <Form.Item label="Phong cách thiết kế" name="design_style">
-                <Input />
-              </Form.Item>
-              <Form.Item
-                label="Mô tả"
-                name="description"
-                rules={[
-                  {
-                    max: 500,
-                    message: "Mô tả không được vượt quá 500 ký tự!",
-                  },
-                ]}
-              >
-                <Input.TextArea />
-              </Form.Item>
-              <Form.Item
-                label="Kho hàng"
-                name="inventoryId"
-                rules={[{ required: true, message: "Vui lòng chọn kho hàng!" }]}
-              >
-                <AntSelect placeholder="Chọn kho hàng">
-                  {inventory?.map((item) => (
-                    <AntSelect.Option key={item.id} value={item.id}>
-                      {item.location}
-                    </AntSelect.Option>
-                  ))}
-                </AntSelect>
-              </Form.Item>
-              <Form.Item className={styles.formActions}>
-                <Button type="primary" htmlType="submit" loading={loading}>
-                  Cập nhật chi tiết
-                </Button>
-                <Button
-                  className={styles.cancelButton}
-                  onClick={() => {
-                    setEditDetailModalVisible(false);
-                    setCurrentDetail(null);
-                    editDetailForm.resetFields();
-                  }}
-                >
-                  Hủy
-                </Button>
-              </Form.Item>
-            </Form>
+                        },
+                      }),
+                    ]}
+                  >
+                    <AntSelect placeholder="Chọn chất liệu">
+                      {Object.values(ProductMaterial).map((material) => (
+                        <AntSelect.Option key={material} value={material}>
+                          {material}
+                        </AntSelect.Option>
+                      ))}
+                    </AntSelect>
+                  </Form.Item>
+                  <Form.Item
+                    label="Số lượng tồn kho"
+                    name="stock"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Vui lòng nhập số lượng tồn kho!",
+                      },
+                      {
+                        validator: (_, value) => {
+                          if (value && Number(value) >= 0) {
+                            return Promise.resolve();
+                          }
+                          return Promise.reject(
+                            new Error("Số lượng tồn kho không được âm!"),
+                          );
+                        },
+                      },
+                    ]}
+                  >
+                    <Input type="number" min={0} />
+                  </Form.Item>
+                  <Form.Item
+                    label="Số lượng đã bán"
+                    name="sold"
+                    rules={[
+                      {
+                        validator: (_, value) => {
+                          if (!value || Number(value) >= 0) {
+                            return Promise.resolve();
+                          }
+                          return Promise.reject(
+                            new Error("Số lượng đã bán không được âm!"),
+                          );
+                        },
+                      },
+                    ]}
+                  >
+                    <Input type="number" min={0} />
+                  </Form.Item>
+                  <Form.Item
+                    label="Chiều dài (cm)"
+                    name="length"
+                    rules={[
+                      {
+                        validator: (_, value) => {
+                          if (!value || Number(value) >= 0) {
+                            return Promise.resolve();
+                          }
+                          return Promise.reject(
+                            new Error("Chiều dài không được âm!"),
+                          );
+                        },
+                      },
+                    ]}
+                  >
+                    <Input type="number" min={0} />
+                  </Form.Item>
+                  <Form.Item
+                    label="Chiều rộng (cm)"
+                    name="width"
+                    rules={[
+                      {
+                        validator: (_, value) => {
+                          if (!value || Number(value) >= 0) {
+                            return Promise.resolve();
+                          }
+                          return Promise.reject(
+                            new Error("Chiều rộng không được âm!"),
+                          );
+                        },
+                      },
+                    ]}
+                  >
+                    <Input type="number" min={0} />
+                  </Form.Item>
+                  <Form.Item
+                    label="Chiều cao (cm)"
+                    name="height"
+                    rules={[
+                      {
+                        validator: (_, value) => {
+                          if (!value || Number(value) >= 0) {
+                            return Promise.resolve();
+                          }
+                          return Promise.reject(
+                            new Error("Chiều cao không được âm!"),
+                          );
+                        },
+                      },
+                    ]}
+                  >
+                    <Input type="number" min={0} />
+                  </Form.Item>
+                  <Form.Item
+                    label="Trọng lượng (g)"
+                    name="weight"
+                    rules={[
+                      {
+                        validator: (_, value) => {
+                          if (!value || Number(value) >= 0) {
+                            return Promise.resolve();
+                          }
+                          return Promise.reject(
+                            new Error("Trọng lượng không được âm!"),
+                          );
+                        },
+                      },
+                    ]}
+                  >
+                    <Input type="number" min={0} />
+                  </Form.Item>
+                  <Form.Item
+                    label="Hướng dẫn bảo quản"
+                    name="care_instructions"
+                  >
+                    <Input />
+                  </Form.Item>
+                  <Form.Item label="Kích thước đá" name="stone_size">
+                    <Input />
+                  </Form.Item>
+                  <Form.Item label="Loại đá" name="stone_type">
+                    <Input />
+                  </Form.Item>
+                  <Form.Item label="Phong cách thiết kế" name="design_style">
+                    <Input />
+                  </Form.Item>
+                  <Form.Item
+                    label="Mô tả"
+                    name="description"
+                    rules={[
+                      {
+                        max: 500,
+                        message: "Mô tả không được vượt quá 500 ký tự!",
+                      },
+                    ]}
+                  >
+                    <Input.TextArea />
+                  </Form.Item>
+                  <Form.Item
+                    label="Kho hàng"
+                    name="inventoryId"
+                    rules={[
+                      { required: true, message: "Vui lòng chọn kho hàng!" },
+                    ]}
+                  >
+                    <AntSelect placeholder="Chọn kho hàng">
+                      {inventory?.map((item) => (
+                        <AntSelect.Option key={item.id} value={item.id}>
+                          {item.location}
+                        </AntSelect.Option>
+                      ))}
+                    </AntSelect>
+                  </Form.Item>
+                </div>
+                <div className={styles.modalFooter}>
+                  <Form.Item className={styles.formActions}>
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      loading={loading}
+                      style={{ marginRight: "12px" }}
+                    >
+                      Cập nhật chi tiết
+                    </Button>
+                    <Button
+                      className={styles.cancelButton}
+                      onClick={() => {
+                        setEditDetailModalVisible(false);
+                        setCurrentDetail(null);
+                        editDetailForm.resetFields();
+                      }}
+                    >
+                      Hủy
+                    </Button>
+                  </Form.Item>
+                </div>
+              </Form>
+            </div>
           </Modal>
         </div>
       </main>

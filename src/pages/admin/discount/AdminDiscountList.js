@@ -25,6 +25,7 @@ import {
   updateDiscount,
 } from "../../../services/api/discountService";
 import styles from "./index.module.scss";
+import dayjs from "../../../components/common/layout/dayjs-setup";
 
 const { Option } = Select;
 
@@ -203,8 +204,8 @@ const AdminDiscountList = () => {
       discountValue: Number(discount.discountValue),
       discountType: discount.discountType,
       quantity: discount.quantity,
-      startDate: moment(discount.startDate),
-      endDate: moment(discount.endDate),
+      startDate: dayjs(discount.startDate),
+      endDate: dayjs(discount.endDate),
       isActive: discount.isActive,
     });
     setEditModalVisible(true);
@@ -218,8 +219,8 @@ const AdminDiscountList = () => {
       discountValue: Number(discount.discountValue),
       discountType: discount.discountType,
       quantity: discount.quantity,
-      startDate: moment(discount.startDate),
-      endDate: moment(discount.endDate),
+      startDate: dayjs(discount.startDate),
+      endDate: dayjs(discount.endDate),
       isActive: discount.isActive,
     });
     setDetailModalVisible(true);
@@ -523,7 +524,11 @@ const AdminDiscountList = () => {
                   { required: true, message: "Vui lòng chọn ngày bắt đầu!" },
                 ]}
               >
-                <DatePicker showTime style={{ width: "100%" }} />
+                <DatePicker
+                  showTime
+                  format="YYYY-MM-DD HH:mm:ss"
+                  style={{ width: "100%" }}
+                />
               </Form.Item>
               <Form.Item
                 label="Ngày kết thúc"
@@ -532,7 +537,11 @@ const AdminDiscountList = () => {
                   { required: true, message: "Vui lòng chọn ngày kết thúc!" },
                 ]}
               >
-                <DatePicker showTime style={{ width: "100%" }} />
+                <DatePicker
+                  showTime
+                  format="YYYY-MM-DD HH:mm:ss"
+                  style={{ width: "100%" }}
+                />
               </Form.Item>
               <Form.Item
                 label="Trạng thái"
@@ -661,7 +670,11 @@ const AdminDiscountList = () => {
                   { required: true, message: "Vui lòng chọn ngày bắt đầu!" },
                 ]}
               >
-                <DatePicker showTime style={{ width: "100%" }} />
+                <DatePicker
+                  showTime
+                  format="YYYY-MM-DD HH:mm:ss"
+                  style={{ width: "100%" }}
+                />
               </Form.Item>
               <Form.Item
                 label="Ngày kết thúc"
@@ -670,7 +683,11 @@ const AdminDiscountList = () => {
                   { required: true, message: "Vui lòng chọn ngày kết thúc!" },
                 ]}
               >
-                <DatePicker showTime style={{ width: "100%" }} />
+                <DatePicker
+                  showTime
+                  format="YYYY-MM-DD HH:mm:ss"
+                  style={{ width: "100%" }}
+                />
               </Form.Item>
               <Form.Item
                 label="Trạng thái"
@@ -797,7 +814,11 @@ const AdminDiscountList = () => {
                   { required: true, message: "Vui lòng chọn ngày bắt đầu!" },
                 ]}
               >
-                <DatePicker showTime style={{ width: "100%" }} />
+                <DatePicker
+                  showTime
+                  format="YYYY-MM-DD HH:mm:ss"
+                  style={{ width: "100%" }}
+                />
               </Form.Item>
               <Form.Item
                 label="Ngày kết thúc"
@@ -806,7 +827,11 @@ const AdminDiscountList = () => {
                   { required: true, message: "Vui lòng chọn ngày kết thúc!" },
                 ]}
               >
-                <DatePicker showTime style={{ width: "100%" }} />
+                <DatePicker
+                  showTime
+                  format="YYYY-MM-DD HH:mm:ss"
+                  style={{ width: "100%" }}
+                />
               </Form.Item>
               <Form.Item
                 label="Trạng thái"

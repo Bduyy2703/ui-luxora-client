@@ -42,6 +42,7 @@ import {
   updateSale,
 } from "../../../services/api/promotionService";
 import styles from "./index.module.scss";
+import dayjs from "../../../components/common/layout/dayjs-setup";
 
 const { Option, OptGroup } = Select;
 const { TabPane } = Tabs;
@@ -339,10 +340,7 @@ const PromotionList = () => {
         name: promotion.name,
         discountAmount: isNaN(discountAmount) ? 0 : discountAmount,
         isGlobalSale: promotion.isGlobalSale,
-        dateRange: [
-          promotion.startDate ? moment(promotion.startDate) : null,
-          promotion.endDate ? moment(promotion.endDate) : null,
-        ],
+        dateRange: [dayjs(promotion.startDate), dayjs(promotion.endDate)],
         categoryId: categoryIds[0] || null, // Chỉ lấy danh mục đầu tiên khi sửa
         products: productIds,
         isActive: promotion.isActive || false,
@@ -943,7 +941,14 @@ const PromotionList = () => {
               { required: true, message: "Vui lòng chọn thời gian diễn ra!" },
             ]}
           >
-            <RangePicker showTime format="YYYY-MM-DD HH:mm:ss" />
+            <RangePicker
+              showTime
+              format="YYYY-MM-DD HH:mm:ss"
+              // Nếu bạn muốn giới hạn khoảng thời gian:
+              // disabledDate={(current) => current && current < dayjs().startOf('day')}
+              // Nếu muốn khởi tạo mặc định:
+              // defaultValue={[dayjs(), dayjs().add(1, 'day')]}
+            />
           </Form.Item>
           {editMode && (
             <Form.Item

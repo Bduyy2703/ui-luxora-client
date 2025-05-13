@@ -50,6 +50,7 @@ import {
 } from "@ant-design/icons";
 import styles from "./statistics.module.scss";
 import { getProductDetailsByIdDetails } from "../../../services/api/productDetailService";
+import dayjs from "../../../components/common/layout/dayjs-setup";
 
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
@@ -69,8 +70,8 @@ const INVOICE_STATUSES = [
 
 const AdminStatis = () => {
   const [dateRange, setDateRange] = useState([
-    moment("2025-01-01"),
-    moment("2026-01-01"),
+    dayjs("2025-01-01", "YYYY-MM-DD"),
+    dayjs("2026-01-01", "YYYY-MM-DD"),
   ]);
   const [revenue, setRevenue] = useState(0);
   const [totalInvoice, setTotalInvoice] = useState(0);
