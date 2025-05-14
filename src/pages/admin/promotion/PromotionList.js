@@ -615,8 +615,8 @@ const PromotionList = () => {
     [],
   );
 
-  const productColumns = useMemo(
-    () => [
+  const productColumns = useMemo(() => {
+    const columns = [
       {
         title: "Hình ảnh",
         key: "images",
@@ -643,7 +643,10 @@ const PromotionList = () => {
         width: 150,
         align: "right",
       },
-      {
+    ];
+
+    if (!currentPromotion?.isGlobalSale) {
+      columns.push({
         title: "Hành động",
         key: "actions",
         render: (record) => (
@@ -651,11 +654,13 @@ const PromotionList = () => {
             Xóa
           </Button>
         ),
-        width: 100,
-      },
-    ],
-    [handleRemoveProduct],
-  );
+        width: 130,
+        align: "center",
+      });
+    }
+
+    return columns;
+  }, [handleRemoveProduct, currentPromotion?.isGlobalSale]);
 
   const productModalColumns = useMemo(
     () => [
@@ -983,9 +988,6 @@ const PromotionList = () => {
                   <Form.Item
                     label="Danh mục áp dụng"
                     name="categoryId"
-                    rules={[
-                      { required: true, message: "Vui lòng chọn danh mục!" },
-                    ]}
                   >
                     <Select placeholder="Chọn danh mục">
                       {categoryList.map((cat) =>

@@ -48,14 +48,12 @@ const Sidebar = () => {
 
   const token = localStorage.getItem("accessToken") || "your-jwt-token";
   const API_BASE_URL = "https://dclux.store/";
-  console.log("Access token in Sidebar:", token); // Log token để kiểm tra
 
   const notificationSound = new Audio("/assets/sounds/notificationFinal.mp3");
 
   useEffect(() => {
     const handleInteraction = () => {
       setHasInteracted(true);
-      console.log("User has interacted with the page. Audio can now play.");
     };
 
     document.addEventListener("click", handleInteraction);
@@ -70,7 +68,6 @@ const Sidebar = () => {
   const fetchNotifications = useCallback(async () => {
     try {
       const response = await getAllNotifications(1, 0, "");
-      console.log("Fetched notifications via polling:", response);
       return response;
     } catch (error) {
       // console.log();
@@ -107,7 +104,6 @@ const Sidebar = () => {
     );
 
     if (window.Notification && Notification.permission === "granted") {
-      console.log("Creating system notification...");
       try {
         const systemNotification = new Notification("Thông báo mới!", {
           body: data.message,
@@ -116,7 +112,6 @@ const Sidebar = () => {
         });
 
         systemNotification.onclick = () => {
-          console.log("Notification clicked, navigating to invoice...");
           window.focus();
           navigate("/admin/invoice");
         };
@@ -150,7 +145,6 @@ const Sidebar = () => {
     }
 
     if (hasInteracted) {
-      console.log("Attempting to play notification sound...");
       notificationSound.play().catch((error) => {
         console.error("Error playing notification sound:", error.message);
         toast.error(
@@ -162,9 +156,6 @@ const Sidebar = () => {
         );
       });
     } else {
-      console.log(
-        "Cannot play sound: User has not interacted with the page yet.",
-      );
       toast.info("Vui lòng nhấp vào trang để bật âm thanh thông báo.", {
         position: "top-right",
         autoClose: 5000,
@@ -236,11 +227,8 @@ const Sidebar = () => {
 
   useEffect(() => {
     if (window.Notification) {
-      console.log("Checking notification permission...");
-      console.log("Current notification permission:", Notification.permission);
       if (Notification.permission === "default") {
         Notification.requestPermission().then((permission) => {
-          console.log("Notification permission result:", permission);
           if (permission === "denied") {
             Swal.fire({
               title: "Thông báo bị chặn",
@@ -257,7 +245,6 @@ const Sidebar = () => {
           icon: "warning",
         });
       } else {
-        console.log("Notification permission is granted.");
       }
     } else {
       console.error("Notification API is not supported in this browser.");
@@ -267,21 +254,15 @@ const Sidebar = () => {
       auth: { token: `Bearer ${token}` },
     });
 
-    socket.on("connect", () => {
-      console.log("WebSocket connected successfully");
-    });
+    socket.on("connect", () => {});
 
     socket.on("connect_error", (error) => {
       console.error("WebSocket connection error:", error.message);
     });
 
     socket.on("notification", (data) => {
-      console.log("Received notification data:", data);
       const notificationType = data.type?.trim();
       const notificationSource = data.source?.trim();
-
-      console.log("Trimmed type:", notificationType);
-      console.log("Trimmed source:", notificationSource);
 
       if (
         (notificationType === "INVOICE_CREATED" ||
@@ -308,19 +289,12 @@ const Sidebar = () => {
         });
         setUnreadCount((prev) => prev + 1);
       } else {
-        console.log("Notification ignored: Invalid type or source", {
-          type: notificationType,
-          source: notificationSource,
-        });
       }
     });
 
-    socket.on("disconnect", () => {
-      console.log("WebSocket disconnected");
-    });
+    socket.on("disconnect", () => {});
 
     return () => {
-      console.log("Cleaning up WebSocket connection...");
       socket.disconnect();
     };
   }, [token, navigate, hasInteracted]);
