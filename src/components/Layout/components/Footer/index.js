@@ -120,9 +120,10 @@ function Footer() {
         />
         <ul style={{ listStyle: "none" }}>
           <li>Địa chỉ:</li>
-          {locations.map((loc, index) => (
+          {locations.slice(0, 3).map((loc, index) => (
             <li key={index}>Cơ sở: {loc.location}</li>
           ))}
+
           {locations.length === 0 && locationLoading && (
             <li>Đang tải danh sách cơ sở...</li>
           )}
@@ -158,7 +159,7 @@ function Footer() {
           </a>
         </div>
       </div>
-
+      {/* 
       <div className={styles.newPost}>
         <div className={styles.new}>BÀI VIẾT MỚI</div>
 
@@ -195,6 +196,63 @@ function Footer() {
               </div>
             </div>
           ))}
+      </div> */}
+      <div className={styles.newPost}>
+        <div className={styles.new}>BÀI VIẾT MỚI</div>
+
+        {blogLoading && <div>Đang tải bài viết...</div>}
+
+        {blogError && <div>{blogError}</div>}
+
+        {!blogLoading &&
+          !blogError &&
+          blogs.map((blog) => (
+            <div className={styles.footerFlower} key={blog.id}>
+              <div>
+                <img
+                  src={blog.thumbnail}
+                  alt={blog.title}
+                  style={{
+                    width: "90px",
+                    height: "60px",
+                    marginRight: "10px",
+                    objectFit: "cover",
+                    borderRadius: "4px",
+                  }}
+                />
+              </div>
+              <div className={styles.footerNote}>
+                <span
+                  className={styles.blogLink}
+                  onClick={() => handleBlogClick(blog.id)}
+                  onKeyDown={(e) =>
+                    e.key === "Enter" && handleBlogClick(blog.id)
+                  }
+                  style={{ cursor: "pointer" }}
+                  role="button"
+                  tabIndex={0}
+                >
+                  {blog.title}
+                </span>
+                <span className={styles.time}>{blog.date}</span>
+              </div>
+            </div>
+          ))}
+
+        {!blogLoading && !blogError && (
+          <motion.button
+            className={styles.viewMoreButton}
+            onClick={() => navigate("/list-blog")}
+            whileHover={{
+              scale: 1.05,
+              backgroundColor: "#d4af37",
+              color: "#fff",
+            }}
+            transition={{ duration: 0.3 }}
+          >
+            Xem thêm bài viết ...
+          </motion.button>
+        )}
       </div>
 
       <div className={styles.storeJewelry}>

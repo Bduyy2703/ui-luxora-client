@@ -73,12 +73,7 @@ const Sidebar = () => {
       console.log("Fetched notifications via polling:", response);
       return response;
     } catch (error) {
-      Swal.fire({
-        title: "Lỗi!",
-        text: "Không thể tải danh sách thông báo.",
-        icon: "error",
-      });
-      return null;
+      // console.log();
     }
   }, []);
 

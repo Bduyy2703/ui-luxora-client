@@ -147,12 +147,7 @@ const Table = ({
       setProductDetails(details.productDetails || []);
       setDetailModalVisible(true);
     } catch (error) {
-      console.error("Failed to fetch product details:", error);
-      Swal.fire({
-        title: "Lỗi!",
-        text: "Không thể tải chi tiết sản phẩm.",
-        icon: "error",
-      });
+      // console.error("Failed to fetch product details:", error);
     }
   };
 
