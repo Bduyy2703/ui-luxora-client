@@ -2,13 +2,14 @@ import { refreshToken } from "./authService";
 import { notification } from "antd";
 import { jwtDecode } from "jwt-decode";
 
-const refreshAccessToken = async (refreshTokenValue) => {
-  console.log("Đang làm mới token...");
+export const refreshAccessToken = async (refreshTokenValue) => {
+  console.log("Đang làm mới token với refreshToken:", refreshTokenValue);
   try {
     const response = await refreshToken(refreshTokenValue);
-    console.log("Response từ API:", response);
+    console.log("Response từ API refresh:", response);
 
-    const newAccessToken = response?.data?.accessToken;
+    const newAccessToken = response?.data?.accessToken || response?.accessToken;
+    const newRefreshToken = response?.data?.refreshToken || response?.refreshToken;
 
     if (!newAccessToken || typeof newAccessToken !== "string") {
       throw new Error("Access token không hợp lệ hoặc không tồn tại");
@@ -16,10 +17,15 @@ const refreshAccessToken = async (refreshTokenValue) => {
 
     const { exp } = jwtDecode(newAccessToken);
     const newExpiryTime = exp * 1000;
-    // const newExpiryTime = new Date().getTime() + 10 * 1000;
 
     localStorage.setItem("accessToken", newAccessToken);
     localStorage.setItem("tokenExpiry", newExpiryTime.toString());
+    if (newRefreshToken && typeof newRefreshToken === "string") {
+      localStorage.setItem("refreshToken", newRefreshToken);
+      console.log("Đã lưu refresh token mới:", newRefreshToken);
+    } else {
+      console.log("Không nhận được refresh token mới từ API");
+    }
 
     notification.success({
       message: "Làm mới token thành công",
@@ -40,8 +46,9 @@ const refreshAccessToken = async (refreshTokenValue) => {
 };
 
 export const startTokenRefresh = () => {
-  const refreshTokenValue = localStorage.getItem("refreshToken");
-  if (!refreshTokenValue || typeof refreshTokenValue !== "string") {
+  const getRefreshTokenValue = () => localStorage.getItem("refreshToken");
+
+  if (!getRefreshTokenValue() || typeof getRefreshTokenValue() !== "string") {
     console.error("Refresh token không hợp lệ hoặc không tồn tại");
     notification.error({
       message: "Làm mới token thất bại",
@@ -49,7 +56,7 @@ export const startTokenRefresh = () => {
     });
     localStorage.clear();
     window.location.href = "/login";
-    return;
+    return () => {};
   }
 
   const checkTokenExpiry = async () => {
@@ -61,12 +68,31 @@ export const startTokenRefresh = () => {
 
     if (currentTime >= storedExpiry) {
       console.log("Token đã hết hạn, đang gọi refresh...");
-      await refreshAccessToken(refreshTokenValue);
+      await refreshAccessToken(getRefreshTokenValue());
     } else {
       console.log("Token chưa hết hạn.");
     }
   };
 
-  const intervalId = setInterval(checkTokenExpiry, 60000);
-  return () => clearInterval(intervalId);
+  const checkIntervalId = setInterval(checkTokenExpiry, 60000);
+
+  const refreshIntervalId = setInterval(async () => {
+    const refreshTokenValue = getRefreshTokenValue();
+    if (!refreshTokenValue) {
+      console.error("Refresh token không tồn tại trong lần gọi 10 giây");
+      clearInterval(checkIntervalId);
+      clearInterval(refreshIntervalId);
+      localStorage.clear();
+      window.location.href = "/login";
+      return;
+    }
+    console.log("Gọi API refresh token mỗi 10 giây...");
+    await refreshAccessToken(refreshTokenValue);
+  }, 3600 * 1000);
+
+  return () => {
+    console.log("Clear intervals for token refresh");
+    clearInterval(checkIntervalId);
+    clearInterval(refreshIntervalId);
+  };
 };
