@@ -206,7 +206,7 @@ function BlogDetail() {
           </motion.div>
 
           {/* Tags */}
-          <motion.div
+          {/* <motion.div
             className={styles.sidebarSection}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -234,7 +234,7 @@ function BlogDetail() {
                 ))}
               </AnimatePresence>
             </div>
-          </motion.div>
+          </motion.div> */}
 
           {/* Tin tức nổi bật */}
           <motion.div

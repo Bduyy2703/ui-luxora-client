@@ -22,6 +22,7 @@ import ThankYou from "../pages/ConfirmSuccess";
 import BlogsListPage from "../pages/blogs";
 import PaymentSuccess from "../pages/PaymentSuccess";
 import WishListPage from "../pages/ProfileUser/pageWishList/wishList";
+import BlogList from "../pages/blogs/BlogList";
 
 function requireAuth(to, from, next) {
   const token = localStorage.getItem("decodedToken");
@@ -59,6 +60,7 @@ const publicRoutes = [
   { path: "/otp", component: VerifyRegister },
   { path: "/detail-product/:id", component: DetailProduct },
   { path: "/list-product", component: ProductList },
+  { path: "/list-blog", component: BlogList },
   { path: "/blog/:id", component: BlogsListPage },
   { path: "/reset-password", component: ResetPassword },
   { path: "/checkout", component: Checkout, layout: null },

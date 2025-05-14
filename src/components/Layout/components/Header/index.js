@@ -167,11 +167,7 @@ function Header() {
       setNotifications(response.notifications || []);
       setUnreadNotifications(response.unreadCount || 0);
     } catch (error) {
-      Swal.fire({
-        title: "Lỗi!",
-        text: "Không thể tải danh sách thông báo.",
-        icon: "error",
-      });
+      // console.log();
     }
   }, [notificationPage]);
 
