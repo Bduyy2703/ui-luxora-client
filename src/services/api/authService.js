@@ -67,7 +67,7 @@ export const login = async (email, password) => {
 
     const accessToken =
       response.data.metadata?.accessToken || response.data.token;
-    const refreshToken = response.data.metadata?.refreshToken; // Add this if provided by API
+    const refreshToken = response.data.metadata?.refreshToken;
     const decodedToken = jwtDecode(accessToken).roles;
     const userEmail = jwtDecode(accessToken).email;
     const userId = jwtDecode(accessToken).userId;
@@ -78,6 +78,9 @@ export const login = async (email, password) => {
 
     if (refreshToken) {
       localStorage.setItem("refreshToken", refreshToken);
+      console.log("Đã lưu refreshToken:", refreshToken);
+    } else {
+      console.log("Không nhận được refreshToken từ API");
     }
 
     return { accessToken, userEmail, decodedToken, userId, isVerified };
@@ -110,12 +113,16 @@ export const sendOTP = async (email) => {
 
 export const refreshToken = async (refreshTokenValue) => {
   try {
+    console.log("Gửi request refresh với payload:", {
+      refreshToken: refreshTokenValue,
+    });
     const response = await privateAxios.post(`/v1/auth/refresh`, {
       refreshToken: refreshTokenValue,
     });
-
+    console.log("Response từ server:", response.data);
     return response.data;
   } catch (error) {
+    console.error("Lỗi từ API refresh:", error.response?.data || error.message);
     throw new Error(error.response?.data?.message || "Làm mới token thất bại");
   }
 };

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from "react"; // Không cần useEffect nữa
 import { Link, useNavigate } from "react-router-dom";
 import {
   forgotPassword,
@@ -8,10 +8,10 @@ import {
   sendOTP,
 } from "../../services/api/authService";
 import { jwtDecode } from "jwt-decode";
-
 import styles from "./Login.module.scss";
 import { notification } from "antd";
 import { UserOutlined, LockOutlined, GoogleOutlined } from "@ant-design/icons";
+import { startTokenRefresh } from "../../services/api/refreshToken";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -21,85 +21,6 @@ export default function Login() {
   const [passwordError, setPasswordError] = useState("");
 
   const navigate = useNavigate();
-
-  const refreshAccessToken = async (refreshTokenValue) => {
-    console.log("Đang làm mới token...");
-    try {
-      const response = await refreshToken(refreshTokenValue);
-      const newAccessToken = response.data.accessToken;
-      const { exp } = jwtDecode(newAccessToken);
-      const newExpiryTime = exp * 1000;
-
-      localStorage.setItem("accessToken", newAccessToken);
-      localStorage.setItem("tokenExpiry", newExpiryTime.toString());
-
-      notification.success({
-        message: "Làm mới token thành công",
-        description: "Token đã được làm mới.",
-      });
-
-      return newAccessToken;
-    } catch (error) {
-      console.error("Token refresh failed:", error);
-      notification.error({
-        message: "Làm mới token thất bại",
-        description: error.message || "Vui lòng đăng nhập lại.",
-      });
-      return null;
-    }
-  };
-
-  // const handleLogin = async (e) => {
-  //   e.preventDefault();
-  //   if (password.length < 6) {
-  //     setPasswordError("Mật khẩu phải có ít nhất 6 ký tự.");
-  //     return;
-  //   }
-  //   setPasswordError("");
-
-  //   try {
-  //     const { userEmail, accessToken, decodedToken, userId, isVerified } =
-  //       await login(email, password);
-
-  //     if (accessToken) {
-  //       const expiryTime = new Date().getTime() + 60 * 60 * 1000;
-
-  //       localStorage.setItem("userEmail", userEmail);
-  //       localStorage.setItem("accessToken", accessToken);
-  //       localStorage.setItem("decodedToken", decodedToken);
-  //       localStorage.setItem("userId", userId);
-  //       localStorage.setItem("isVerified", isVerified.toString());
-  //       localStorage.setItem("tokenExpiry", expiryTime.toString());
-
-  //       notification.success({
-  //         message: "Đăng nhập thành công",
-  //         description: "Bạn đã đăng nhập thành công",
-  //       });
-
-  //       if (decodedToken === "USER") {
-  //         navigate("/");
-  //       } else if (decodedToken === "ADMIN") {
-  //         navigate("/admin");
-  //       } else {
-  //         notification.error({
-  //           message: "Đăng nhập thất bại",
-  //           description: "Vai trò không hợp lệ",
-  //         });
-  //       }
-  //     } else {
-  //       notification.error({
-  //         message: "Đăng nhập thất bại",
-  //         description: "Thông tin đăng nhập không đúng",
-  //       });
-  //     }
-  //   } catch (error) {
-  //     console.error("Lỗi đăng nhập:", error);
-  //     notification.error({
-  //       message: "Đăng nhập thất bại",
-  //       description: error?.message || "Có lỗi xảy ra, vui lòng thử lại.",
-  //     });
-  //   }
-  // };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -122,8 +43,9 @@ export default function Login() {
       }
 
       if (accessToken) {
-        const { exp } = jwtDecode(accessToken); // Get expiry from JWT
-        const expiryTime = exp * 1000; // Convert to milliseconds
+        const { exp } = jwtDecode(accessToken);
+        // const expiryTime = new Date().getTime() + 10 * 1000;
+        const expiryTime = new Date().getTime() + 60 * 60 * 1000;
 
         localStorage.setItem("userEmail", userEmail);
         localStorage.setItem("accessToken", accessToken);
@@ -137,33 +59,14 @@ export default function Login() {
           description: "Bạn đã đăng nhập thành công",
         });
 
+        startTokenRefresh();
+
         if (decodedToken === "USER") {
           navigate("/");
         } else if (decodedToken === "ADMIN") {
           navigate("/admin");
         } else {
           throw new Error("Vai trò không hợp lệ");
-        }
-
-        // Set up token refresh check
-        const refreshTokenValue = localStorage.getItem("refreshToken"); // Assuming you store refresh token
-        if (refreshTokenValue) {
-          const checkTokenExpiry = () => {
-            const currentTime = new Date().getTime();
-            const storedExpiry = parseInt(
-              localStorage.getItem("tokenExpiry"),
-              10,
-            );
-
-            if (currentTime >= storedExpiry) {
-              refreshAccessToken(refreshTokenValue);
-            }
-          };
-
-          // Check every minute (adjust interval as needed)
-          const intervalId = setInterval(checkTokenExpiry, 60000);
-          // Clean up interval on component unmount (add to useEffect if needed)
-          return () => clearInterval(intervalId);
         }
       } else {
         throw new Error("Không nhận được token");
@@ -174,7 +77,6 @@ export default function Login() {
         message: "Đăng nhập thất bại",
         description: error.message || "Có lỗi xảy ra, vui lòng thử lại.",
       });
-    } finally {
     }
   };
 
@@ -215,7 +117,6 @@ export default function Login() {
 
         <form className={styles.loginForm} onSubmit={handleLogin}>
           <div className={styles.inputGroup}>
-            <UserOutlined className={styles.inputIcon} />
             <input
               type="email"
               placeholder="Email"
@@ -226,7 +127,6 @@ export default function Login() {
           </div>
 
           <div className={styles.inputGroup}>
-            <LockOutlined className={styles.inputIcon} />
             <input
               type="password"
               placeholder="Mật khẩu"

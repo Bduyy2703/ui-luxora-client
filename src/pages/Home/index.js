@@ -35,6 +35,81 @@ function Home() {
     setIsLoggedIn(!!token);
   }, []);
 
+  // const getFlashSaleData = async () => {
+  //   try {
+  //     setFlashSaleLoading(true);
+  //     const salesResponse = await getAllSales({ page: 1, limit: 1000 });
+
+  //     // Lọc các sale đang hoạt động và chưa hết thời gian
+  //     const now = new Date().getTime();
+  //     const activeSales = salesResponse.filter(
+  //       (sale) => sale.isActive && new Date(sale.endDate).getTime() > now,
+  //     );
+
+  //     if (activeSales.length === 0) {
+  //       setFlashSaleProducts([]);
+  //       setFlashSaleEndTime(null);
+  //       return;
+  //     }
+
+  //     // Tìm thời gian kết thúc sớm nhất
+  //     const endTimes = activeSales.map((sale) =>
+  //       new Date(sale.endDate).getTime(),
+  //     );
+  //     const earliestEndTime = Math.min(...endTimes);
+  //     setFlashSaleEndTime(new Date(earliestEndTime));
+
+  //     const productMap = new Map();
+
+  //     for (const sale of activeSales) {
+  //       let productsToProcess = [];
+
+  //       if (sale.isGlobalSale) {
+  //         productsToProcess = allProducts;
+  //       } else {
+  //         productsToProcess = sale.productStrategySales.map(
+  //           (item) => item.product,
+  //         );
+  //       }
+
+  //       productsToProcess.forEach((product) => {
+  //         const discountPercent = parseFloat(sale.discountAmount) || 0;
+  //         const finalPrice = (
+  //           (parseFloat(product.originalPrice) || 0) *
+  //           (1 - discountPercent / 100)
+  //         ).toFixed(2);
+
+  //         const productData = {
+  //           ...product,
+  //           saleId: sale.id,
+  //           saleName: sale.name,
+  //           discountPercent,
+  //           finalPrice,
+  //           images: allProducts.find((p) => p.id === product.id)?.images,
+  //         };
+
+  //         if (productMap.has(product.id)) {
+  //           const existingProduct = productMap.get(product.id);
+  //           if (discountPercent > existingProduct.discountPercent) {
+  //             productMap.set(product.id, productData);
+  //           }
+  //         } else {
+  //           productMap.set(product.id, productData);
+  //         }
+  //       });
+  //     }
+
+  //     const allFlashSaleProducts = Array.from(productMap.values());
+  //     setFlashSaleProducts(allFlashSaleProducts);
+  //   } catch (error) {
+  //     console.error("Lỗi khi lấy dữ liệu Flash Sale:", error);
+  //     setFlashSaleProducts([]);
+  //     setFlashSaleEndTime(null);
+  //   } finally {
+  //     setFlashSaleLoading(false);
+  //   }
+  // };
+
   const getFlashSaleData = async () => {
     try {
       setFlashSaleLoading(true);
@@ -64,14 +139,35 @@ function Home() {
       for (const sale of activeSales) {
         let productsToProcess = [];
 
-        if (sale.isGlobalSale) {
-          productsToProcess = allProducts;
-        } else {
+        // Case 1: Product Sale
+        if (sale.productStrategySales && sale.productStrategySales.length > 0) {
           productsToProcess = sale.productStrategySales.map(
             (item) => item.product,
           );
         }
+        // Case 2: Global Sale
+        else if (sale.isGlobalSale) {
+          productsToProcess = allProducts;
+        }
+        // Case 3: Category Sale
+        else if (
+          sale.categoryStrategySales &&
+          sale.categoryStrategySales.length > 0
+        ) {
+          const categoryIds = sale.categoryStrategySales.map(
+            (cat) => cat.categoryId,
+          );
 
+          console.log("categoryIds", categoryIds);
+
+          productsToProcess = allProducts.filter((product) => {
+            console.log("product", product);
+
+            return categoryIds.includes(product.category?.id);
+          });
+        }
+
+        // Xử lý danh sách sản phẩm cho sale hiện tại
         productsToProcess.forEach((product) => {
           const discountPercent = parseFloat(sale.discountAmount) || 0;
           const finalPrice = (
@@ -85,9 +181,15 @@ function Home() {
             saleName: sale.name,
             discountPercent,
             finalPrice,
-            images: allProducts.find((p) => p.id === product.id)?.images,
+            images: allProducts.find((p) => p.id === product.id)?.images || [],
+            saleType: sale.isGlobalSale
+              ? "global"
+              : sale.categoryStrategySales?.length > 0
+                ? "category"
+                : "product",
           };
 
+          // Case 4: Chọn sale có giảm giá cao nhất
           if (productMap.has(product.id)) {
             const existingProduct = productMap.get(product.id);
             if (discountPercent > existingProduct.discountPercent) {
@@ -337,10 +439,31 @@ function Home() {
                     />
                   </Badge.Ribbon>
                 </div>
-                <div className={styles.flashSaleContent}>
+                {/* <div className={styles.flashSaleContent}>
                   <span className={styles.flashSaleDesc}>{product.name}</span>
                   <span className={styles.flashSaleProgram}>
                     Chương trình: {product.saleName}
+                  </span>
+                  <div className={styles.flashSalePriceWrapper}>
+                    <h4 className={styles.flashSalePrice}>
+                      {new Intl.NumberFormat("vi-VN").format(
+                        product.finalPrice,
+                      )}{" "}
+                      <span className={styles.dong}>đ</span>
+                    </h4>
+                    <span className={styles.flashSaleOriginalPrice}>
+                      {new Intl.NumberFormat("vi-VN").format(
+                        product.originalPrice,
+                      )}{" "}
+                      đ
+                    </span>
+                  </div>
+                  <div className={styles.flashSaleStatus}>ĐANG BÁN CHẠY</div>
+                </div> */}
+                <div className={styles.flashSaleContent}>
+                  <span className={styles.flashSaleDesc}>{product.name}</span>
+                  <span className={styles.flashSaleProgram}>
+                    Chương trình: {product.saleName} ({product.saleType})
                   </span>
                   <div className={styles.flashSalePriceWrapper}>
                     <h4 className={styles.flashSalePrice}>
