@@ -60,7 +60,6 @@ const CartPage = () => {
         } catch (error) {
           retries--;
           if (retries < 0) {
-            console.error("Lỗi khi lấy dữ liệu giỏ hàng:", error);
             notification.error({
               message: "Thông báo",
               description: "Không thể tải dữ liệu giỏ hàng, vui lòng thử lại",
@@ -103,7 +102,6 @@ const CartPage = () => {
           }, {}),
         }));
       } catch (error) {
-        console.error("Lỗi khi lấy chi tiết sản phẩm:", error);
         notification.error({
           message: "Thông báo",
           description: "Không thể tải chi tiết sản phẩm, vui lòng thử lại",
@@ -236,7 +234,6 @@ const CartPage = () => {
         duration: 3,
       });
     } catch (error) {
-      console.error("Lỗi khi xóa sản phẩm:", error);
       notification.error({
         message: "Thông báo",
         description: "Xóa sản phẩm thất bại, vui lòng thử lại",
@@ -262,7 +259,6 @@ const CartPage = () => {
             duration: 3,
           });
         } catch (error) {
-          console.error("Lỗi khi xóa giỏ hàng:", error);
           notification.error({
             message: "Thông báo",
             description: "Xóa giỏ hàng thất bại, vui lòng thử lại",
@@ -316,8 +312,6 @@ const CartPage = () => {
       return;
     }
 
-    console.log("cartItems", cartItems);
-
     try {
       const selectedItemsData = cartItems
         .filter((item) => selectedItems.includes(getItemKey(item)))
@@ -331,7 +325,6 @@ const CartPage = () => {
       });
 
       if (response.error) {
-        console.error("Lỗi khi lấy dữ liệu thanh toán:", response.error);
         notification.error({
           message: "Thông báo",
           description: "Lỗi khi xử lý thanh toán, vui lòng thử lại",
@@ -351,7 +344,6 @@ const CartPage = () => {
         },
       });
     } catch (error) {
-      console.error("Lỗi không mong muốn:", error);
       notification.error({
         message: "Thông báo",
         description: "Lỗi không mong muốn, vui lòng thử lại",
@@ -594,78 +586,77 @@ const CartPage = () => {
               </>
             )}
           </div>
-          <div className={styles.cartRight}>
+          {/* <div className={styles.cartRight}>
             <DiscountCard
               totalAmount={totalAmount}
               setDiscount_id={setDiscount_id}
             />
-          </div>
+          </div> */}
         </div>
       </div>
     </>
   );
 };
 
-const DiscountCard = ({ totalAmount, setDiscount_id }) => {
-  const [showDiscounts, setShowDiscounts] = useState(false);
-  const [discountData, setDiscountData] = useState([]);
+// const DiscountCard = ({ totalAmount, setDiscount_id }) => {
+//   const [showDiscounts, setShowDiscounts] = useState(false);
+//   const [discountData, setDiscountData] = useState([]);
 
-  const fetchDiscount = async () => {
-    try {
-      const response = await fetchDiscounts({ totalPrice: totalAmount });
+//   const fetchDiscount = async () => {
+//     try {
+//       const response = await fetchDiscounts({ totalPrice: totalAmount });
 
-      if (response.error) {
-        console.error("Lỗi khi lấy dữ liệu giảm giá:", response.error);
-        return;
-      }
-      setDiscountData(response);
-    } catch (error) {
-      console.error("Lỗi không mong muốn:", error);
-    }
-  };
+//       if (response.error) {
+//         return;
+//       }
+//       setDiscountData(response);
+//     } catch (error) {
+//       // console.error("Lỗi không mong muốn:", error);
+//     }
+//   };
 
-  useEffect(() => {
-    fetchDiscount();
-  }, [totalAmount]);
+//   useEffect(() => {
+//     fetchDiscount();
+//   }, [totalAmount]);
 
-  const toggleDiscounts = () => {
-    setShowDiscounts(!showDiscounts);
-    fetchDiscount();
-  };
+//   const toggleDiscounts = () => {
+//     setShowDiscounts(!showDiscounts);
+//     fetchDiscount();
+//   };
 
-  return (
-    <div className={styles.discountCard}>
-      {showDiscounts && (
-        <div className={styles.discountCardContent}>
-          {discountData.map((discount, index) => (
-            <div key={index} className={styles.discountItem}>
-              <div className={styles.discountTitle}>
-                Giảm{" "}
-                {new Intl.NumberFormat("vi-VN").format(discount.discountAmount)}
-                {discount.discountType === "percent" ? "%" : "đ"}
-              </div>
-              <div className={styles.discountCodeContainer}>
-                <div className={styles.discountCode}>
-                  <input
-                    type="radio"
-                    id={`discount-${index}`}
-                    name="discount"
-                    value={discount.code}
-                    style={{ marginRight: "10px", marginTop: "10px" }}
-                    onChange={() => setDiscount_id(discount._id)}
-                  />
-                  <span style={{ marginRight: "10px" }}>Top Code</span>
-                  <span>{discount.code}</span>
-                  <span>{discount.name}</span>
-                  <button className={styles.copyButton}>Áp dụng</button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
+//   return (
+//     <div className={styles.discountCard}>
+//       {showDiscounts && (
+//         <div className={styles.discountCardContent}>
+//           {discountData.map((discount, index) => (
+//             <div key={index} className={styles.discountItem}>
+//               <div className={styles.discountTitle}>
+//                 Giảm{" "}
+//                 {new Intl.NumberFormat("vi-VN").format(discount.discountAmount)}
+//                 {discount.discountType === "percent" ? "%" : "đ"}
+//               </div>
+//               <div className={styles.discountCodeContainer}>
+//                 <div className={styles.discountCode}>
+//                   <input
+//                     type="radio"
+//                     id={`discount-${index}`}
+//                     name="discount"
+//                     value={discount.code}
+//                     style={{ marginRight: "10px", marginTop: "10px" }}
+//                     onChange={() => setDiscount_id(discount._id)}
+//                   />
+//                   <span style={{ marginRight: "10px" }}>Top Code</span>
+//                   <span>{discount.code}</span>
+//                   <span>{discount.name}</span>
+//                   <button className={styles.copyButton}>Áp dụng</button>
+//                 </div>
+//               </div>
+//             </div>
+//           ))}
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
 
 export default CartPage;
