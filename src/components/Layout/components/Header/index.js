@@ -536,7 +536,7 @@ function Header() {
               SALE
               <FontAwesomeIcon className={styles.iconFire} icon={faFire} />
             </li>
-            {menuItems.map((item) => (
+            {/* {menuItems.map((item) => (
               <li key={item.id}>
                 <div style={{ fontWeight: "600", fontSize: "16px" }}>
                   {item.name.toUpperCase()}
@@ -579,7 +579,76 @@ function Header() {
                   </div>
                 </div>
               </li>
-            ))}
+            ))} */}
+            {menuItems.map((item) => {
+              // Chia danh mục con thành 4 mảng, mỗi mảng tối đa 4 danh mục
+              const subCategories = item.children || [];
+              const columns = [[], [], [], []];
+              subCategories.forEach((sub, index) => {
+                const columnIndex = Math.floor(index / 4); // Mỗi cột chứa 4 danh mục
+                if (columnIndex < 4) {
+                  columns[columnIndex].push(sub);
+                }
+              });
+
+              return (
+                <li key={item.id}>
+                  <div style={{ fontWeight: "600", fontSize: "16px" }}>
+                    {item.name.toUpperCase()}
+                  </div>
+                  <div
+                    className={styles.submenu}
+                    style={{ marginLeft: accessToken ? "0px" : "-40px" }}
+                  >
+                    <div className={styles.menu1}>
+                      {subCategories.length > 0 ? (
+                        <div className={styles.categoryColumns}>
+                          {columns.map((column, colIndex) => (
+                            <ul
+                              key={colIndex}
+                              className={styles.categoryColumn}
+                            >
+                              <li className={styles.headerli}>
+                                Danh mục
+                                <div className={styles.subcategories}>
+                                  {column.map((sub) => (
+                                    <li
+                                      key={sub.id}
+                                      onClick={() =>
+                                        handleCategoryClick(sub.id)
+                                      }
+                                      style={{
+                                        cursor: "pointer",
+                                        color: "#333",
+                                        fontWeight: "400",
+                                      }}
+                                      className={styles.childCategory}
+                                    >
+                                      {sub.name}
+                                    </li>
+                                  ))}
+                                </div>
+                              </li>
+                            </ul>
+                          ))}
+                        </div>
+                      ) : (
+                        <p>Không có danh mục con</p>
+                      )}
+                      <div className={styles.imageContainer}>
+                        <img
+                          src={
+                            categoryImages[item.name] ||
+                            "https://bizweb.dktcdn.net/100/461/213/themes/870653/assets/mega-1-image-2.jpg"
+                          }
+                          alt={`Ảnh ${item.name}`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         </div>
       </div>
