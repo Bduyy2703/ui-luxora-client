@@ -17,7 +17,6 @@ privateAxios.interceptors.request.use(
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
       if (process.env.NODE_ENV === "development") {
-        console.log("Đã thêm Authorization header với token:", accessToken);
       }
     }
     return config;
@@ -28,7 +27,6 @@ privateAxios.interceptors.request.use(
 privateAxios.interceptors.response.use(
   (response) => {
     if (process.env.NODE_ENV === "development") {
-      console.log("Request thành công:", response.config.url);
     }
     return response;
   },
@@ -38,7 +36,6 @@ privateAxios.interceptors.response.use(
     originalRequest._retryCount = originalRequest._retryCount || 0;
     if (error.response?.status === 401 && originalRequest._retryCount < 1) {
       originalRequest._retryCount += 1;
-      console.log("Phát hiện lỗi 401, đang làm mới token...");
 
       try {
         const refreshTokenValue = localStorage.getItem("refreshToken");
@@ -48,19 +45,16 @@ privateAxios.interceptors.response.use(
         const newAccessToken = await refreshAccessToken(refreshTokenValue);
         if (newAccessToken) {
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-          console.log("Thử lại request với token mới:", newAccessToken);
           return privateAxios(originalRequest);
         }
         throw new Error("Không thể làm mới token");
       } catch (refreshError) {
-        console.error("Làm mới token thất bại:", refreshError);
         localStorage.clear();
         window.location.href = "/login";
         return Promise.reject(refreshError);
       }
     }
 
-    console.error("Lỗi không xử lý được:", error);
     return Promise.reject(error);
   },
 );

@@ -23,6 +23,7 @@ import PromotionList from "./pages/admin/promotion/PromotionList";
 import ReivewList from "./pages/admin/review/ReviewList";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import useClearTokenEvery5Seconds from "../src/components/common/layout/clearAccessToken";
 
 function requireAuth({ children }) {
   const token = localStorage.getItem("decodedToken");
@@ -42,6 +43,7 @@ function RequireAdmin({ children }) {
 }
 
 function App() {
+  useClearTokenEvery5Seconds();
   const decodedToken = localStorage.getItem("decodedToken");
   return (
     <Router>
