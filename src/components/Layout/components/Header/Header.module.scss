@@ -110,6 +110,109 @@
   }
 }
 
+// .menu {
+//   width: 100%;
+//   margin-top: 5px;
+//   padding-top: 5px;
+//   border-top: 1px solid #d4af37;
+
+//   ul {
+//     list-style-type: none;
+//     display: flex;
+//     justify-content: space-around;
+//     position: relative;
+
+//     li {
+//       padding: 14px 20px;
+//       cursor: pointer;
+//       font-size: 16px;
+//       color: #2b2b2b;
+//       font-weight: 600;
+//       transition: color 0.3s ease;
+
+//       &:hover {
+//         color: #d4af37;
+//       }
+
+.iconFire {
+  margin-left: 8px;
+  color: #d4af37;
+  transition: color 0.3s ease;
+
+  &:hover {
+    color: #b8972e;
+  }
+}
+
+//       .submenu {
+//         display: none;
+//         position: absolute;
+//         left: 50%;
+//         transform: translateX(-50%);
+//         margin-top: 15px;
+//         width: 1475px;
+//         height: 270px;
+//         background: #fff;
+//         box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+//         border: 1px solid #e0e0e0;
+//         border-radius: 8px;
+//         z-index: 1;
+//       }
+
+//       &:hover .submenu {
+//         display: block;
+//       }
+//     }
+//   }
+// }
+
+// .menu1 {
+//   display: flex;
+
+//   .ul1 {
+//     display: flex;
+//     flex-direction: column;
+//     line-height: 1.2rem;
+//     margin-left: 55px;
+
+//     .li1 {
+//       display: flex;
+//       flex-direction: column;
+//       line-height: 5px;
+//       margin-bottom: 70px;
+//       font-weight: 400;
+//       color: #aab1b0;
+//       font-size: 16px;
+
+//       .headerli {
+//         color: #2b2b2b;
+//         border-bottom: 1px solid #d4af37;
+//         font-weight: 600;
+//       }
+
+//       .subcategories {
+//         li {
+//           color: #2b2b2b;
+//           transition: color 0.3s ease;
+
+//           &:hover {
+//             color: #d4af37;
+//           }
+//         }
+//       }
+//     }
+//   }
+
+//   .imageContainer img {
+//     width: 465px;
+//     height: 190px;
+//     margin-left: 120px;
+//     margin-top: 40px;
+//     border-radius: 8px;
+//     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+//   }
+// }
+
 .menu {
   width: 100%;
   margin-top: 5px;
@@ -130,19 +233,9 @@
       font-weight: 600;
       transition: color 0.3s ease;
 
-      &:hover {
-        color: #d4af37;
-      }
-
-      .iconFire {
-        margin-left: 8px;
-        color: #d4af37;
-        transition: color 0.3s ease;
-
-        &:hover {
-          color: #b8972e;
-        }
-      }
+      // &:hover {
+      //   color: #d4af37;
+      // }
 
       .submenu {
         display: none;
@@ -157,6 +250,7 @@
         border: 1px solid #e0e0e0;
         border-radius: 8px;
         z-index: 1;
+        // margin-left: -20px;
       }
 
       &:hover .submenu {
@@ -166,51 +260,61 @@
   }
 }
 
+.childCategory {
+  color: #2b2b2b !important;
+  margin-top: 9px;
+  &:hover {
+    color: #d4af37 !important;
+  }
+}
+
 .menu1 {
   display: flex;
+  justify-content: space-between;
+  padding: 20px;
+}
 
-  .ul1 {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.2rem;
-    margin-left: 55px;
+.categoryColumns {
+  display: flex;
+  gap: 20px;
+}
 
-    .li1 {
-      display: flex;
-      flex-direction: column;
-      line-height: 5px;
-      margin-bottom: 70px;
-      font-weight: 400;
-      color: #aab1b0;
-      font-size: 16px;
+.categoryColumn {
+  flex: 1;
+  line-height: 1.2rem;
+  font-size: 16px;
+  color: #aab1b0;
 
-      .headerli {
-        color: #2b2b2b;
-        border-bottom: 1px solid #d4af37;
-        font-weight: 600;
-      }
+  .subcategories {
+    width: 225px;
+  }
 
-      .subcategories {
-        li {
-          color: #2b2b2b;
-          transition: color 0.3s ease;
+  .headerli {
+    color: #2b2b2b;
+    border-bottom: 1px solid #d4af37;
+    font-weight: 600;
+    margin-bottom: 10px;
+    width: 225px;
+  }
 
-          &:hover {
-            color: #d4af37;
-          }
-        }
-      }
+  .subcategories {
+    li {
+      color: #2b2b2b;
+      padding: 8px 0;
+      transition: color 0.3s ease;
+
+      // &:hover {
+      //   color: #d4af37;
+      // }
     }
   }
+}
 
-  .imageContainer img {
-    width: 465px;
-    height: 190px;
-    margin-left: 120px;
-    margin-top: 40px;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-  }
+.imageContainer img {
+  width: 465px;
+  height: 190px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
 .right {
