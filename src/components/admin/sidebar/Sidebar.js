@@ -15,10 +15,10 @@ import {
   Badge,
   Typography,
   Space,
+  Tabs,
 } from "antd";
 import { IconBrandDribbble } from "@tabler/icons-react";
 import { useEffect, useState, useCallback, useRef } from "react";
-// import logoTest from "../../assets/icon/te.png";
 import logoTest from "../../../assets/icon/LogoWeb.jpg";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { logOut } from "../../../services/api/authService";
@@ -34,6 +34,26 @@ import "./sidebar.css";
 
 const { Text } = Typography;
 
+const notificationConfig = {
+  INVOICE_CREATED: { route: "/admin/invoice", label: "Hóa đơn", color: "blue" },
+  INVOICE_CANCELLED: { route: "/admin/invoice", label: "Hóa đơn", color: "red" },
+  INVOICE_PAYMENT: { route: "/admin/invoice", label: "Hóa đơn", color: "green" },
+};
+
+const getTimeAgo = (createdAt) => {
+  const now = new Date();
+  const date = new Date(createdAt);
+  const diffInSeconds = Math.floor((now - date) / 1000);
+
+  if (diffInSeconds < 60) return "Vừa xong";
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) return `${diffInMinutes} phút trước`;
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) return `${diffInHours} giờ trước`;
+  const diffInDays = Math.floor(diffInHours / 24);
+  return `${diffInDays} ngày trước`;
+};
+
 const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -43,8 +63,12 @@ const Sidebar = () => {
   const [openKeys, setOpenKeys] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationPage, setNotificationPage] = useState(1);
+  const [notificationTotal, setNotificationTotal] = useState(0);
+  const [activeTab, setActiveTab] = useState("all");
   const [hasInteracted, setHasInteracted] = useState(false);
   const prevNotificationsRef = useRef([]);
+  const notificationLimit = 10;
 
   const token = localStorage.getItem("accessToken") || "your-jwt-token";
   const API_BASE_URL = "https://dclux.store/";
@@ -67,12 +91,18 @@ const Sidebar = () => {
 
   const fetchNotifications = useCallback(async () => {
     try {
-      const response = await getAllNotifications(1, 0, "");
-      return response;
+      const types = activeTab === "all"
+        ? ["INVOICE_CREATED", "INVOICE_CANCELLED", "INVOICE_PAYMENT"]
+        : ["INVOICE_CREATED", "INVOICE_CANCELLED", "INVOICE_PAYMENT"];
+      const response = await getAllNotifications(notificationPage, notificationLimit, types);
+      setNotifications(response.notifications || []);
+      setUnreadCount(response.unreadCount || 0);
+      setNotificationTotal(response.total || 0);
+      prevNotificationsRef.current = response.notifications || [];
     } catch (error) {
-      // console.log();
+      console.error("Error fetching notifications:", error);
     }
-  }, []);
+  }, [notificationPage, activeTab]);
 
   const handleNewNotification = (data) => {
     toast.info(
@@ -164,13 +194,7 @@ const Sidebar = () => {
   };
 
   useEffect(() => {
-    fetchNotifications().then((response) => {
-      if (response) {
-        setNotifications(response.notifications || []);
-        setUnreadCount(response.unreadCount || 0);
-        prevNotificationsRef.current = response.notifications || [];
-      }
-    });
+    fetchNotifications();
 
     const interval = setInterval(async () => {
       const response = await fetchNotifications();
@@ -199,6 +223,7 @@ const Sidebar = () => {
 
         setNotifications(newNotifications);
         setUnreadCount(newUnreadCount);
+        setNotificationTotal(response.total || 0);
         prevNotificationsRef.current = newNotifications;
       }
     }, 10000);
@@ -244,7 +269,6 @@ const Sidebar = () => {
           text: "Vui lòng bật quyền thông báo trong cài đặt trình duyệt.",
           icon: "warning",
         });
-      } else {
       }
     } else {
       console.error("Notification API is not supported in this browser.");
@@ -254,7 +278,9 @@ const Sidebar = () => {
       auth: { token: `Bearer ${token}` },
     });
 
-    socket.on("connect", () => {});
+    socket.on("connect", () => {
+      console.log("WebSocket connected");
+    });
 
     socket.on("connect_error", (error) => {
       console.error("WebSocket connection error:", error.message);
@@ -288,11 +314,13 @@ const Sidebar = () => {
           return updatedNotifications;
         });
         setUnreadCount((prev) => prev + 1);
-      } else {
+        setNotificationTotal((prev) => prev + 1);
       }
     });
 
-    socket.on("disconnect", () => {});
+    socket.on("disconnect", () => {
+      console.log("WebSocket disconnected");
+    });
 
     return () => {
       socket.disconnect();
@@ -347,22 +375,32 @@ const Sidebar = () => {
   };
 
   const notificationMenu = (
-    <div className="notification-dropdown">
-      <div>
+    <div className="notification-dropdown" style={{ padding: "0px", width: "400px" }}>
+      <div style={{ padding: "10px 0px 8px 10px" }}>
         <Text
           strong
           style={{
             fontSize: "16px",
             color: "#333",
-            padding: "5px 0px 8px 10px",
-            display: "flex",
-            width: "100%",
           }}
         >
           Thông báo
         </Text>
       </div>
-      <div className="notification-list">
+      <Tabs
+        activeKey={activeTab}
+        onChange={(key) => {
+          setActiveTab(key);
+          setNotificationPage(1);
+          setNotifications([]);
+        }}
+        items={[
+          { key: "all", label: "Tất cả" },
+          { key: "invoice", label: "Hóa đơn" },
+        ]}
+        style={{ padding: "0 10px" }}
+      />
+      <div className="notification-list" style={{ maxHeight: "400px", overflowY: "auto" }}>
         {notifications.length > 0 ? (
           <AnimatePresence>
             {notifications.map((notification, index) => (
@@ -373,39 +411,63 @@ const Sidebar = () => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3, delay: index * 0.1 }}
-                onClick={() =>
-                  !notification.isRead && handleMarkAsRead(notification.id)
-                }
+                onClick={() => {
+                  if (!notification.isRead) handleMarkAsRead(notification.id);
+                  const config = notificationConfig[notification.type] || {
+                    route: "/admin/invoice",
+                    label: "Hóa đơn",
+                    color: "default",
+                  };
+                  navigate(config.route);
+                }}
+                style={{ borderTop: "1px solid #e8e8e8", cursor: "pointer" }}
               >
-                <Space direction="vertical" style={{ width: "100%" }}>
-                  <Text strong>{notification.message}</Text>
-                  <Text type="secondary" style={{ fontSize: "12px" }}>
-                    {new Date(notification.createdAt).toLocaleString("vi-VN", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      second: "2-digit",
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                    })}
-                  </Text>
-                  <Space>
-                    <Button
-                      type={notification.isRead ? "default" : "primary"}
-                      size="small"
-                      style={{
-                        backgroundColor: notification.isRead
-                          ? "#f5f5f5"
-                          : "#e6f7ff",
-                        borderColor: notification.isRead
-                          ? "#d9d9d9"
-                          : "#91d5ff",
-                        color: notification.isRead ? "#000" : "#1890ff",
-                      }}
-                    >
-                      {notification.isRead ? "Đã đọc" : "Chưa đọc"}
-                    </Button>
-                  </Space>
+                <Space
+                  align="start"
+                  style={{ width: "100%", padding: "10px" }}
+                >
+                  <BellOutlined
+                    style={{
+                      fontSize: "16px",
+                      color: "#1890ff",
+                      marginTop: "4px",
+                    }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <Text strong>{notification.message}</Text>
+                    <Text type="secondary" style={{ fontSize: "12px" }}>
+                      {getTimeAgo(notification.createdAt)}
+                    </Text>
+                    <Space style={{ marginTop: "4px" }}>
+                      <Button
+                        type={notification.isRead ? "default" : "primary"}
+                        size="small"
+                        style={{
+                          backgroundColor: notification.isRead
+                            ? "#f5f5f5"
+                            : "#e6f7ff",
+                          borderColor: notification.isRead
+                            ? "#d9d9d9"
+                            : "#91d5ff",
+                          color: notification.isRead ? "#000" : "#1890ff",
+                        }}
+                      >
+                        {notification.isRead ? "Đã đọc" : "Chưa đọc"}
+                      </Button>
+                      <Button
+                        type="default"
+                        size="small"
+                        style={{
+                          backgroundColor: notificationConfig[notification.type]?.color
+                            ? `var(--ant-color-${notificationConfig[notification.type].color})`
+                            : "#f5f5f5",
+                          color: "#fff",
+                        }}
+                      >
+                        {notificationConfig[notification.type]?.label || "Khác"}
+                      </Button>
+                    </Space>
+                  </div>
                 </Space>
               </motion.div>
             ))}
@@ -416,6 +478,25 @@ const Sidebar = () => {
           </Text>
         )}
       </div>
+      {notificationTotal > notifications.length && (
+        <div style={{ padding: "10px", textAlign: "center" }}>
+          <motion.button
+            onClick={() => setNotificationPage((prev) => prev + 1)}
+            style={{
+              background: "#1890ff",
+              color: "#fff",
+              border: "none",
+              padding: "8px 16px",
+              borderRadius: "4px",
+              cursor: "pointer",
+            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            Tải thêm
+          </motion.button>
+        </div>
+      )}
     </div>
   );
 
@@ -497,7 +578,6 @@ const Sidebar = () => {
           <img
             width="230"
             height="90"
-            // src="/src/assets/icon/testLogo.png"
             src={logoTest}
             alt="Logo"
             style={{ marginBottom: "10px" }}

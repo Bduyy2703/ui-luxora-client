@@ -225,3 +225,41 @@ export const adminDeleteReview = async (id) => {
     };
   }
 };
+
+export const replyToReview = async (reviewId, content) => {
+  try {
+    const response = await privateAxios.post(
+      `${API_URL}/v1/reviews/${reviewId}/reply`,
+      { content },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+    return response.data; // { message: string, reply: string }
+  } catch (error) {
+    return {
+      error:
+        error.response?.data?.message || "Lỗi khi trả lời đánh giá",
+    };
+  }
+};
+export const toggleLike = async (reviewId) => {
+  try {
+    const response = await privateAxios.post(
+      `${API_URL}/v1/reviews/${reviewId}/toggle-like`,
+      {},
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+    return response.data; // { message: string, liked: boolean, likeCount: number }
+  } catch (error) {
+    return {
+      error: error.response?.data?.message || "Lỗi khi toggle like đánh giá",
+    };
+  }
+}

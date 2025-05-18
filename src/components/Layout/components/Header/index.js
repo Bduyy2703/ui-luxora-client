@@ -27,10 +27,11 @@ import {
   Typography,
   Space,
   Tag,
+  Tabs,
 } from "antd";
 import { logOut } from "../../../../services/api/authService";
 import {
-  getNotifications,
+  getNotificationsByTypes,
   markNotificationAsRead,
 } from "../../../../services/api/notifications";
 import io from "socket.io-client";
@@ -59,6 +60,29 @@ const categoryImages = {
     "https://bizweb.dktcdn.net/100/461/213/themes/870653/assets/mega-1-image-2.jpg?1744711547396",
 };
 
+// Cấu hình thông báo
+const notificationConfig = {
+  INVOICE_UPDATE: { route: "/account/orders", label: "Đơn hàng", color: "blue" },
+  REVIEW_REPLIED: { route: "/account/reviews", label: "Đánh giá", color: "green" },
+  REVIEW_HIDDEN: { route: "/account/reviews", label: "Đánh giá", color: "red" },
+  REVIEW_UNHIDDEN: { route: "/account/reviews", label: "Đánh giá", color: "cyan" },
+  REVIEW_ADMIN_DELETED: { route: "/account/reviews", label: "Đánh giá", color: "orange" },
+};
+
+const getTimeAgo = (createdAt) => {
+  const now = new Date();
+  const date = new Date(createdAt);
+  const diffInSeconds = Math.floor((now - date) / 1000);
+
+  if (diffInSeconds < 60) return "Vừa xong";
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) return `${diffInMinutes} phút trước`;
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) return `${diffInHours} giờ trước`;
+  const diffInDays = Math.floor(diffInHours / 24);
+  return `${diffInDays} ngày trước`;
+};
+
 function Header() {
   const [cartCount, setCartCount] = useState(0);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -77,6 +101,8 @@ function Header() {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [notifications, setNotifications] = useState([]);
   const [notificationPage, setNotificationPage] = useState(1);
+  const [notificationTotal, setNotificationTotal] = useState(0);
+  const [activeTab, setActiveTab] = useState("all");
   const notificationLimit = 10;
   const [hasInteracted, setHasInteracted] = useState(false);
 
@@ -122,9 +148,9 @@ function Header() {
   useEffect(() => {
     const search = () => {
       if (!keyword.trim()) {
-        setFilteredProducts(allProducts);
-        return;
-      }
+  setFilteredProducts(allProducts);
+  return;
+}
 
       const searchTerms = removeVietnameseTones(keyword)
         .split(/\s+/)
@@ -159,22 +185,28 @@ function Header() {
 
   const fetchNotifications = useCallback(async () => {
     try {
-      const response = await getNotifications(
-        notificationPage,
-        0,
-        "INVOICE_UPDATE",
-      );
+      const types = activeTab === "all"
+        ? ["INVOICE_UPDATE", "REVIEW_REPLIED", "REVIEW_HIDDEN", "REVIEW_UNHIDDEN", "REVIEW_ADMIN_DELETED"]
+        : activeTab === "invoice"
+        ? ["INVOICE_UPDATE"]
+        : ["REVIEW_REPLIED", "REVIEW_HIDDEN", "REVIEW_UNHIDDEN", "REVIEW_ADMIN_DELETED"];
+      const response = await getNotificationsByTypes(notificationPage, notificationLimit, types);
       setNotifications(response.notifications || []);
       setUnreadNotifications(response.unreadCount || 0);
+      setNotificationTotal(response.total || 0);
     } catch (error) {
-      // console.log();
+      console.error("Error fetching notifications:", error);
     }
-  }, [notificationPage]);
+  }, [notificationPage, activeTab]);
 
   useEffect(() => {
     if (accessToken) {
       fetchNotifications();
+    }
+  }, [accessToken, fetchNotifications]);
 
+  useEffect(() => {
+    if (accessToken) {
       if (window.Notification) {
         if (Notification.permission === "default") {
           Notification.requestPermission().then((permission) => {
@@ -200,7 +232,9 @@ function Header() {
         auth: { token: `Bearer ${accessToken}` },
       });
 
-      socket.on("connect", () => {});
+      socket.on("connect", () => {
+        console.log("WebSocket connected");
+      });
 
       socket.on("connect_error", (error) => {
         console.error("WebSocket connection error:", error.message);
@@ -210,13 +244,16 @@ function Header() {
         const notificationType = data.type?.trim();
         const notificationSource = data.source?.trim();
 
-        if (
-          notificationType === "INVOICE_UPDATE" &&
-          notificationSource === "ADMIN"
-        ) {
+        if (notificationSource === "ADMIN") {
+          const config = notificationConfig[notificationType] || {
+            route: "/account",
+            label: "Tài khoản",
+            color: "default",
+          };
+
           toast.info(
             <div>
-              <strong>Thông báo mới!</strong>
+              <strong>Thông báo {config.label}!</strong>
               <p>{data.message}</p>
               <button
                 style={{
@@ -227,7 +264,7 @@ function Header() {
                   borderRadius: "4px",
                   cursor: "pointer",
                 }}
-                onClick={() => navigate("/account/orders")}
+                onClick={() => navigate(config.route)}
               >
                 Xem chi tiết
               </button>
@@ -244,7 +281,7 @@ function Header() {
           );
 
           if (window.Notification && Notification.permission === "granted") {
-            const systemNotification = new Notification("Thông báo mới!", {
+            const systemNotification = new Notification(`Thông báo ${config.label}!`, {
               body: data.message,
               icon: "/assets/icon/bell.png",
               tag: data.notificationId,
@@ -252,7 +289,7 @@ function Header() {
 
             systemNotification.onclick = () => {
               window.focus();
-              navigate("/account/orders");
+              navigate(config.route);
             };
           }
 
@@ -286,16 +323,19 @@ function Header() {
             ...prev,
           ]);
           setUnreadNotifications((prev) => prev + 1);
+          setNotificationTotal((prev) => prev + 1);
         }
       });
 
-      socket.on("disconnect", () => {});
+      socket.on("disconnect", () => {
+        console.log("WebSocket disconnected");
+      });
 
       return () => {
         socket.disconnect();
       };
     }
-  }, [accessToken, fetchNotifications, navigate, hasInteracted]);
+  }, [accessToken, navigate, hasInteracted]);
 
   const handleMarkAsRead = async (notificationId) => {
     try {
@@ -370,14 +410,14 @@ function Header() {
   };
 
   const notificationMenu = (
-    <div className="notification-dropdown" style={{ padding: "0px" }}>
+    <div className="notification-dropdown" style={{ padding: "0px", width: "400px" }}>
       <div className={styles.notificationHeader}>
         <Text
           strong
           style={{
             fontSize: "16px",
             color: "#2b2b2b",
-            padding: "5px 0px 8px 10px",
+            padding: "10px 0px 8px 10px",
             display: "flex",
             width: "100%",
           }}
@@ -385,15 +425,35 @@ function Header() {
           Thông báo
         </Text>
       </div>
-      <div className="notification-list">
+      <Tabs
+        activeKey={activeTab}
+        onChange={(key) => {
+          setActiveTab(key);
+          setNotificationPage(1);
+          setNotifications([]);
+        }}
+        items={[
+          { key: "all", label: "Tất cả" },
+          { key: "invoice", label: "Đơn hàng" },
+          { key: "review", label: "Đánh giá" },
+        ]}
+        style={{ padding: "0 10px" }}
+      />
+      <div className="notification-list" style={{ maxHeight: "400px", overflowY: "auto" }}>
         {notifications.length > 0 ? (
           <AnimatePresence>
             {notifications.map((notification, index) => (
               <motion.div
-                onClick={() =>
-                  !notification.isRead && handleMarkAsRead(notification.id)
-                }
-                style={{ borderTop: "1px solid #e8e8e8" }}
+                onClick={() => {
+                  if (!notification.isRead) handleMarkAsRead(notification.id);
+                  const config = notificationConfig[notification.type] || {
+                    route: "/account",
+                    label: "Tài khoản",
+                    color: "default",
+                  };
+                  navigate(config.route);
+                }}
+                style={{ borderTop: "1px solid #e8e8e8", cursor: "pointer" }}
                 key={notification.id}
                 className="notification-item-contentt"
                 initial={{ opacity: 0, x: -20 }}
@@ -403,7 +463,7 @@ function Header() {
               >
                 <Space
                   align="start"
-                  style={{ width: "100%", padding: "10px 10px 10px 10px" }}
+                  style={{ width: "100%", padding: "10px" }}
                   className={styles.spaceNoti}
                 >
                   <BellOutlined
@@ -415,25 +475,14 @@ function Header() {
                   />
                   <div style={{ flex: 1 }}>
                     <div className={styles.notificationMessageWrapper}>
-                      <div>
-                        <Text className={styles.notificationMessage}>
-                          {notification.message}
-                        </Text>
-                      </div>
+                      <Text className={styles.notificationMessage}>
+                        {notification.message}
+                      </Text>
                       <Text
                         type="secondary"
                         className={styles.notificationTime}
                       >
-                        {new Date(notification.createdAt).toLocaleString(
-                          "vi-VN",
-                          {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "numeric",
-                          },
-                        )}
+                        {getTimeAgo(notification.createdAt)}
                       </Text>
                     </div>
                     <Space style={{ marginTop: "4px" }}>
@@ -445,9 +494,12 @@ function Header() {
                             : styles.unreadTag
                         }
                       >
-                        <span>
-                          {notification.isRead ? "Đã đọc" : "Chưa đọc"}
-                        </span>
+                        {notification.isRead ? "Đã đọc" : "Chưa đọc"}
+                      </Tag>
+                      <Tag
+                        color={notificationConfig[notification.type]?.color || "default"}
+                      >
+                        {notificationConfig[notification.type]?.label || "Khác"}
                       </Tag>
                     </Space>
                   </div>
@@ -459,6 +511,25 @@ function Header() {
           <Text className={styles.noNotification}>Không có thông báo nào</Text>
         )}
       </div>
+      {notificationTotal > notifications.length && (
+        <div style={{ padding: "10px", textAlign: "center" }}>
+          <motion.button
+            onClick={() => setNotificationPage((prev) => prev + 1)}
+            style={{
+              background: "#d4af37",
+              color: "#fff",
+              border: "none",
+              padding: "8px 16px",
+              borderRadius: "4px",
+              cursor: "pointer",
+            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            Tải thêm
+          </motion.button>
+        </div>
+      )}
     </div>
   );
 
@@ -536,56 +607,11 @@ function Header() {
               SALE
               <FontAwesomeIcon className={styles.iconFire} icon={faFire} />
             </li>
-            {/* {menuItems.map((item) => (
-              <li key={item.id}>
-                <div style={{ fontWeight: "600", fontSize: "16px" }}>
-                  {item.name.toUpperCase()}
-                </div>
-                <div className={styles.submenu}>
-                  <div className={styles.menu1}>
-                    {item.children && item.children.length > 0 ? (
-                      <ul className={styles.ul1}>
-                        <div className={styles.li1}>
-                          <li className={styles.headerli}>Danh mục</li>
-                          <div className={styles.subcategories}>
-                            {item.children.map((sub) => (
-                              <li
-                                key={sub.id}
-                                onClick={() => handleCategoryClick(sub.id)}
-                                style={{
-                                  cursor: "pointer",
-                                  color: "#333",
-                                  fontWeight: "400",
-                                }}
-                              >
-                                {sub.name}
-                              </li>
-                            ))}
-                          </div>
-                        </div>
-                      </ul>
-                    ) : (
-                      <p>Không có danh mục con</p>
-                    )}
-                    <div className={styles.imageContainer}>
-                      <img
-                        src={
-                          categoryImages[item.name] ||
-                          "https://bizweb.dktcdn.net/100/461/213/themes/870653/assets/mega-1-image-2.jpg"
-                        }
-                        alt={`Ảnh ${item.name}`}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </li>
-            ))} */}
             {menuItems.map((item) => {
-              // Chia danh mục con thành 4 mảng, mỗi mảng tối đa 4 danh mục
               const subCategories = item.children || [];
               const columns = [[], [], [], []];
               subCategories.forEach((sub, index) => {
-                const columnIndex = Math.floor(index / 4); // Mỗi cột chứa 4 danh mục
+                const columnIndex = Math.floor(index / 4);
                 if (columnIndex < 4) {
                   columns[columnIndex].push(sub);
                 }

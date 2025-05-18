@@ -1,16 +1,16 @@
-
 import privateAxios from "./privateAxios";
 
-export const getNotifications = async (page = 1, limit = 20, type = "INVOICE_UPDATE") => {
+export const getNotificationsByTypes = async (page = 1, limit = 20, types = []) => {
   try {
-    const response = await privateAxios.get(`/v1/notification?page=${page}&limit=${limit}&type=${type}`);
+    const typesQuery = types.length > 0 ? `&types=${types.join(",")}` : "";
+    const response = await privateAxios.get(`/v1/notification?page=${page}&limit=${limit}${typesQuery}`);
     return {
       notifications: response.data.notifications || [],
       total: response.data.total || 0,
       unreadCount: response.data.unreadCount || 0,
     };
   } catch (error) {
-    console.error("Error fetching notifications:", error);
+    console.error("Error fetching notifications by types:", error);
     throw error;
   }
 };
@@ -24,10 +24,10 @@ export const markNotificationAsRead = async (notificationId) => {
   }
 };
 
-export const getAllNotifications = async (page = 1, limit = 20, type = "") => {
+export const getAllNotifications = async (page = 1, limit = 20, types = []) => {
   try {
-    const typeQuery = type ? `&type=${type}` : "";
-    const response = await privateAxios.get(`/v1/notification/all?page=${page}&limit=${limit}${typeQuery}`);
+    const typesQuery = types.length > 0 ? `&types=${types.join(",")}` : "";
+    const response = await privateAxios.get(`/v1/notification/all?page=${page}&limit=${limit}${typesQuery}`);
     return {
       notifications: response.data.notifications || [],
       total: response.data.total || 0,
