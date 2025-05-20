@@ -5,8 +5,6 @@ import {
   Button,
   Pagination,
   Modal,
-  Form,
-  Select,
   Tooltip,
   Typography,
   Row,
@@ -29,8 +27,18 @@ import {
   markNotificationAsReadAdmin,
 } from "../../../services/api/notifications";
 import io from "socket.io-client";
+import {
+  PayCircleOutlined,
+  CloseCircleOutlined,
+  CheckCircleOutlined,
+  IssuesCloseOutlined,
+  ClockCircleOutlined,
+  CarOutlined,
+  GiftOutlined,
+  RollbackOutlined,
+  WarningOutlined,
+} from "@ant-design/icons";
 
-const { Option } = Select;
 const { Text, Title } = Typography;
 
 // Định nghĩa các trạng thái hóa đơn
@@ -42,18 +50,62 @@ const INVOICE_STATUSES = [
   { value: "PAID", label: "Đã thanh toán", color: "green" },
   { value: "FAILED", label: "Thất bại", color: "purple" },
   { value: "CANCELLED", label: "Đã hủy", color: "red" },
-  { value: "RETURNED", label: "Đã trả hàng", color: "volcano" },
+  { value: "RETURNACKNOWLEDGED", label: "Đã trả hàng", color: "volcano" },
+];
+
+// Định nghĩa timeline trạng thái
+const statusTimeline = [
+  {
+    status: "PENDING",
+    display: "Đang chờ",
+    icon: <IssuesCloseOutlined />,
+  },
+  {
+    status: "CONFIRMED",
+    display: "Đã xác nhận",
+    icon: <ClockCircleOutlined />,
+  },
+  {
+    status: "SHIPPING",
+    display: "Đang giao hàng",
+    icon: <CarOutlined />,
+  },
+  {
+    status: "DELIVERED",
+    display: "Đã giao hàng",
+    icon: <GiftOutlined />,
+  },
+  {
+    status: "PAID",
+    display: "Đã thanh toán",
+    icon: <CheckCircleOutlined />,
+  },
+  {
+    status: "CANCELLED",
+    display: "Đã hủy",
+    icon: <CloseCircleOutlined />,
+  },
+  {
+    status: "RETURNACKNOWLEDGED",
+    display: "Đã trả hàng",
+    icon: <RollbackOutlined />,
+  },
+  {
+    status: "FAILED",
+    display: "Thất bại",
+    icon: <WarningOutlined />,
+  },
 ];
 
 const VALID_TRANSITIONS = {
-  PENDING: ["CONFIRMED", "CANCELLED"],
-  CONFIRMED: ["SHIPPING", "CANCELLED"],
-  SHIPPING: ["DELIVERED", "CANCELLED", "RETURNED"],
-  DELIVERED: ["RETURNED"],
-  PAID: ["RETURNED"],
-  FAILED: ["CANCELLED", "PENDING"],
+  PENDING: ["CONFIRMED", "CANCELLED", "FAILED"],
+  CONFIRMED: ["SHIPPING", "CANCELLED", "PAID"],
+  SHIPPING: ["DELIVERED", "CANCELLED"],
+  DELIVERED: ["PAID", "RETURNACKNOWLEDGED"],
+  PAID: ["RETURNACKNOWLEDGED"],
+  FAILED: ["PENDING", "CANCELLED"],
   CANCELLED: [],
-  RETURNED: [],
+  RETURNACKNOWLEDGED: [],
 };
 
 const AdminInvoiceList = () => {
@@ -64,7 +116,6 @@ const AdminInvoiceList = () => {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
-  const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [notificationModalVisible, setNotificationModalVisible] =
     useState(false);
   const [currentInvoice, setCurrentInvoice] = useState(null);
@@ -72,7 +123,7 @@ const AdminInvoiceList = () => {
   const [notificationTotal, setNotificationTotal] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notificationPage, setNotificationPage] = useState(1);
-  const [form] = Form.useForm();
+  const [selectedStatus, setSelectedStatus] = useState(null);
   const limit = config.LIMIT || 10;
   const notificationLimit = 10;
 
@@ -106,7 +157,7 @@ const AdminInvoiceList = () => {
         notificationPage,
         notificationLimit,
         "",
-      ); // Không lọc type để lấy cả INVOICE_CREATED và INVOICE_CANCELLED
+      );
       setNotifications(response.notifications);
       setNotificationTotal(response.total);
       setUnreadCount(response.unreadCount);
@@ -125,6 +176,7 @@ const AdminInvoiceList = () => {
     try {
       const invoiceDetail = await getInvoiceById(invoice.id);
       setCurrentInvoice(invoiceDetail);
+      setSelectedStatus(invoiceDetail.status);
       setDetailModalVisible(true);
     } catch (error) {
       Swal.fire({
@@ -138,46 +190,50 @@ const AdminInvoiceList = () => {
   };
 
   // Cập nhật trạng thái hóa đơn
-  const handleUpdateStatus = async (values) => {
-    const cleanStatus = values.status.replace(/['"]/g, "");
-    setLoading(true);
-    try {
-      const response = await updateStatusInvoice(
-        currentInvoice.id,
-        cleanStatus,
-      );
+  const handleUpdateStatus = async (newStatus) => {
+    const statusLabel = statusTimeline.find(
+      (s) => s.status === newStatus,
+    )?.display;
+    Swal.fire({
+      title: "Xác nhận",
+      text: `Bạn có chắc muốn cập nhật trạng thái thành ${statusLabel}?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Cập nhật",
+      cancelButtonText: "Hủy",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        setLoading(true);
+        try {
+          const response = await updateStatusInvoice(
+            currentInvoice.id,
+            newStatus,
+          );
+          Swal.fire({
+            title: "Cập nhật thành công!",
+            text:
+              response.message ||
+              `Hóa đơn đã được cập nhật trạng thái thành ${statusLabel}.`,
+            icon: "success",
+            timer: 1500,
+            showConfirmButton: false,
+          });
 
-      const finalStatus =
-        currentInvoice.paymentMethod === "COD" && cleanStatus === "DELIVERED"
-          ? "PAID"
-          : cleanStatus;
-      const statusLabel =
-        INVOICE_STATUSES.find((s) => s.value === finalStatus)?.label ||
-        finalStatus;
-
-      Swal.fire({
-        title: "Cập nhật thành công!",
-        text:
-          response.message ||
-          `Hóa đơn đã được cập nhật trạng thái thành ${statusLabel}.`,
-        icon: "success",
-        timer: 1500,
-        showConfirmButton: false,
-      });
-
-      setStatusModalVisible(false);
-      form.resetFields();
-      fetchData();
-      setDetailModalVisible(false);
-    } catch (error) {
-      Swal.fire({
-        title: "Lỗi!",
-        text: error.response?.data?.message || "Không thể cập nhật trạng thái.",
-        icon: "error",
-      });
-    } finally {
-      setLoading(false);
-    }
+          setSelectedStatus(newStatus);
+          fetchData();
+          setCurrentInvoice({ ...currentInvoice, status: newStatus });
+        } catch (error) {
+          Swal.fire({
+            title: "Lỗi!",
+            text:
+              error.response?.data?.message || "Không thể cập nhật trạng thái.",
+            icon: "error",
+          });
+        } finally {
+          setLoading(false);
+        }
+      }
+    });
   };
 
   // Đánh dấu thông báo đã đọc
@@ -197,7 +253,7 @@ const AdminInvoiceList = () => {
     }
   };
 
-  // Kết nối WebSocket để nhận thông báo thời gian thực
+  // Kết nối WebSocket
   useEffect(() => {
     const socket = io(API_BASE_URL, {
       auth: { token: `Bearer ${token}` },
@@ -405,8 +461,8 @@ const AdminInvoiceList = () => {
 
   const getValidStatusOptions = (currentStatus) => {
     const validStatuses = VALID_TRANSITIONS[currentStatus] || [];
-    return INVOICE_STATUSES.filter((status) =>
-      validStatuses.includes(status.value),
+    return statusTimeline.filter((status) =>
+      validStatuses.includes(status.status),
     );
   };
 
@@ -476,37 +532,76 @@ const AdminInvoiceList = () => {
             title="Chi tiết hóa đơn"
             visible={detailModalVisible}
             onCancel={() => setDetailModalVisible(false)}
-            footer={
-              currentInvoice &&
-              VALID_TRANSITIONS[currentInvoice.status]?.length > 0 ? (
-                <Button
-                  type="primary"
-                  onClick={() => setStatusModalVisible(true)}
-                >
-                  Cập nhật trạng thái
-                </Button>
-              ) : null
-            }
+            footer={null}
             width={1000}
             centered
           >
             {currentInvoice && (
               <div className={styles.detailModal}>
-                <Title level={4}>Thông tin hóa đơn</Title>
+                <Title level={4}>Trạng thái hóa đơn</Title>
+                <div className={styles.timeline}>
+                  {loading ? (
+                    <div className={styles.loading}>Đang cập nhật...</div>
+                  ) : (
+                    statusTimeline.map((step, index) => {
+                      const isActive = step.status === selectedStatus;
+                      const isCurrent = step.status === currentInvoice.status;
+                      const isValid = VALID_TRANSITIONS[
+                        currentInvoice.status
+                      ]?.includes(step.status);
+                      const isLastStep = index === statusTimeline.length - 1;
+                      const isException =
+                        step.status === "CANCELLED" ||
+                        step.status === "FAILED" ||
+                        step.status === "RETURNACKNOWLEDGED";
+                      const shouldDisplay =
+                        !isException ||
+                        (isException && step.status === currentInvoice.status);
+
+                      return shouldDisplay ? (
+                        <div
+                          key={step.status}
+                          className={`${styles.timelineStep} ${
+                            isActive ? styles.active : ""
+                          } ${isValid ? styles.valid : ""}`}
+                          onClick={() =>
+                            isValid && handleUpdateStatus(step.status)
+                          }
+                        >
+                          <div className={styles.timelineIcon}>{step.icon}</div>
+                          <div className={styles.timelineLabel}>
+                            {step.display}
+                          </div>
+                          {!isLastStep && !isException && (
+                            <div className={styles.timelineArrow}>→</div>
+                          )}
+                        </div>
+                      ) : null;
+                    })
+                  )}
+                </div>
+
+                <Title level={4} style={{ marginTop: 24 }}>
+                  Thông tin hóa đơn
+                </Title>
                 <Row gutter={[16, 16]}>
                   <Col xs={24} md={12}>
                     <p>
                       <strong>Mã đơn:</strong> {currentInvoice.id}
                     </p>
                     <p>
-                      <strong>Người mua:</strong> {currentInvoice.user.username}
+                      <strong>Người mua:</strong>{" "}
+                      {currentInvoice.user?.username || "N/A"}
                     </p>
                     <p>
-                      <strong>SĐT:</strong> {currentInvoice.user.phoneNumber}
+                      <strong>SĐT:</strong>{" "}
+                      {currentInvoice.user?.phoneNumber || "N/A"}
                     </p>
                     <p>
                       <strong>Địa chỉ:</strong>{" "}
-                      {`${currentInvoice.address.street}, ${currentInvoice.address.city}, ${currentInvoice.address.country}`}
+                      {currentInvoice.address
+                        ? `${currentInvoice.address.street}, ${currentInvoice.address.city}, ${currentInvoice.address.country}`
+                        : "N/A"}
                     </p>
                   </Col>
                   <Col xs={24} md={12}>
@@ -596,71 +691,21 @@ const AdminInvoiceList = () => {
                   </Col>
                 </Row>
 
-                {currentInvoice.discount &&
-                  currentInvoice.discount.length > 0 && (
-                    <>
-                      <Title level={4} style={{ marginTop: 24 }}>
-                        Thông tin giảm giá
-                      </Title>
-                      <AntTable
-                        dataSource={currentInvoice.discount}
-                        columns={discountColumns}
-                        rowKey="id"
-                        pagination={false}
-                      />
-                    </>
-                  )}
+                {currentInvoice.discount?.length > 0 && (
+                  <>
+                    <Title level={4} style={{ marginTop: 24 }}>
+                      Thông tin giảm giá
+                    </Title>
+                    <AntTable
+                      dataSource={currentInvoice.discount}
+                      columns={discountColumns}
+                      rowKey="id"
+                      pagination={false}
+                    />
+                  </>
+                )}
               </div>
             )}
-          </Modal>
-
-          <Modal
-            title="Cập nhật trạng thái hóa đơn"
-            visible={statusModalVisible}
-            onCancel={() => setStatusModalVisible(false)}
-            footer={null}
-          >
-            <Form form={form} onFinish={handleUpdateStatus} layout="vertical">
-              <Form.Item
-                name="status"
-                label="Trạng thái"
-                rules={[
-                  { required: true, message: "Vui lòng chọn trạng thái!" },
-                ]}
-              >
-                <Select placeholder="Chọn trạng thái">
-                  {currentInvoice &&
-                    getValidStatusOptions(currentInvoice.status).map(
-                      (status) => (
-                        <Option key={status.value} value={status.value}>
-                          {status.label}
-                        </Option>
-                      ),
-                    )}
-                </Select>
-              </Form.Item>
-              <Text
-                type="secondary"
-                style={{ display: "block", marginBottom: 16 }}
-              >
-                Lưu ý:
-                {currentInvoice?.paymentMethod === "COD" &&
-                currentInvoice?.status === "SHIPPING"
-                  ? " Chọn 'Đã giao' sẽ tự động cập nhật thành 'Đã thanh toán' cho hóa đơn COD."
-                  : " Trạng thái sẽ được cập nhật và thông báo sẽ được gửi đến khách hàng."}
-              </Text>
-              <Form.Item>
-                <Button type="primary" htmlType="submit" loading={loading}>
-                  Cập nhật
-                </Button>
-                <Button
-                  style={{ marginLeft: 8 }}
-                  onClick={() => setStatusModalVisible(false)}
-                >
-                  Hủy
-                </Button>
-              </Form.Item>
-            </Form>
           </Modal>
 
           <Modal

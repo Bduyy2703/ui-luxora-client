@@ -4,13 +4,22 @@ import privateAxios from "./privateAxios";
 import publicAxios from "./publicAxios";
 const API_URL = "https://www.dclux.store/api/";
 
-
 export const addUser = async (userData) => {
   try {
     const response = await privateAxios.post("/v1/users/create", userData);
     return response.data || {};
   } catch (error) {
     console.error("Error creating user:", error);
+    throw error;
+  }
+};
+
+export const getUserIdByAdmin = async (id) => {
+  try {
+    const response = await privateAxios.get(`/v1/users/${id}`);
+    return response.data || {};
+  } catch (error) {
+    console.error("Error get user:", error);
     throw error;
   }
 };

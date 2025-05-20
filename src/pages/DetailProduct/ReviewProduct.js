@@ -8,6 +8,8 @@ import {
   EyeOutlined,
   EyeInvisibleOutlined,
   PlusOutlined,
+  LikeOutlined,
+  LikeFilled,
 } from "@ant-design/icons";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -18,6 +20,7 @@ import {
   getProductReviewStatistics,
   toggleHiddenReview,
   adminDeleteReview,
+  toggleLike,
 } from "../../services/api/reviewService";
 import styles from "./ReviewProduct.module.scss";
 
@@ -34,6 +37,7 @@ const ReviewProduct = ({ product }) => {
   const [existingImages, setExistingImages] = useState([]);
   const [editingReviewId, setEditingReviewId] = useState(null);
   const [helpfulVotes, setHelpfulVotes] = useState({});
+  const [likedReviews, setLikedReviews] = useState({});
   const [loading, setLoading] = useState(false);
   const [adminLoading, setAdminLoading] = useState({});
 
@@ -78,6 +82,15 @@ const ReviewProduct = ({ product }) => {
 
       setReviews(sortedReviews);
       setTotalReviews(response.total || 0);
+      // Khởi tạo helpfulVotes và likedReviews từ dữ liệu API
+      const votes = {};
+      const liked = {};
+      sortedReviews.forEach((review) => {
+        votes[review.id] = review.likeCount || 0;
+        liked[review.id] = review.isLiked || false; // Giả định API trả về isLiked
+      });
+      setHelpfulVotes(votes);
+      setLikedReviews(liked);
     } catch (error) {
       console.error("Error fetching reviews:", error);
       notification.error({
@@ -414,11 +427,50 @@ const ReviewProduct = ({ product }) => {
     }
   };
 
-  const handleHelpfulVote = (reviewId) => {
-    setHelpfulVotes((prev) => ({
-      ...prev,
-      [reviewId]: (prev[reviewId] || 0) + 1,
-    }));
+  const handleToggleLike = async (reviewId) => {
+    if (!isLoggedIn()) {
+      notification.error({
+        message: "Thông báo",
+        description: "Vui lòng đăng nhập để thích đánh giá",
+        duration: 3,
+      });
+      navigate("/login");
+      return;
+    }
+
+    try {
+      const response = await toggleLike(reviewId);
+      if (response.error) {
+        notification.error({
+          message: "Thông báo",
+          description: response.error,
+          duration: 3,
+        });
+        return;
+      }
+
+      setHelpfulVotes((prev) => ({
+        ...prev,
+        [reviewId]: response.likeCount,
+      }));
+      setLikedReviews((prev) => ({
+        ...prev,
+        [reviewId]: response.liked,
+      }));
+      notification.success({
+        message: "Thông báo",
+        description: response.liked
+          ? "Đã thích đánh giá"
+          : "Đã bỏ thích đánh giá",
+        duration: 2,
+      });
+    } catch (error) {
+      notification.error({
+        message: "Thông báo",
+        description: "Lỗi khi toggle like đánh giá",
+        duration: 3,
+      });
+    }
   };
 
   const truncateComment = (comment, maxLength = 100) => {
@@ -521,6 +573,19 @@ const ReviewProduct = ({ product }) => {
                       <span className={styles.readMore}>Xem thêm</span>
                     )}
                   </p>
+                  {review.reply && review.reply.content && (
+                    <motion.div
+                      className={styles.reviewReply}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <p className={styles.replyLabel}>Phản hồi từ admin:</p>
+                      <p className={styles.replyContent}>
+                        {review.reply.content}
+                      </p>
+                    </motion.div>
+                  )}
                   {review.images && review.images.length > 0 && (
                     <div className={styles.reviewImages}>
                       <Image.PreviewGroup>
@@ -558,6 +623,19 @@ const ReviewProduct = ({ product }) => {
                     </div>
                   )}
                   <div className={styles.reviewActions}>
+                    <motion.button
+                      onClick={() => handleToggleLike(review.id)}
+                      className={styles.actionButtonLike}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      {likedReviews[review.id] ? (
+                        <LikeFilled style={{ color: "#1890ff" }} />
+                      ) : (
+                        <LikeOutlined />
+                      )}
+                      <span>{helpfulVotes[review.id] || 0}</span>
+                    </motion.button>
                     {review.user?.id === userId && (
                       <>
                         <motion.button
