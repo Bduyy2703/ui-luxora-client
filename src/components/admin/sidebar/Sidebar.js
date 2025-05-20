@@ -15,10 +15,11 @@ import {
   Badge,
   Typography,
   Space,
+  Tabs,
+  Select,
 } from "antd";
 import { IconBrandDribbble } from "@tabler/icons-react";
 import { useEffect, useState, useCallback, useRef } from "react";
-// import logoTest from "../../assets/icon/te.png";
 import logoTest from "../../../assets/icon/LogoWeb.jpg";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { logOut } from "../../../services/api/authService";
@@ -31,8 +32,54 @@ import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 import { motion, AnimatePresence } from "framer-motion";
 import "./sidebar.css";
-
+import { getUserIdByAdmin } from "../../../services/api/userService";
+const { TabPane } = Tabs;
+const { Option } = Select;
 const { Text } = Typography;
+
+const notificationConfig = {
+  INVOICE_CREATED: { route: "/admin/invoice", label: "Hóa đơn", color: "blue" },
+  INVOICE_CANCELLED: {
+    route: "/admin/invoice",
+    label: "Hóa đơn",
+    color: "red",
+  },
+  INVOICE_PAYMENT: {
+    route: "/admin/invoice",
+    label: "Hóa đơn",
+    color: "green",
+  },
+  REVIEW_UPDATED: {
+    route: "/admin/reviews",
+    label: "Đánh giá",
+    color: "purple",
+  },
+  REVIEW_DELETED: { route: "/admin/reviews", label: "Đánh giá", color: "red" },
+  REVIEW_CREATED: { route: "/admin/reviews", label: "Đánh giá", color: "blue" },
+};
+
+const actionMap = {
+  REVIEW_UPDATED: "cập nhật đánh giá sản phẩm",
+  REVIEW_DELETED: "xóa đánh giá sản phẩm",
+  REVIEW_CREATED: "tạo đánh giá sản phẩm",
+  INVOICE_CREATED: "đặt đơn hàng",
+  INVOICE_PAYMENT: "thanh toán thành công đơn hàng",
+  INVOICE_CANCELLED: "hủy đơn hàng",
+};
+
+const getTimeAgo = (createdAt) => {
+  const now = new Date();
+  const date = new Date(createdAt);
+  const diffInSeconds = Math.floor((now - date) / 1000);
+
+  if (diffInSeconds < 60) return "Vừa xong";
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) return `${diffInMinutes} phút trước`;
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) return `${diffInHours} giờ trước`;
+  const diffInDays = Math.floor(diffInHours / 24);
+  return `${diffInDays} ngày trước`;
+};
 
 const Sidebar = () => {
   const location = useLocation();
@@ -43,8 +90,17 @@ const Sidebar = () => {
   const [openKeys, setOpenKeys] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationPage, setNotificationPage] = useState(1);
+  const [notificationTotal, setNotificationTotal] = useState(0);
+  const [activeTab, setActiveTab] = useState("all");
+  // const [selectedInvoiceType, setSelectedInvoiceType] =
+  //   useState("all_invoices");
+  const [selectedInvoiceType, setSelectedInvoiceType] =
+    useState("INVOICE_CREATED");
   const [hasInteracted, setHasInteracted] = useState(false);
   const prevNotificationsRef = useRef([]);
+  const notificationLimit = 10;
+  const usersMapRef = useRef({});
 
   const token = localStorage.getItem("accessToken") || "your-jwt-token";
   const API_BASE_URL = "https://dclux.store/";
@@ -67,14 +123,110 @@ const Sidebar = () => {
 
   const fetchNotifications = useCallback(async () => {
     try {
-      const response = await getAllNotifications(1, 0, "");
-      return response;
+      let types;
+      if (activeTab === "all") {
+        types = [
+          "INVOICE_CREATED",
+          "INVOICE_CANCELLED",
+          "INVOICE_PAYMENT",
+          "REVIEW_UPDATED",
+          "REVIEW_DELETED",
+          "REVIEW_CREATED",
+        ];
+      } else if (activeTab === "invoice") {
+        types = [selectedInvoiceType];
+      } else if (activeTab === "review") {
+        types = ["REVIEW_UPDATED", "REVIEW_DELETED", "REVIEW_CREATED"];
+      } else {
+        types = [];
+      }
+
+      const response = await getAllNotifications(
+        notificationPage,
+        notificationLimit,
+        types,
+      );
+
+      const notifications = response.notifications || [];
+
+      // Lọc phía client để đảm bảo chỉ giữ thông báo khớp với types
+      const filteredNotifications = notifications.filter((notification) =>
+        types.includes(notification.type),
+      );
+
+      // Fetch usernames for unique userIds
+      const uniqueUserIds = [
+        ...new Set(filteredNotifications.map((n) => n.userId)),
+      ];
+      const userPromises = uniqueUserIds.map(async (userId) => {
+        if (!usersMapRef.current[userId]) {
+          try {
+            const userData = await getUserIdByAdmin(userId);
+            usersMapRef.current[userId] = userData.username || "N/A";
+            return { userId, username: userData.username || "N/A" };
+          } catch (error) {
+            console.error(`Error fetching user ${userId}:`, error);
+            return { userId, username: "N/A" };
+          }
+        }
+        return { userId, username: usersMapRef.current[userId] };
+      });
+      const userResults = await Promise.all(userPromises);
+      userResults.forEach(({ userId, username }) => {
+        usersMapRef.current[userId] = username;
+      });
+
+      // Transform notifications
+      const updatedNotifications = filteredNotifications.map((notification) => {
+        const username = usersMapRef.current[notification.userId] || "N/A";
+        let displayMessage;
+
+        if (
+          ["REVIEW_UPDATED", "REVIEW_DELETED", "REVIEW_CREATED"].includes(
+            notification.type,
+          )
+        ) {
+          displayMessage = `Người dùng ${username} đã ${actionMap[notification.type]}`;
+        } else if (
+          ["INVOICE_CREATED", "INVOICE_PAYMENT", "INVOICE_CANCELLED"].includes(
+            notification.type,
+          )
+        ) {
+          const invoiceIdMatch = notification.message.match(/#(\d+)/) || [];
+          const invoiceId = invoiceIdMatch[1] || "N/A";
+          const suffix =
+            notification.type === "INVOICE_PAYMENT" &&
+            notification.message.includes("VNPay")
+              ? " qua VNPay"
+              : "";
+          displayMessage = `Người dùng ${username} đã ${actionMap[notification.type]} #${invoiceId}${suffix}`;
+        } else {
+          displayMessage = notification.message; // Fallback
+        }
+
+        return {
+          ...notification,
+          displayMessage,
+        };
+      });
+
+      setNotifications(updatedNotifications);
+      setUnreadCount(response.unreadCount || 0);
+      setNotificationTotal(response.total || 0);
+      prevNotificationsRef.current = updatedNotifications;
     } catch (error) {
-      // console.log();
+      console.error("Error fetching notifications:", error);
+      setNotifications([]);
     }
-  }, []);
+  }, [notificationPage, activeTab, selectedInvoiceType]);
 
   const handleNewNotification = (data) => {
+    const config = notificationConfig[data.type] || {
+      route: "/admin/invoice",
+      label: "Hóa đơn",
+      color: "default",
+    };
+
     toast.info(
       <div>
         <strong>Thông báo mới!</strong>
@@ -88,7 +240,7 @@ const Sidebar = () => {
             borderRadius: "4px",
             cursor: "pointer",
           }}
-          onClick={() => navigate("/admin/invoice")}
+          onClick={() => navigate(config.route)}
         >
           Xem chi tiết
         </button>
@@ -113,7 +265,7 @@ const Sidebar = () => {
 
         systemNotification.onclick = () => {
           window.focus();
-          navigate("/admin/invoice");
+          navigate(config.route);
         };
 
         systemNotification.onerror = (error) => {
@@ -164,47 +316,46 @@ const Sidebar = () => {
   };
 
   useEffect(() => {
-    fetchNotifications().then((response) => {
-      if (response) {
-        setNotifications(response.notifications || []);
-        setUnreadCount(response.unreadCount || 0);
-        prevNotificationsRef.current = response.notifications || [];
-      }
-    });
+    fetchNotifications();
 
-    const interval = setInterval(async () => {
-      const response = await fetchNotifications();
-      if (response) {
-        const newNotifications = response.notifications || [];
-        const newUnreadCount = response.unreadCount || 0;
+    // Bật lại setInterval sau khi debug
+    /*
+  const interval = setInterval(async () => {
+    const response = await fetchNotifications();
+    if (response) {
+      const newNotifications = response.notifications || [];
+      const newUnreadCount = response.unreadCount || 0;
 
-        const currentIds = prevNotificationsRef.current.map((n) => n.id);
-        const newItems = newNotifications.filter(
-          (n) => !currentIds.includes(n.id),
-        );
+      const currentIds = prevNotificationsRef.current.map((n) => n.id);
+      const newItems = newNotifications.filter((n) => !currentIds.includes(n.id));
 
-        newItems.forEach((item) => {
-          const notificationType = item.type?.trim();
-          const notificationSource = item.source?.trim();
+      newItems.forEach((item) => {
+        const notificationType = item.type?.trim();
+        const notificationSource = item.source?.trim();
 
-          if (
-            (notificationType === "INVOICE_CREATED" ||
-              notificationType === "INVOICE_CANCELLED" ||
-              notificationType === "INVOICE_PAYMENT") &&
-            notificationSource === "USER"
-          ) {
-            handleNewNotification(item);
-          }
-        });
+        if (
+          (notificationType === "INVOICE_CREATED" ||
+            notificationType === "INVOICE_CANCELLED" ||
+            notificationType === "INVOICE_PAYMENT" ||
+            notificationType === "REVIEW_UPDATED" ||
+            notificationType === "REVIEW_DELETED" ||
+            notificationType === "REVIEW_CREATED") &&
+          notificationSource === "USER"
+        ) {
+          handleNewNotification(item);
+        }
+      });
 
-        setNotifications(newNotifications);
-        setUnreadCount(newUnreadCount);
-        prevNotificationsRef.current = newNotifications;
-      }
-    }, 10000);
+      setNotifications(newNotifications);
+      setUnreadCount(newUnreadCount);
+      setNotificationTotal(response.total || 0);
+      prevNotificationsRef.current = newNotifications;
+    }
+  }, 10000);
 
-    return () => clearInterval(interval);
-  }, [fetchNotifications, hasInteracted, navigate]);
+  return () => clearInterval(interval);
+  */
+  }, [fetchNotifications, activeTab, selectedInvoiceType]);
 
   const handleMarkAsRead = async (notificationId) => {
     try {
@@ -244,7 +395,6 @@ const Sidebar = () => {
           text: "Vui lòng bật quyền thông báo trong cài đặt trình duyệt.",
           icon: "warning",
         });
-      } else {
       }
     } else {
       console.error("Notification API is not supported in this browser.");
@@ -254,7 +404,8 @@ const Sidebar = () => {
       auth: { token: `Bearer ${token}` },
     });
 
-    socket.on("connect", () => {});
+    socket.on("connect", () => {
+    });
 
     socket.on("connect_error", (error) => {
       console.error("WebSocket connection error:", error.message);
@@ -267,32 +418,81 @@ const Sidebar = () => {
       if (
         (notificationType === "INVOICE_CREATED" ||
           notificationType === "INVOICE_CANCELLED" ||
-          notificationType === "INVOICE_PAYMENT") &&
+          notificationType === "INVOICE_PAYMENT" ||
+          notificationType === "REVIEW_UPDATED") &&
         notificationSource === "USER"
       ) {
-        handleNewNotification(data);
+        // Fetch username for new notification
+        const fetchUsername = async () => {
+          if (!usersMapRef.current[data.userId]) {
+            try {
+              const userData = await getUserIdByAdmin(data.userId);
+              usersMapRef.current[data.userId] = userData.username || "N/A";
+            } catch (error) {
+              console.error(`Error fetching user ${data.userId}:`, error);
+              usersMapRef.current[data.userId] = "N/A";
+            }
+          }
+          return usersMapRef.current[data.userId];
+        };
 
-        setNotifications((prev) => {
-          const updatedNotifications = [
-            {
-              id: data.notificationId || `temp-id-${Date.now()}`,
-              message: data.message,
-              type: data.type || "UNKNOWN",
-              source: data.source || "UNKNOWN",
-              isRead: false,
-              createdAt: data.createdAt || new Date().toISOString(),
-            },
-            ...prev,
-          ];
-          prevNotificationsRef.current = updatedNotifications;
-          return updatedNotifications;
+        fetchUsername().then((username) => {
+          let displayMessage = data.message;
+
+          if (notificationType === "REVIEW_UPDATED") {
+            displayMessage = `Người dùng ${username} đã ${actionMap[notificationType]}`;
+          } else if (
+            [
+              "INVOICE_CREATED",
+              "INVOICE_PAYMENT",
+              "INVOICE_CANCELLED",
+            ].includes(notificationType)
+          ) {
+            const invoiceIdMatch = data.message.match(/#(\d+)/) || [];
+            const invoiceId = invoiceIdMatch[1] || "N/A";
+            const suffix =
+              notificationType === "INVOICE_PAYMENT" &&
+              data.message.includes("VNPay")
+                ? " qua VNPay"
+                : "";
+            displayMessage = `Người dùng ${username} đã ${actionMap[notificationType]} #${invoiceId}${suffix}`;
+          }
+
+          // Chỉ thêm thông báo nếu phù hợp với tab hiện tại
+          if (
+            activeTab === "all" ||
+            (activeTab === "invoice" &&
+              notificationType === selectedInvoiceType) ||
+            (activeTab === "review" && notificationType === "REVIEW_UPDATED")
+          ) {
+            handleNewNotification({ ...data, message: displayMessage });
+
+            setNotifications((prev) => {
+              const updatedNotifications = [
+                {
+                  id: data.notificationId || `temp-id-${Date.now()}`,
+                  message: data.message,
+                  displayMessage,
+                  type: data.type || "UNKNOWN",
+                  source: data.source || "UNKNOWN",
+                  isRead: false,
+                  createdAt: data.createdAt || new Date().toISOString(),
+                  userId: data.userId,
+                },
+                ...prev,
+              ];
+              prevNotificationsRef.current = updatedNotifications;
+              return updatedNotifications;
+            });
+            setUnreadCount((prev) => prev + 1);
+            setNotificationTotal((prev) => prev + 1);
+          }
         });
-        setUnreadCount((prev) => prev + 1);
-      } else {
       }
     });
 
-    socket.on("disconnect", () => {});
+    socket.on("disconnect", () => {
+    });
 
     return () => {
       socket.disconnect();
@@ -347,22 +547,62 @@ const Sidebar = () => {
   };
 
   const notificationMenu = (
-    <div className="notification-dropdown">
-      <div>
-        <Text
-          strong
-          style={{
-            fontSize: "16px",
-            color: "#333",
-            padding: "5px 0px 8px 10px",
-            display: "flex",
-            width: "100%",
-          }}
-        >
+    <div
+      className="notification-dropdown"
+      style={{ padding: "0px", width: "400px" }}
+    >
+      <div style={{ padding: "10px 0px 8px 10px" }}>
+        <Text strong style={{ fontSize: "16px", color: "#333" }}>
           Thông báo
         </Text>
       </div>
-      <div className="notification-list">
+      <Tabs
+        activeKey={activeTab}
+        onChange={(key) => {
+          setActiveTab(key);
+          setNotificationPage(1);
+          setNotifications([]);
+          if (key === "invoice") {
+            setSelectedInvoiceType("INVOICE_CREATED");
+          }
+        }}
+        items={[
+          {
+            key: "all",
+            label: "Tất cả",
+          },
+          {
+            key: "invoice",
+            label: "Hóa đơn",
+            children: (
+              <Select
+                value={selectedInvoiceType}
+                onChange={(value) => {
+                  setSelectedInvoiceType(value);
+                  setNotificationPage(1);
+                  setNotifications([]);
+                }}
+                style={{ width: "100%", marginBottom: "10px" }}
+              >
+                <Option value="INVOICE_CREATED">Đã đặt hàng</Option>
+                <Option value="INVOICE_PAYMENT">Thanh toán thành công</Option>
+                <Option value="REVIEW_CREATED">Đã tạo đánh giá</Option>
+                <Option value="REVIEW_DELETED">Đã xóa đánh giá</Option>
+                <Option value="INVOICE_CANCELLED">Hủy đơn hàng</Option>
+              </Select>
+            ),
+          },
+          {
+            key: "review",
+            label: "Đánh giá",
+          },
+        ]}
+        style={{ padding: "0 10px" }}
+      />
+      <div
+        className="notification-list"
+        style={{ maxHeight: "280px", overflowY: "auto" }}
+      >
         {notifications.length > 0 ? (
           <AnimatePresence>
             {notifications.map((notification, index) => (
@@ -373,39 +613,48 @@ const Sidebar = () => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3, delay: index * 0.1 }}
-                onClick={() =>
-                  !notification.isRead && handleMarkAsRead(notification.id)
-                }
+                onClick={() => {
+                  if (!notification.isRead) handleMarkAsRead(notification.id);
+                  const config = notificationConfig[notification.type] || {
+                    route: "/admin/invoice",
+                    label: "Hóa đơn",
+                    color: "default",
+                  };
+                  navigate(config.route);
+                }}
+                style={{ borderTop: "1px solid #e8e8e8", cursor: "pointer" }}
               >
-                <Space direction="vertical" style={{ width: "100%" }}>
-                  <Text strong>{notification.message}</Text>
-                  <Text type="secondary" style={{ fontSize: "12px" }}>
-                    {new Date(notification.createdAt).toLocaleString("vi-VN", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      second: "2-digit",
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                    })}
-                  </Text>
-                  <Space>
-                    <Button
-                      type={notification.isRead ? "default" : "primary"}
-                      size="small"
-                      style={{
-                        backgroundColor: notification.isRead
-                          ? "#f5f5f5"
-                          : "#e6f7ff",
-                        borderColor: notification.isRead
-                          ? "#d9d9d9"
-                          : "#91d5ff",
-                        color: notification.isRead ? "#000" : "#1890ff",
-                      }}
-                    >
-                      {notification.isRead ? "Đã đọc" : "Chưa đọc"}
-                    </Button>
-                  </Space>
+                <Space align="start" style={{ width: "100%", padding: "10px" }}>
+                  <BellOutlined
+                    style={{
+                      fontSize: "16px",
+                      color: "#1890ff",
+                      marginTop: "4px",
+                    }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <Text strong>{notification.displayMessage}</Text>
+                    <Text type="secondary" style={{ fontSize: "12px" }}>
+                      {getTimeAgo(notification.createdAt)}
+                    </Text>
+                    <Space style={{ marginTop: "4px" }}>
+                      <Button
+                        type={notification.isRead ? "default" : "primary"}
+                        size="small"
+                        style={{
+                          backgroundColor: notification.isRead
+                            ? "#f5f5f5"
+                            : "#e6f7ff",
+                          borderColor: notification.isRead
+                            ? "#d9d9d9"
+                            : "#91d5ff",
+                          color: notification.isRead ? "#000" : "#1890ff",
+                        }}
+                      >
+                        {notification.isRead ? "Đã đọc" : "Chưa đọc"}
+                      </Button>
+                    </Space>
+                  </div>
                 </Space>
               </motion.div>
             ))}
@@ -416,6 +665,25 @@ const Sidebar = () => {
           </Text>
         )}
       </div>
+      {notificationTotal > notifications.length && (
+        <div style={{ padding: "10px", textAlign: "center" }}>
+          <motion.button
+            onClick={() => setNotificationPage((prev) => prev + 1)}
+            style={{
+              background: "#1890ff",
+              color: "#fff",
+              border: "none",
+              padding: "8px 16px",
+              borderRadius: "4px",
+              cursor: "pointer",
+            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            Tải thêm
+          </motion.button>
+        </div>
+      )}
     </div>
   );
 
@@ -497,7 +765,6 @@ const Sidebar = () => {
           <img
             width="230"
             height="90"
-            // src="/src/assets/icon/testLogo.png"
             src={logoTest}
             alt="Logo"
             style={{ marginBottom: "10px" }}
