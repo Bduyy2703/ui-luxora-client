@@ -83,11 +83,6 @@ const InvoiceDetail = () => {
   useEffect(() => {
     const { invoiceDetail } = location.state || {};
     if (!invoiceDetail) {
-      // notification.error({
-      //   message: "Thông báo",
-      //   description: "Không tìm thấy chi tiết hóa đơn",
-      //   duration: 3,
-      // });
       navigate("/account/orders");
       return;
     }
@@ -177,8 +172,6 @@ const InvoiceDetail = () => {
     (invoiceDetail.productDiscount || 0) +
     (invoiceDetail.shippingFeeDiscount || 0);
 
-  console.log("currentStatusIndex", currentStatusIndex);
-
   return (
     <div className={styles.wrapper}>
       <div className={styles.header}>
@@ -190,37 +183,58 @@ const InvoiceDetail = () => {
       <Breadcrumb items={breadcrumbItems} className={styles.breadcrumb} />
       <div className={styles.orderDetail}>
         <div className={styles.timeline}>
-          {statusTimeline.map((step, index) => {
-            const isActive =
-              index <= currentStatusIndex && isMainFlowStatus(step.status);
-            const isLastStep = index === statusTimeline.length - 1;
-            const isException = ["CANCELLED", "FAILED", "RETURNED"].includes(
-              step.status,
-            );
-            const validNextStatuses = getValidNextStatuses(
-              invoiceDetail.status,
-            );
-            const shouldDisplay =
-              (isMainFlowStatus(step.status) && index <= currentStatusIndex) ||
-              (isException &&
-                (step.status === invoiceDetail.status ||
-                  validNextStatuses.includes(step.status)));
+          {invoiceDetail.status === "CANCELLED" ||
+          invoiceDetail.status === "RETURNED"
+            ? // Chỉ hiển thị trạng thái CANCELLED hoặc RETURNED
+              (() => {
+                const step = statusTimeline.find(
+                  (s) => s.status === invoiceDetail.status,
+                );
+                return (
+                  <div
+                    key={step.status}
+                    className={`${styles.timelineStep} ${styles.active}`}
+                  >
+                    <div className={styles.timelineIcon}>{step.icon}</div>
+                    <div className={styles.timelineLabel}>{step.display}</div>
+                  </div>
+                );
+              })()
+            : // Hiển thị timeline đầy đủ cho các trạng thái khác
+              statusTimeline.map((step, index) => {
+                const isActive =
+                  index <= currentStatusIndex && isMainFlowStatus(step.status);
+                const isLastStep = index === statusTimeline.length - 1;
+                const isException = [
+                  "CANCELLED",
+                  "FAILED",
+                  "RETURNED",
+                ].includes(step.status);
+                const validNextStatuses = getValidNextStatuses(
+                  invoiceDetail.status,
+                );
+                const shouldDisplay =
+                  (isMainFlowStatus(step.status) &&
+                    index <= currentStatusIndex) ||
+                  (isException &&
+                    (step.status === invoiceDetail.status ||
+                      validNextStatuses.includes(step.status)));
 
-            return shouldDisplay ? (
-              <div
-                key={step.status}
-                className={`${styles.timelineStep} ${isActive ? styles.active : ""}`}
-              >
-                <div className={styles.timelineIcon}>{step.icon}</div>
-                <div className={styles.timelineLabel}>{step.display}</div>
-                {!isLastStep &&
-                  !isException &&
-                  isMainFlowStatus(step.status) && (
-                    <div className={styles.timelineArrow}>→</div>
-                  )}
-              </div>
-            ) : null;
-          })}
+                return shouldDisplay ? (
+                  <div
+                    key={step.status}
+                    className={`${styles.timelineStep} ${isActive ? styles.active : ""}`}
+                  >
+                    <div className={styles.timelineIcon}>{step.icon}</div>
+                    <div className={styles.timelineLabel}>{step.display}</div>
+                    {!isLastStep &&
+                      !isException &&
+                      isMainFlowStatus(step.status) && (
+                        <div className={styles.timelineArrow}>→</div>
+                      )}
+                  </div>
+                ) : null;
+              })}
         </div>
 
         <div className={styles.status}>
