@@ -24,7 +24,6 @@ const statusTimeline = [
     display: "Đang chờ",
     icon: <IssuesCloseOutlined />,
   },
-
   {
     status: "CONFIRMED",
     display: "Đã xác nhận",
@@ -61,6 +60,17 @@ const statusTimeline = [
     icon: <CheckCircleOutlined />,
   },
 ];
+
+const validTransitions = {
+  PENDING: ["CONFIRMED", "CANCELLED"],
+  CONFIRMED: ["SHIPPING", "CANCELLED"],
+  SHIPPING: ["DELIVERED", "CANCELLED", "RETURNED"],
+  DELIVERED: ["RETURNED"],
+  PAID: ["RETURNED"],
+  FAILED: ["CANCELLED", "PENDING"],
+  CANCELLED: [],
+  RETURNED: [],
+};
 
 const InvoiceDetail = () => {
   const [invoiceDetail, setInvoiceDetail] = useState(null);
@@ -139,11 +149,19 @@ const InvoiceDetail = () => {
     }
   };
 
-  console.log("statusTimeline", statusTimeline);
-
   const currentStatusIndex = statusTimeline.findIndex(
     (item) => item.status === invoiceDetail?.status,
   );
+
+  const getValidNextStatuses = (currentStatus) => {
+    return validTransitions[currentStatus] || [];
+  };
+
+  const isMainFlowStatus = (status) => {
+    return ["PENDING", "CONFIRMED", "SHIPPING", "DELIVERED", "PAID"].includes(
+      status,
+    );
+  };
 
   const breadcrumbItems = [
     { label: "Trang chủ", path: "/" },
@@ -173,28 +191,33 @@ const InvoiceDetail = () => {
       <div className={styles.orderDetail}>
         <div className={styles.timeline}>
           {statusTimeline.map((step, index) => {
-            const isActive = index <= currentStatusIndex;
+            const isActive =
+              index <= currentStatusIndex && isMainFlowStatus(step.status);
             const isLastStep = index === statusTimeline.length - 1;
-            const isException =
-              step.status === "CANCELLED" ||
-              step.status === "FAILED" ||
-              step.status === "RETURNED";
+            const isException = ["CANCELLED", "FAILED", "RETURNED"].includes(
+              step.status,
+            );
+            const validNextStatuses = getValidNextStatuses(
+              invoiceDetail.status,
+            );
             const shouldDisplay =
-              !isException ||
-              (isException && step.status === invoiceDetail.status);
+              (isMainFlowStatus(step.status) && index <= currentStatusIndex) ||
+              (isException &&
+                (step.status === invoiceDetail.status ||
+                  validNextStatuses.includes(step.status)));
 
             return shouldDisplay ? (
               <div
                 key={step.status}
-                className={`${styles.timelineStep} ${
-                  isActive ? styles.active : ""
-                }`}
+                className={`${styles.timelineStep} ${isActive ? styles.active : ""}`}
               >
                 <div className={styles.timelineIcon}>{step.icon}</div>
                 <div className={styles.timelineLabel}>{step.display}</div>
-                {!isLastStep && !isException && (
-                  <div className={styles.timelineArrow}>→</div>
-                )}
+                {!isLastStep &&
+                  !isException &&
+                  isMainFlowStatus(step.status) && (
+                    <div className={styles.timelineArrow}>→</div>
+                  )}
               </div>
             ) : null;
           })}
