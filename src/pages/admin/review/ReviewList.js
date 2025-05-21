@@ -17,11 +17,6 @@ import {
   Progress,
   Rate,
   Input,
-  Badge,
-  Dropdown,
-  Space,
-  Typography,
-  Tag,
 } from "antd";
 import Swal from "sweetalert2";
 import Filter from "../../../components/admin/filter/Filter";
@@ -31,7 +26,6 @@ import {
   DeleteOutlined,
   EyeInvisibleOutlined,
   EyeOutlined,
-  BellOutlined,
 } from "@ant-design/icons";
 import styles from "./index.module.scss";
 import {
@@ -45,19 +39,11 @@ import {
   getProductReviewStatistics,
   replyToReview,
 } from "../../../services/api/reviewService";
-import {
-  getNotificationsByTypes,
-  markNotificationAsRead,
-} from "../../../services/api/notifications";
-import io from "socket.io-client";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { getUserIdByAdmin } from "../../../services/api/userService";
 
 const { Option } = Select;
 const { TabPane } = Tabs;
 const { RangePicker } = DatePicker;
-const { Text } = Typography;
 const { TextArea } = Input;
 
 // Hàm định dạng giá tiền
@@ -94,34 +80,11 @@ const AdminReviewList = () => {
   const [productStatistics, setProductStatistics] = useState(null);
   const [replyContent, setReplyContent] = useState("");
   const [replyContentAdmin, setReplyContentAdmin] = useState("");
-  const [unreadNotifications, setUnreadNotifications] = useState(0);
-  const [notifications, setNotifications] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [usersMap, setUsersMap] = useState({});
-  const [notificationPage, setNotificationPage] = useState(1);
-  const [hasInteracted, setHasInteracted] = useState(false);
   const limit = config.LIMIT || 10;
-  const notificationLimit = 10;
-
-  const notificationSound = new Audio("/assets/sounds/notificationFinal.mp3");
-  const accessToken = localStorage.getItem("accessToken");
 
   const standardSort = ["product.name", "createdAt"];
-
-  // Xử lý tương tác để bật âm thanh
-  useEffect(() => {
-    const handleInteraction = () => {
-      setHasInteracted(true);
-    };
-
-    document.addEventListener("click", handleInteraction);
-    document.addEventListener("keydown", handleInteraction);
-
-    return () => {
-      document.removeEventListener("click", handleInteraction);
-      document.removeEventListener("keydown", handleInteraction);
-    };
-  }, []);
 
   // Lấy danh sách đánh giá
   const fetchData = useCallback(async () => {
@@ -142,14 +105,13 @@ const AdminReviewList = () => {
       // Fetch user details for all unique userIds
       const uniqueUserIds = [...new Set(items.map((item) => item.userId))];
       const userPromises = uniqueUserIds.map(async (userId) => {
-        // Check the current state of usersMap without causing a dependency
         if (!usersMap[userId]) {
           try {
             const userData = await getUserIdByAdmin(userId);
             return { userId, userData };
           } catch (error) {
             console.error(`Error fetching user ${userId}:`, error);
-            return { userId, userData: null }; // Fallback for failed user fetch
+            return { userId, userData: null };
           }
         }
         return { userId, userData: usersMap[userId] };
@@ -162,10 +124,9 @@ const AdminReviewList = () => {
           }
           return acc;
         },
-        { ...usersMap }, // Preserve existing usersMap
+        { ...usersMap },
       );
 
-      // Update usersMap only if there are new users
       if (Object.keys(newUsersMap).length !== Object.keys(usersMap).length) {
         setUsersMap(newUsersMap);
       }
@@ -208,7 +169,6 @@ const AdminReviewList = () => {
     userIdFilter,
     ratingFilter,
     dateRangeFilter,
-    // Remove usersMap from dependencies
   ]);
 
   // Lấy thống kê sản phẩm
@@ -254,159 +214,6 @@ const AdminReviewList = () => {
       });
     }
   };
-
-  // Lấy thông báo
-  const fetchNotifications = useCallback(async () => {
-    try {
-      const response = await getNotificationsByTypes(
-        notificationPage,
-        notificationLimit,
-      );
-      setNotifications(response.notifications || []);
-      setUnreadNotifications(response.unreadCount || 0);
-    } catch (error) {
-      console.error("Error fetching notifications:", error);
-    }
-  }, [notificationPage]);
-
-  // Xử lý WebSocket cho thông báo
-  useEffect(() => {
-    if (accessToken) {
-      fetchNotifications();
-
-      if (window.Notification) {
-        if (Notification.permission === "default") {
-          Notification.requestPermission().then((permission) => {
-            if (permission === "denied") {
-              Swal.fire({
-                title: "Thông báo bị chặn",
-                text: "Vui lòng bật quyền thông báo trong cài đặt trình duyệt.",
-                icon: "warning",
-              });
-            }
-          });
-        } else if (Notification.permission === "denied") {
-          console.warn("Notification permission is denied.");
-          Swal.fire({
-            title: "Thông báo bị chặn",
-            text: "Vui lòng bật quyền thông báo trong cài đặt trình duyệt.",
-            icon: "warning",
-          });
-        }
-      }
-
-      const socket = io("https://dclux.store", {
-        auth: { token: `Bearer ${accessToken}` },
-      });
-
-      socket.on("connect", () => {
-        console.log("WebSocket connected");
-      });
-
-      socket.on("connect_error", (error) => {
-        console.error("WebSocket connection error:", error.message);
-      });
-
-      socket.on("notification", (data) => {
-        const notificationType = data.type?.trim();
-        const notificationSource = data.source?.trim();
-
-        if (
-          notificationSource === "USER" &&
-          ["REVIEW_CREATED", "REVIEW_UPDATED", "REVIEW_DELETED"].includes(
-            notificationType,
-          )
-        ) {
-          toast.info(
-            <div>
-              <strong>Thông báo Đánh giá!</strong>
-              <p>{data.message}</p>
-              <button
-                style={{
-                  background: "#d4af37",
-                  color: "#fff",
-                  border: "none",
-                  padding: "5px 10px",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                }}
-                onClick={() => {
-                  setCurrentPage(1);
-                  fetchData();
-                }}
-              >
-                Xem chi tiết
-              </button>
-            </div>,
-            {
-              position: "top-right",
-              autoClose: 5000,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: true,
-              draggable: true,
-              className: styles.customToast,
-            },
-          );
-
-          if (window.Notification && Notification.permission === "granted") {
-            const systemNotification = new Notification("Thông báo Đánh giá!", {
-              body: data.message,
-              icon: "/assets/icon/bell.png",
-              tag: data.notificationId,
-            });
-
-            systemNotification.onclick = () => {
-              window.focus();
-              fetchData();
-            };
-          }
-
-          if (hasInteracted) {
-            notificationSound.play().catch((error) => {
-              console.error("Error playing notification sound:", error.message);
-              toast.error(
-                "Không thể phát âm thanh thông báo. Vui lòng kiểm tra tệp âm thanh hoặc cài đặt trình duyệt.",
-                {
-                  position: "top-right",
-                  autoClose: 5000,
-                },
-              );
-            });
-          } else {
-            toast.info("Vui lòng nhấp vào trang để bật âm thanh thông báo.", {
-              position: "top-right",
-              autoClose: 5000,
-            });
-          }
-
-          setNotifications((prev) => [
-            {
-              id: data.notificationId,
-              message: data.message,
-              type: data.type,
-              source: data.source,
-              isRead: false,
-              createdAt: data.createdAt || new Date().toISOString(),
-            },
-            ...prev,
-          ]);
-          setUnreadNotifications((prev) => prev + 1);
-
-          // Làm mới danh sách đánh giá
-          fetchData();
-        }
-      });
-
-      socket.on("disconnect", () => {
-        console.log("WebSocket disconnected");
-      });
-
-      return () => {
-        socket.disconnect();
-      };
-    }
-  }, [accessToken, fetchNotifications, fetchData, hasInteracted]);
 
   // Xóa đánh giá
   const handleDeleteReview = async () => {
@@ -553,23 +360,6 @@ const AdminReviewList = () => {
     }
   };
 
-  // Đánh dấu thông báo đã đọc
-  const handleMarkAsRead = async (notificationId) => {
-    try {
-      await markNotificationAsRead(notificationId);
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n)),
-      );
-      setUnreadNotifications((prev) => Math.max(prev - 1, 0));
-    } catch (error) {
-      Swal.fire({
-        title: "Lỗi!",
-        text: "Không thể đánh dấu thông báo đã đọc.",
-        icon: "error",
-      });
-    }
-  };
-
   // Cập nhật bộ lọc
   useEffect(() => {
     fetchData();
@@ -617,11 +407,9 @@ const AdminReviewList = () => {
     {
       title: "Người dùng",
       key: "user",
-      render: (record) => {
-        console.log("record", record);
-
-        return <div>{usersMap[record.userId]?.username || "N/A"}</div>;
-      },
+      render: (record) => (
+        <div>{usersMap[record.userId]?.username || "N/A"}</div>
+      ),
       width: 200,
     },
     {
@@ -740,99 +528,6 @@ const AdminReviewList = () => {
     },
   ];
 
-  // Menu thông báo
-  const notificationMenu = (
-    <div className="notification-dropdown" style={{ padding: "0px" }}>
-      <div className={styles.notificationHeader}>
-        <Text
-          strong
-          style={{
-            fontSize: "16px",
-            color: "#2b2b2b",
-            padding: "5px 0px 8px 10px",
-            display: "flex",
-            width: "100%",
-          }}
-        >
-          Thông báo
-        </Text>
-      </div>
-      <div className="notification-list">
-        {notifications.length > 0 ? (
-          <AnimatePresence>
-            {notifications.map((notification, index) => (
-              <motion.div
-                onClick={() => {
-                  if (!notification.isRead) handleMarkAsRead(notification.id);
-                  fetchData();
-                }}
-                style={{ borderTop: "1px solid #e8e8e8", cursor: "pointer" }}
-                key={notification.id}
-                className="notification-item-contentt"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3, delay: index * 0.1 }}
-              >
-                <Space
-                  align="start"
-                  style={{ width: "100%", padding: "10px 10px 10px 10px" }}
-                  className={styles.spaceNoti}
-                >
-                  <BellOutlined
-                    style={{
-                      fontSize: "16px",
-                      color: "#d4af37",
-                      marginTop: "4px",
-                    }}
-                  />
-                  <div style={{ flex: 1 }}>
-                    <div className={styles.notificationMessageWrapper}>
-                      <div>
-                        <Text className={styles.notificationMessage}>
-                          {notification.message}
-                        </Text>
-                      </div>
-                      <Text
-                        type="secondary"
-                        className={styles.notificationTime}
-                      >
-                        {formatDate(notification.createdAt)}
-                      </Text>
-                    </div>
-                    <Space style={{ marginTop: "4px" }}>
-                      <Tag
-                        color={notification.isRead ? "default" : "gold"}
-                        className={
-                          notification.isRead
-                            ? styles.readTag
-                            : styles.unreadTag
-                        }
-                      >
-                        <span>
-                          {notification.isRead ? "Đã đọc" : "Chưa đọc"}
-                        </span>
-                      </Tag>
-                      <Tag color="blue">
-                        {notification.type === "REVIEW_CREATED"
-                          ? "Tạo đánh giá"
-                          : notification.type === "REVIEW_UPDATED"
-                            ? "Cập nhật đánh giá"
-                            : "Xóa đánh giá"}
-                      </Tag>
-                    </Space>
-                  </div>
-                </Space>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        ) : (
-          <Text className={styles.noNotification}>Không có thông báo nào</Text>
-        )}
-      </div>
-    </div>
-  );
-
   return (
     <div className={styles.wrapper}>
       <div
@@ -847,27 +542,6 @@ const AdminReviewList = () => {
         }}
       >
         <h2>QUẢN LÝ ĐÁNH GIÁ</h2>
-        <div className={styles.notification}>
-          <Dropdown
-            overlay={notificationMenu}
-            trigger={["click"]}
-            placement="bottomRight"
-            overlayStyle={{
-              background: "#fff",
-              padding: "0px 0px 0px 0px",
-              borderRadius: "8px",
-              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-              zIndex: 1000,
-            }}
-            className={styles.customNotification}
-          >
-            <div className={styles.circle}>
-              <Badge count={unreadNotifications} size="small" offset={[5, 0]}>
-                <BellOutlined style={{ fontSize: "20px" }} />
-              </Badge>
-            </div>
-          </Dropdown>
-        </div>
       </div>
       <main className={styles.main}>
         <div className={styles.container}>
@@ -1259,7 +933,6 @@ const AdminReviewList = () => {
                               }
                               placeholder="Nhập nội dung trả lời..."
                               style={{ marginBottom: 16 }}
-                              // disabled
                               readOnly
                             />
                           </div>

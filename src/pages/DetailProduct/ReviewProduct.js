@@ -82,12 +82,11 @@ const ReviewProduct = ({ product }) => {
 
       setReviews(sortedReviews);
       setTotalReviews(response.total || 0);
-      // Khởi tạo helpfulVotes và likedReviews từ dữ liệu API
       const votes = {};
       const liked = {};
       sortedReviews.forEach((review) => {
         votes[review.id] = review.likeCount || 0;
-        liked[review.id] = review.isLiked || false; // Giả định API trả về isLiked
+        liked[review.id] = review.isLikedByUser || false; // Sử dụng isLikedByUser thay vì isLiked
       });
       setHelpfulVotes(votes);
       setLikedReviews(liked);
@@ -537,166 +536,173 @@ const ReviewProduct = ({ product }) => {
             <p className={styles.noReviews}>Chưa có đánh giá nào.</p>
           ) : (
             <div className={styles.reviewList}>
-              {reviews.map((review, index) => (
-                <motion.div
-                  key={review.id}
-                  className={styles.reviewCard}
-                  initial={{ opacity: 0, x: 10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
-                >
-                  <div className={styles.reviewHeader}>
-                    <div className={styles.userInfo}>
-                      <span className={styles.userName}>
-                        {review.user?.username || "Người dùng"}
-                      </span>
-                      <span className={styles.reviewTime}>
-                        {getTimeAgo(review.createdAt)}
-                      </span>
+              {reviews.map((review, index) => {
+                console.log("review:", review);
+
+                return (
+                  <motion.div
+                    key={review.id}
+                    className={styles.reviewCard}
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                  >
+                    <div className={styles.reviewHeader}>
+                      <div className={styles.userInfo}>
+                        <span className={styles.userName}>
+                          {review.user?.username || "Người dùng"}
+                        </span>
+                        <span className={styles.reviewTime}>
+                          {getTimeAgo(review.createdAt)}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  <div className={styles.starRating}>
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <StarFilled
-                        key={star}
-                        className={styles.star}
-                        style={{
-                          color: star <= review.rating ? "#F5C518" : "#E5E5E5",
-                        }}
-                      />
-                    ))}
-                  </div>
-                  <p className={styles.reviewComment}>
-                    {truncateComment(review.comment)}
-                    {review.comment.length > 100 && (
-                      <span className={styles.readMore}>Xem thêm</span>
-                    )}
-                  </p>
-                  {review.reply && review.reply.content && (
-                    <motion.div
-                      className={styles.reviewReply}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <p className={styles.replyLabel}>Phản hồi từ admin:</p>
-                      <p className={styles.replyContent}>
-                        {review.reply.content}
-                      </p>
-                    </motion.div>
-                  )}
-                  {review.images && review.images.length > 0 && (
-                    <div className={styles.reviewImages}>
-                      <Image.PreviewGroup>
-                        {review.images.slice(0, 4).map((img, idx) => (
-                          <div key={idx} className={styles.imageWrapper}>
-                            <Image
-                              src={img.fileUrl}
-                              alt={`review-${idx}`}
-                              className={`${styles.reviewImage} ${
-                                idx === 3 && review.images.length > 4
-                                  ? styles.dimmedImage
-                                  : ""
-                              }`}
-                              style={{ cursor: "pointer" }}
-                              onError={(e) =>
-                                (e.target.src =
-                                  "https://via.placeholder.com/60")
-                              }
-                            />
-                            {idx === 3 && review.images.length > 4 && (
-                              <div className={styles.imageOverlay}>
-                                +{review.images.length - 4}
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                        {review.images.slice(4).map((img, idx) => (
-                          <Image
-                            key={`hidden-${idx}`}
-                            src={img.fileUrl}
-                            style={{ display: "none" }}
-                          />
-                        ))}
-                      </Image.PreviewGroup>
+                    <div className={styles.starRating}>
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <StarFilled
+                          key={star}
+                          className={styles.star}
+                          style={{
+                            color:
+                              star <= review.rating ? "#F5C518" : "#E5E5E5",
+                          }}
+                        />
+                      ))}
                     </div>
-                  )}
-                  <div className={styles.reviewActions}>
-                    <motion.button
-                      onClick={() => handleToggleLike(review.id)}
-                      className={styles.actionButtonLike}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      {likedReviews[review.id] ? (
-                        <LikeFilled style={{ color: "#1890ff" }} />
-                      ) : (
-                        <LikeOutlined />
+                    <p className={styles.reviewComment}>
+                      {truncateComment(review.comment)}
+                      {review.comment.length > 100 && (
+                        <span className={styles.readMore}>Xem thêm</span>
                       )}
-                      <span>{helpfulVotes[review.id] || 0}</span>
-                    </motion.button>
-                    {review.user?.id === userId && (
-                      <>
-                        <motion.button
-                          onClick={() => handleEditReview(review)}
-                          className={styles.actionButton}
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                        >
-                          Chỉnh sửa
-                        </motion.button>
-                        <motion.button
-                          onClick={() => handleDeleteReview(review.id)}
-                          className={styles.actionButtonDelete}
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                        >
-                          Xóa
-                        </motion.button>
-                      </>
+                    </p>
+                    {review.reply && review.reply.content && (
+                      <motion.div
+                        className={styles.reviewReply}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <p className={styles.replyLabel}>Phản hồi từ admin:</p>
+                        <p className={styles.replyContent}>
+                          {review.reply.content}
+                        </p>
+                      </motion.div>
                     )}
-                    {isAdmin() && (
-                      <>
-                        <motion.button
-                          onClick={() =>
-                            handleToggleHidden(review.id, review.isHidden)
-                          }
-                          className={`${styles.actionButton} ${
-                            review.isHidden
-                              ? styles.toggleShow
-                              : styles.toggleHide
-                          }`}
-                          disabled={adminLoading[review.id]}
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                        >
-                          {adminLoading[review.id] ? (
-                            "Đang xử lý..."
-                          ) : review.isHidden ? (
-                            <EyeOutlined />
-                          ) : (
-                            <EyeInvisibleOutlined />
-                          )}
-                        </motion.button>
-                        <motion.button
-                          onClick={() => handleAdminDeleteReview(review.id)}
-                          className={styles.actionButton}
-                          disabled={adminLoading[review.id]}
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                        >
-                          {adminLoading[review.id] ? (
-                            "Đang xử lý..."
-                          ) : (
-                            <DeleteOutlined />
-                          )}
-                        </motion.button>
-                      </>
+                    {review.images && review.images.length > 0 && (
+                      <div className={styles.reviewImages}>
+                        <Image.PreviewGroup>
+                          {review.images.slice(0, 4).map((img, idx) => (
+                            <div key={idx} className={styles.imageWrapper}>
+                              <Image
+                                src={img.fileUrl}
+                                alt={`review-${idx}`}
+                                className={`${styles.reviewImage} ${
+                                  idx === 3 && review.images.length > 4
+                                    ? styles.dimmedImage
+                                    : ""
+                                }`}
+                                style={{ cursor: "pointer" }}
+                                onError={(e) =>
+                                  (e.target.src =
+                                    "https://via.placeholder.com/60")
+                                }
+                              />
+                              {idx === 3 && review.images.length > 4 && (
+                                <div className={styles.imageOverlay}>
+                                  +{review.images.length - 4}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                          {review.images.slice(4).map((img, idx) => (
+                            <Image
+                              key={`hidden-${idx}`}
+                              src={img.fileUrl}
+                              style={{ display: "none" }}
+                            />
+                          ))}
+                        </Image.PreviewGroup>
+                      </div>
                     )}
-                  </div>
-                </motion.div>
-              ))}
+                    <div className={styles.reviewActions}>
+                      <motion.button
+                        onClick={() => handleToggleLike(review.id)}
+                        className={styles.actionButtonLike}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                      >
+                        {likedReviews[review.id] ? (
+                          <LikeFilled style={{ color: "#1890ff" }} />
+                        ) : (
+                          <LikeOutlined />
+                        )}
+                        <span style={{ marginLeft: "5px" }}>
+                          {helpfulVotes[review.id] || 0}
+                        </span>
+                      </motion.button>
+                      {review.user?.id === userId && (
+                        <>
+                          <motion.button
+                            onClick={() => handleEditReview(review)}
+                            className={styles.actionButton}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                          >
+                            Chỉnh sửa
+                          </motion.button>
+                          <motion.button
+                            onClick={() => handleDeleteReview(review.id)}
+                            className={styles.actionButtonDelete}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                          >
+                            Xóa
+                          </motion.button>
+                        </>
+                      )}
+                      {isAdmin() && (
+                        <>
+                          <motion.button
+                            onClick={() =>
+                              handleToggleHidden(review.id, review.isHidden)
+                            }
+                            className={`${styles.actionButton} ${
+                              review.isHidden
+                                ? styles.toggleShow
+                                : styles.toggleHide
+                            }`}
+                            disabled={adminLoading[review.id]}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                          >
+                            {adminLoading[review.id] ? (
+                              "Đang xử lý..."
+                            ) : review.isHidden ? (
+                              <EyeOutlined />
+                            ) : (
+                              <EyeInvisibleOutlined />
+                            )}
+                          </motion.button>
+                          <motion.button
+                            onClick={() => handleAdminDeleteReview(review.id)}
+                            className={styles.actionButton}
+                            disabled={adminLoading[review.id]}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                          >
+                            {adminLoading[review.id] ? (
+                              "Đang xử lý..."
+                            ) : (
+                              <DeleteOutlined />
+                            )}
+                          </motion.button>
+                        </>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           )}
         </AnimatePresence>

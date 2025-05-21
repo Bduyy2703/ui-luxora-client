@@ -68,6 +68,12 @@ export const DetailProduct = () => {
 
   useEffect(() => {
     const checkWishlistStatus = async () => {
+      const accessToken = localStorage.getItem("accessToken");
+      if (!accessToken) {
+        setIsFavorite(false);
+        return;
+      }
+
       const selectedDetail = product.productDetails?.find(
         (detail) =>
           detail.color === selectedColor && detail.size === selectedSize,
@@ -76,7 +82,6 @@ export const DetailProduct = () => {
         try {
           const response = await checkWishList(selectedDetail.id);
           console.log("Response:", response);
-
           setIsFavorite(response.isFavorite || false);
         } catch (error) {
           console.error("Error checking wishlist status:", error);

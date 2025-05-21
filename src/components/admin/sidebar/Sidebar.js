@@ -140,7 +140,6 @@ const Sidebar = () => {
         types = [];
       }
 
-      // Lấy tất cả thông báo, không giới hạn số lượng
       const response = await getAllNotifications(
         1,
         Number.MAX_SAFE_INTEGER,
@@ -201,7 +200,7 @@ const Sidebar = () => {
               : "";
           displayMessage = `Người dùng ${username} đã ${actionMap[notification.type]} #${invoiceId}${suffix}`;
         } else {
-          displayMessage = notification.message; // Fallback
+          displayMessage = notification.message;
         }
 
         return {
@@ -220,123 +219,103 @@ const Sidebar = () => {
     }
   }, [activeTab, selectedInvoiceType]);
 
-  const handleNewNotification = (data) => {
-    const config = notificationConfig[data.type] || {
-      route: "/admin/invoice",
-      label: "Hóa đơn",
-      color: "default",
-    };
+  const handleNewNotification = useCallback(
+    (data) => {
+      const config = notificationConfig[data.type] || {
+        route: "/admin/invoice",
+        label: "Hóa đơn",
+        color: "default",
+      };
 
-    toast.info(
-      <div>
-        <strong>Thông báo mới!</strong>
-        <p>{data.message}</p>
-        <button
-          style={{
-            background: "#1890ff",
-            color: "#fff",
-            border: "none",
-            padding: "5px 10px",
-            borderRadius: "4px",
-            cursor: "pointer",
-          }}
-          onClick={() => navigate(config.route)}
-        >
-          Xem chi tiết
-        </button>
-      </div>,
-      {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      },
-    );
+      toast.info(
+        <div>
+          <strong>Thông báo mới!</strong>
+          <p>{data.message}</p>
+          <button
+            style={{
+              background: "#1890ff",
+              color: "#fff",
+              border: "none",
+              padding: "5px 10px",
+              borderRadius: "4px",
+              cursor: "pointer",
+            }}
+            onClick={() => navigate(config.route)}
+          >
+            Xem chi tiết
+          </button>
+        </div>,
+        {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        },
+      );
 
-    if (window.Notification && Notification.permission === "granted") {
-      try {
-        const systemNotification = new Notification("Thông báo mới!", {
-          body: data.message,
-          icon: "/assets/icon/bell.png",
-          tag: data.notificationId || "default-tag",
+      if (window.Notification && Notification.permission === "granted") {
+        try {
+          const systemNotification = new Notification("Thông báo mới!", {
+            body: data.message,
+            icon: "/assets/icon/bell.png",
+            tag: data.notificationId || "default-tag",
+          });
+
+          systemNotification.onclick = () => {
+            window.focus();
+            navigate(config.route);
+          };
+
+          systemNotification.onerror = (error) => {
+            console.error("System notification error:", error);
+          };
+        } catch (error) {
+          console.error("Failed to create system notification:", error);
+          toast.error(
+            "Không thể hiển thị thông báo hệ thống. Vui lòng kiểm tra cài đặt thông báo trên Windows và trình duyệt.",
+            {
+              position: "top-right",
+              autoClose: 5000,
+            },
+          );
+        }
+      } else {
+        console.warn(
+          "Cannot show notification: Permission not granted or Notification API not supported.",
+        );
+        if (Notification.permission !== "granted") {
+          toast.warn(
+            "Quyền thông báo chưa được cấp. Vui lòng bật quyền thông báo trong cài đặt trình duyệt.",
+            {
+              position: "top-right",
+              autoClose: 5000,
+            },
+          );
+        }
+      }
+
+      if (hasInteracted) {
+        notificationSound.play().catch((error) => {
+          console.error("Error playing notification sound:", error.message);
+          toast.error(
+            "Không thể phát âm thanh thông báo. Vui lòng kiểm tra tệp âm thanh hoặc cài đặt trình duyệt.",
+            {
+              position: "top-right",
+              autoClose: 5000,
+            },
+          );
         });
-
-        systemNotification.onclick = () => {
-          window.focus();
-          navigate(config.route);
-        };
-
-        systemNotification.onerror = (error) => {
-          console.error("System notification error:", error);
-        };
-      } catch (error) {
-        console.error("Failed to create system notification:", error);
-        toast.error(
-          "Không thể hiển thị thông báo hệ thống. Vui lòng kiểm tra cài đặt thông báo trên Windows và trình duyệt.",
-          {
-            position: "top-right",
-            autoClose: 5000,
-          },
-        );
+      } else {
+        toast.info("Vui lòng nhấp vào trang để bật âm thanh thông báo.", {
+          position: "top-right",
+          autoClose: 5000,
+        });
       }
-    } else {
-      console.warn(
-        "Cannot show notification: Permission not granted or Notification API not supported.",
-      );
-      if (Notification.permission !== "granted") {
-        toast.warn(
-          "Quyền thông báo chưa được cấp. Vui lòng bật quyền thông báo trong cài đặt trình duyệt.",
-          {
-            position: "top-right",
-            autoClose: 5000,
-          },
-        );
-      }
-    }
-
-    if (hasInteracted) {
-      notificationSound.play().catch((error) => {
-        console.error("Error playing notification sound:", error.message);
-        toast.error(
-          "Không thể phát âm thanh thông báo. Vui lòng kiểm tra tệp âm thanh hoặc cài đặt trình duyệt.",
-          {
-            position: "top-right",
-            autoClose: 5000,
-          },
-        );
-      });
-    } else {
-      toast.info("Vui lòng nhấp vào trang để bật âm thanh thông báo.", {
-        position: "top-right",
-        autoClose: 5000,
-      });
-    }
-  };
-
-  useEffect(() => {
-    fetchNotifications();
-  }, [fetchNotifications, activeTab, selectedInvoiceType]);
-
-  const handleMarkAsRead = async (notificationId) => {
-    try {
-      await markNotificationAsReadAdmin(notificationId);
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n)),
-      );
-      setUnreadCount((prev) => Math.max(prev - 1, 0));
-      prevNotificationsRef.current = prevNotificationsRef.current.map((n) =>
-        n.id === notificationId ? { ...n, isRead: true } : n,
-      );
-    } catch (error) {
-      Swal.fire({
-        title: "Lỗi!",
-        text: "Không thể đánh dấu thông báo đã đọc.",
-        icon: "error",
-      });
-    }
-  };
+    },
+    [hasInteracted, navigate],
+  );
 
   useEffect(() => {
     if (window.Notification) {
@@ -372,7 +351,7 @@ const Sidebar = () => {
       console.error("WebSocket connection error:", error.message);
     });
 
-    socket.on("notification", (data) => {
+    socket.on("notification", async (data) => {
       const notificationType = data.type?.trim();
       const notificationSource = data.source?.trim();
 
@@ -380,75 +359,75 @@ const Sidebar = () => {
         (notificationType === "INVOICE_CREATED" ||
           notificationType === "INVOICE_CANCELLED" ||
           notificationType === "INVOICE_PAYMENT" ||
-          notificationType === "REVIEW_UPDATED") &&
+          notificationType === "REVIEW_UPDATED" ||
+          notificationType === "REVIEW_DELETED" ||
+          notificationType === "REVIEW_CREATED") &&
         notificationSource === "USER"
       ) {
         // Fetch username for new notification
-        const fetchUsername = async () => {
-          if (!usersMapRef.current[data.userId]) {
-            try {
-              const userData = await getUserIdByAdmin(data.userId);
-              usersMapRef.current[data.userId] = userData.username || "N/A";
-            } catch (error) {
-              console.error(`Error fetching user ${data.userId}:`, error);
-              usersMapRef.current[data.userId] = "N/A";
-            }
+        let username;
+        if (!usersMapRef.current[data.userId]) {
+          try {
+            const userData = await getUserIdByAdmin(data.userId);
+            usersMapRef.current[data.userId] = userData.username || "N/A";
+            username = userData.username || "N/A";
+          } catch (error) {
+            console.error(`Error fetching user ${data.userId}:`, error);
+            username = "N/A";
           }
-          return usersMapRef.current[data.userId];
-        };
+        } else {
+          username = usersMapRef.current[data.userId];
+        }
 
-        fetchUsername().then((username) => {
-          let displayMessage = data.message;
+        let displayMessage = data.message;
 
-          if (notificationType === "REVIEW_UPDATED") {
-            displayMessage = `Người dùng ${username} đã ${actionMap[notificationType]}`;
-          } else if (
-            [
-              "INVOICE_CREATED",
-              "INVOICE_PAYMENT",
-              "INVOICE_CANCELLED",
-            ].includes(notificationType)
-          ) {
-            const invoiceIdMatch = data.message.match(/#(\d+)/) || [];
-            const invoiceId = invoiceIdMatch[1] || "N/A";
-            const suffix =
-              notificationType === "INVOICE_PAYMENT" &&
-              data.message.includes("VNPay")
-                ? " qua VNPay"
-                : "";
-            displayMessage = `Người dùng ${username} đã ${actionMap[notificationType]} #${invoiceId}${suffix}`;
-          }
+        if (
+          ["REVIEW_UPDATED", "REVIEW_DELETED", "REVIEW_CREATED"].includes(
+            notificationType,
+          )
+        ) {
+          displayMessage = `Người dùng ${username} đã ${actionMap[notificationType]}`;
+        } else if (
+          ["INVOICE_CREATED", "INVOICE_PAYMENT", "INVOICE_CANCELLED"].includes(
+            notificationType,
+          )
+        ) {
+          const invoiceIdMatch = data.message.match(/#(\d+)/) || [];
+          const invoiceId = invoiceIdMatch[1] || "N/A";
+          const suffix =
+            notificationType === "INVOICE_PAYMENT" &&
+            data.message.includes("VNPay")
+              ? " qua VNPay"
+              : "";
+          displayMessage = `Người dùng ${username} đã ${actionMap[notificationType]} #${invoiceId}${suffix}`;
+        }
 
-          // Chỉ thêm thông báo nếu phù hợp với tab hiện tại
-          if (
-            activeTab === "all" ||
-            (activeTab === "invoice" &&
-              notificationType === selectedInvoiceType) ||
-            (activeTab === "review" && notificationType === "REVIEW_UPDATED")
-          ) {
-            handleNewNotification({ ...data, message: displayMessage });
+        // Hiển thị thông báo và cập nhật danh sách
+        handleNewNotification({ ...data, message: displayMessage });
 
-            setNotifications((prev) => {
-              const updatedNotifications = [
-                {
-                  id: data.notificationId || `temp-id-${Date.now()}`,
-                  message: data.message,
-                  displayMessage,
-                  type: data.type || "UNKNOWN",
-                  source: data.source || "UNKNOWN",
-                  isRead: false,
-                  createdAt: data.createdAt || new Date().toISOString(),
-                  userId: data.userId,
-                },
-                ...prev,
-              ];
-              prevNotificationsRef.current = updatedNotifications;
-              return updatedNotifications;
-            });
-            setUnreadCount((prev) => prev + 1);
-            setNotificationTotal((prev) => prev + 1);
-          }
+        // Thêm thông báo mới vào danh sách
+        setNotifications((prev) => {
+          const updatedNotifications = [
+            {
+              id: data.notificationId || `temp-id-${Date.now()}`,
+              message: data.message,
+              displayMessage,
+              type: data.type || "UNKNOWN",
+              source: data.source || "UNKNOWN",
+              isRead: false,
+              createdAt: data.createdAt || new Date().toISOString(),
+              userId: data.userId,
+            },
+            ...prev,
+          ];
+          prevNotificationsRef.current = updatedNotifications;
+          return updatedNotifications;
         });
+
+        // Tăng unreadCount và gọi lại fetchNotifications để đồng bộ
+        setUnreadCount((prev) => prev + 1);
+        setNotificationTotal((prev) => prev + 1);
+        fetchNotifications(); // Gọi lại để đảm bảo unreadCount đồng bộ với server
       }
     });
 
@@ -457,7 +436,30 @@ const Sidebar = () => {
     return () => {
       socket.disconnect();
     };
-  }, [token, navigate, hasInteracted]);
+  }, [token, handleNewNotification, fetchNotifications]);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
+
+  const handleMarkAsRead = async (notificationId) => {
+    try {
+      await markNotificationAsReadAdmin(notificationId);
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n)),
+      );
+      setUnreadCount((prev) => Math.max(prev - 1, 0));
+      prevNotificationsRef.current = prevNotificationsRef.current.map((n) =>
+        n.id === notificationId ? { ...n, isRead: true } : n,
+      );
+    } catch (error) {
+      Swal.fire({
+        title: "Lỗi!",
+        text: "Không thể đánh dấu thông báo đã đọc.",
+        icon: "error",
+      });
+    }
+  };
 
   useEffect(() => {
     setSelectedKeys([lastPathSegment]);
