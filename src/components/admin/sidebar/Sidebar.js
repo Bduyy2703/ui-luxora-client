@@ -90,16 +90,12 @@ const Sidebar = () => {
   const [openKeys, setOpenKeys] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [notificationPage, setNotificationPage] = useState(1);
   const [notificationTotal, setNotificationTotal] = useState(0);
   const [activeTab, setActiveTab] = useState("all");
-  // const [selectedInvoiceType, setSelectedInvoiceType] =
-  //   useState("all_invoices");
   const [selectedInvoiceType, setSelectedInvoiceType] =
     useState("INVOICE_CREATED");
   const [hasInteracted, setHasInteracted] = useState(false);
   const prevNotificationsRef = useRef([]);
-  const notificationLimit = 10;
   const usersMapRef = useRef({});
 
   const token = localStorage.getItem("accessToken") || "your-jwt-token";
@@ -128,7 +124,10 @@ const Sidebar = () => {
         types = [
           "INVOICE_CREATED",
           "INVOICE_CANCELLED",
+          "INVOICE_GOODS_ISSUED",
           "INVOICE_PAYMENT",
+          "INVOICE_DELIVERING",
+          "INVOICE_DELIVERED",
           "REVIEW_UPDATED",
           "REVIEW_DELETED",
           "REVIEW_CREATED",
@@ -141,9 +140,10 @@ const Sidebar = () => {
         types = [];
       }
 
+      // Lấy tất cả thông báo, không giới hạn số lượng
       const response = await getAllNotifications(
-        notificationPage,
-        notificationLimit,
+        1,
+        Number.MAX_SAFE_INTEGER,
         types,
       );
 
@@ -218,7 +218,7 @@ const Sidebar = () => {
       console.error("Error fetching notifications:", error);
       setNotifications([]);
     }
-  }, [notificationPage, activeTab, selectedInvoiceType]);
+  }, [activeTab, selectedInvoiceType]);
 
   const handleNewNotification = (data) => {
     const config = notificationConfig[data.type] || {
@@ -317,44 +317,6 @@ const Sidebar = () => {
 
   useEffect(() => {
     fetchNotifications();
-
-    // Bật lại setInterval sau khi debug
-    /*
-  const interval = setInterval(async () => {
-    const response = await fetchNotifications();
-    if (response) {
-      const newNotifications = response.notifications || [];
-      const newUnreadCount = response.unreadCount || 0;
-
-      const currentIds = prevNotificationsRef.current.map((n) => n.id);
-      const newItems = newNotifications.filter((n) => !currentIds.includes(n.id));
-
-      newItems.forEach((item) => {
-        const notificationType = item.type?.trim();
-        const notificationSource = item.source?.trim();
-
-        if (
-          (notificationType === "INVOICE_CREATED" ||
-            notificationType === "INVOICE_CANCELLED" ||
-            notificationType === "INVOICE_PAYMENT" ||
-            notificationType === "REVIEW_UPDATED" ||
-            notificationType === "REVIEW_DELETED" ||
-            notificationType === "REVIEW_CREATED") &&
-          notificationSource === "USER"
-        ) {
-          handleNewNotification(item);
-        }
-      });
-
-      setNotifications(newNotifications);
-      setUnreadCount(newUnreadCount);
-      setNotificationTotal(response.total || 0);
-      prevNotificationsRef.current = newNotifications;
-    }
-  }, 10000);
-
-  return () => clearInterval(interval);
-  */
   }, [fetchNotifications, activeTab, selectedInvoiceType]);
 
   const handleMarkAsRead = async (notificationId) => {
@@ -404,8 +366,7 @@ const Sidebar = () => {
       auth: { token: `Bearer ${token}` },
     });
 
-    socket.on("connect", () => {
-    });
+    socket.on("connect", () => {});
 
     socket.on("connect_error", (error) => {
       console.error("WebSocket connection error:", error.message);
@@ -491,8 +452,7 @@ const Sidebar = () => {
       }
     });
 
-    socket.on("disconnect", () => {
-    });
+    socket.on("disconnect", () => {});
 
     return () => {
       socket.disconnect();
@@ -560,7 +520,6 @@ const Sidebar = () => {
         activeKey={activeTab}
         onChange={(key) => {
           setActiveTab(key);
-          setNotificationPage(1);
           setNotifications([]);
           if (key === "invoice") {
             setSelectedInvoiceType("INVOICE_CREATED");
@@ -579,7 +538,6 @@ const Sidebar = () => {
                 value={selectedInvoiceType}
                 onChange={(value) => {
                   setSelectedInvoiceType(value);
-                  setNotificationPage(1);
                   setNotifications([]);
                 }}
                 style={{ width: "100%", marginBottom: "10px" }}
@@ -665,25 +623,6 @@ const Sidebar = () => {
           </Text>
         )}
       </div>
-      {notificationTotal > notifications.length && (
-        <div style={{ padding: "10px", textAlign: "center" }}>
-          <motion.button
-            onClick={() => setNotificationPage((prev) => prev + 1)}
-            style={{
-              background: "#1890ff",
-              color: "#fff",
-              border: "none",
-              padding: "8px 16px",
-              borderRadius: "4px",
-              cursor: "pointer",
-            }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            Tải thêm
-          </motion.button>
-        </div>
-      )}
     </div>
   );
 

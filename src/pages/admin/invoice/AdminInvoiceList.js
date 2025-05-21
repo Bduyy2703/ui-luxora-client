@@ -41,7 +41,33 @@ import {
 
 const { Text, Title } = Typography;
 
-// Định nghĩa các trạng thái hóa đơn
+const statusTimeline = [
+  { status: "PENDING", display: "Đang chờ", icon: <IssuesCloseOutlined /> },
+  {
+    status: "CONFIRMED",
+    display: "Đã xác nhận",
+    icon: <ClockCircleOutlined />,
+  },
+  { status: "SHIPPING", display: "Đang giao hàng", icon: <CarOutlined /> },
+  { status: "DELIVERED", display: "Đã giao hàng", icon: <GiftOutlined /> },
+  { status: "PAID", display: "Đã thanh toán", icon: <CheckCircleOutlined /> },
+  { status: "CANCELLED", display: "Đã hủy", icon: <CloseCircleOutlined /> },
+  { status: "FAILED", display: "Thất bại", icon: <WarningOutlined /> },
+  { status: "RETURNED", display: "Đã trả hàng", icon: <RollbackOutlined /> },
+];
+
+const validTransitions = {
+  PENDING: ["CONFIRMED", "CANCELLED"],
+  CONFIRMED: ["SHIPPING", "CANCELLED"],
+  SHIPPING: ["DELIVERED", "CANCELLED", "RETURNED"],
+  DELIVERED: ["RETURNED"],
+  PAID: ["RETURNED"],
+  FAILED: ["CANCELLED", "PENDING"],
+  CANCELLED: [],
+  RETURNED: [],
+};
+
+// Định nghĩa các trạng thái hóa đơn (đồng bộ với RETURNED)
 const INVOICE_STATUSES = [
   { value: "PENDING", label: "Chờ xử lý", color: "orange" },
   { value: "CONFIRMED", label: "Đã xác nhận", color: "blue" },
@@ -50,63 +76,8 @@ const INVOICE_STATUSES = [
   { value: "PAID", label: "Đã thanh toán", color: "green" },
   { value: "FAILED", label: "Thất bại", color: "purple" },
   { value: "CANCELLED", label: "Đã hủy", color: "red" },
-  { value: "RETURNACKNOWLEDGED", label: "Đã trả hàng", color: "volcano" },
+  { value: "RETURNED", label: "Đã trả hàng", color: "volcano" }, // Sửa từ RETURNACKNOWLEDGED thành RETURNED
 ];
-
-// Định nghĩa timeline trạng thái
-const statusTimeline = [
-  {
-    status: "PENDING",
-    display: "Đang chờ",
-    icon: <IssuesCloseOutlined />,
-  },
-  {
-    status: "CONFIRMED",
-    display: "Đã xác nhận",
-    icon: <ClockCircleOutlined />,
-  },
-  {
-    status: "SHIPPING",
-    display: "Đang giao hàng",
-    icon: <CarOutlined />,
-  },
-  {
-    status: "DELIVERED",
-    display: "Đã giao hàng",
-    icon: <GiftOutlined />,
-  },
-  {
-    status: "PAID",
-    display: "Đã thanh toán",
-    icon: <CheckCircleOutlined />,
-  },
-  {
-    status: "CANCELLED",
-    display: "Đã hủy",
-    icon: <CloseCircleOutlined />,
-  },
-  {
-    status: "RETURNACKNOWLEDGED",
-    display: "Đã trả hàng",
-    icon: <RollbackOutlined />,
-  },
-  {
-    status: "FAILED",
-    display: "Thất bại",
-    icon: <WarningOutlined />,
-  },
-];
-
-const VALID_TRANSITIONS = {
-  PENDING: ["CONFIRMED", "CANCELLED", "FAILED"],
-  CONFIRMED: ["SHIPPING", "CANCELLED", "PAID"],
-  SHIPPING: ["DELIVERED", "CANCELLED"],
-  DELIVERED: ["PAID", "RETURNACKNOWLEDGED"],
-  PAID: ["RETURNACKNOWLEDGED"],
-  FAILED: ["PENDING", "CANCELLED"],
-  CANCELLED: [],
-  RETURNACKNOWLEDGED: [],
-};
 
 const AdminInvoiceList = () => {
   const [data, setData] = useState([]);
@@ -418,9 +389,7 @@ const AdminInvoiceList = () => {
       dataIndex: ["discount", "startDate"],
       key: "time",
       render: (text, record) =>
-        `${new Date(record.discount.startDate).toLocaleDateString("vi-VN")} - ${new Date(
-          record.discount.endDate,
-        ).toLocaleDateString("vi-VN")}`,
+        `${new Date(record.discount.startDate).toLocaleDateString("vi-VN")} - ${new Date(record.discount.endDate).toLocaleDateString("vi-VN")}`,
     },
   ];
 
@@ -459,11 +428,14 @@ const AdminInvoiceList = () => {
     },
   ];
 
-  const getValidStatusOptions = (currentStatus) => {
-    const validStatuses = VALID_TRANSITIONS[currentStatus] || [];
-    return statusTimeline.filter((status) =>
-      validStatuses.includes(status.status),
+  const isMainFlowStatus = (status) => {
+    return ["PENDING", "CONFIRMED", "SHIPPING", "DELIVERED", "PAID"].includes(
+      status,
     );
+  };
+
+  const getValidNextStatuses = (currentStatus) => {
+    return validTransitions[currentStatus] || [];
   };
 
   return (
@@ -544,26 +516,28 @@ const AdminInvoiceList = () => {
                     <div className={styles.loading}>Đang cập nhật...</div>
                   ) : (
                     statusTimeline.map((step, index) => {
-                      const isActive = step.status === selectedStatus;
-                      const isCurrent = step.status === currentInvoice.status;
-                      const isValid = VALID_TRANSITIONS[
-                        currentInvoice.status
-                      ]?.includes(step.status);
+                      const isActive = step.status === currentInvoice.status;
+                      const isValid = getValidNextStatuses(
+                        currentInvoice.status,
+                      ).includes(step.status);
                       const isLastStep = index === statusTimeline.length - 1;
-                      const isException =
-                        step.status === "CANCELLED" ||
-                        step.status === "FAILED" ||
-                        step.status === "RETURNACKNOWLEDGED";
+                      const isException = [
+                        "CANCELLED",
+                        "FAILED",
+                        "RETURNED",
+                      ].includes(step.status);
+                      // Luôn hiển thị trạng thái chính, chỉ hiển thị trạng thái ngoại lệ nếu là hiện tại hoặc hợp lệ
                       const shouldDisplay =
-                        !isException ||
-                        (isException && step.status === currentInvoice.status);
+                        isMainFlowStatus(step.status) ||
+                        (isException && (isActive || isValid));
 
                       return shouldDisplay ? (
                         <div
                           key={step.status}
-                          className={`${styles.timelineStep} ${
-                            isActive ? styles.active : ""
-                          } ${isValid ? styles.valid : ""}`}
+                          className={`${styles.timelineStep} 
+                            ${isActive ? styles.active : ""}
+                            ${isValid ? styles.valid : ""}
+                            ${isValid && !isActive ? styles.clickable : ""}`}
                           onClick={() =>
                             isValid && handleUpdateStatus(step.status)
                           }
@@ -572,7 +546,7 @@ const AdminInvoiceList = () => {
                           <div className={styles.timelineLabel}>
                             {step.display}
                           </div>
-                          {!isLastStep && !isException && (
+                          {!isLastStep && isMainFlowStatus(step.status) && (
                             <div className={styles.timelineArrow}>→</div>
                           )}
                         </div>

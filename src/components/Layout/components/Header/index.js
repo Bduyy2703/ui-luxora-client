@@ -532,7 +532,7 @@ function Header() {
       />
       <div
         className="notification-list"
-        style={{ maxHeight: "280px", overflowY: "auto" }}
+        style={{ maxHeight: "280px", overflowY: "auto", paddingBottom: "7px" }}
       >
         {notificationsWithRoute.length > 0 ? (
           <AnimatePresence>
@@ -593,7 +593,12 @@ function Header() {
             ))}
           </AnimatePresence>
         ) : (
-          <Text className={styles.noNotification}>Không có thông báo nào</Text>
+          <Text
+            style={{ marginLeft: "13px" }}
+            className={styles.noNotification}
+          >
+            Không có thông báo nào
+          </Text>
         )}
       </div>
       {notificationTotal > notifications.length && (
