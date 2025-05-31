@@ -59,4 +59,21 @@ privateAxios.interceptors.response.use(
   },
 );
 
+export const checkWishList = async (productDetailId) => {
+  const accessToken = localStorage.getItem("accessToken");
+  if (!accessToken) {
+    return { isFavorite: false };
+  }
+
+  try {
+    const response = await privateAxios.get(
+      `/v1/wishlist/check/${productDetailId}`,
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error checking wishlist:", error);
+    throw error;
+  }
+};
+
 export default privateAxios;

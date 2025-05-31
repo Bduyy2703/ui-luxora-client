@@ -105,7 +105,7 @@ export const deleteReview = async (id) => {
 // Lấy thống kê đánh giá của sản phẩm
 export const getProductReviewStatistics = async (productId) => {
   try {
-    const response = await privateAxios.get(
+    const response = await publicAxios.get(
       `${API_URL}/v1/reviews/product/${productId}/statistics`,
     );
     return response.data; // { averageRating: number, totalReviews: number, ratingDistribution: object }

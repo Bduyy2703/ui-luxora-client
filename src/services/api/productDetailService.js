@@ -1,4 +1,5 @@
 import privateAxios from "./privateAxios";
+import publicAxios from "./publicAxios";
 
 export const addProductDetails = async (productId, productDetailsData) => {
   try {
@@ -47,7 +48,7 @@ export const getProductDetailsByIdDetails = async (productId) => {
 
 export const getByIdProduct = async (id) => {
   try {
-    const response = await privateAxios.get(`/v1/products/${id}`);
+    const response = await publicAxios.get(`/v1/products/${id}`);
     return response.data || [];
   } catch (error) {
     console.error("Error get product details:", error);

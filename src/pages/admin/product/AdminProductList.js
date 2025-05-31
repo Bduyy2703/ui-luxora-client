@@ -11,6 +11,7 @@ import {
   Tooltip,
   Table as AntTable,
   Tag,
+  InputNumber,
 } from "antd";
 import Swal from "sweetalert2";
 import Filter from "../../../components/admin/filter/Filter";
@@ -606,7 +607,7 @@ const AdminProductList = () => {
           <span>Không có hình ảnh</span>
         );
       },
-      width: 100,
+      width: 110,
       align: "center",
     },
     {
@@ -617,7 +618,25 @@ const AdminProductList = () => {
         const size = record.size || "N/A";
         const color = record.color || "N/A";
         const material = record.material || "N/A";
-        return `${name} (Size: ${size}, Color: ${color}, Material: ${material})`;
+        const content = `${name} (Size: ${size}, Color: ${color}, Material: ${material})`;
+
+        return (
+          <div
+            style={{
+              width: 350,
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              lineHeight: "1.4em",
+              maxHeight: "2.8em",
+              wordBreak: "break-word",
+            }}
+          >
+            {content}
+          </div>
+        );
       },
       width: 350,
     },
@@ -627,7 +646,7 @@ const AdminProductList = () => {
       key: "finalPrice",
       render: (finalPrice) =>
         finalPrice ? `${parseFloat(finalPrice).toLocaleString()} VNĐ` : "N/A",
-      width: 120,
+      width: 180,
       align: "right",
     },
     {
@@ -643,7 +662,7 @@ const AdminProductList = () => {
       dataIndex: "sold",
       key: "sold",
       render: (text) => text || "0",
-      width: 150,
+      width: 180,
       align: "center",
     },
     {
@@ -667,7 +686,7 @@ const AdminProductList = () => {
 
         return <Tag color={tagColor}>{tagText}</Tag>;
       },
-      width: 150,
+      width: 120,
       align: "center",
     },
     {
@@ -724,10 +743,12 @@ const AdminProductList = () => {
     },
     {
       title: "Giá sản phẩm",
-      dataIndex: "finalPrice",
-      key: "finalPrice",
-      render: (finalPrice) =>
-        finalPrice ? `${parseFloat(finalPrice).toLocaleString()} VNĐ` : "N/A",
+      dataIndex: "originalPrice",
+      key: "originalPrice",
+      render: (originalPrice) =>
+        originalPrice
+          ? `${parseFloat(originalPrice).toLocaleString()} VNĐ`
+          : "N/A",
       width: 600,
       align: "right",
     },
@@ -1333,7 +1354,7 @@ const AdminProductList = () => {
                       },
                     ]}
                   >
-                    <Input type="number" min={0} />
+                    <Input min={0} />
                   </Form.Item>
                   <Form.Item
                     label="Chiều dài (cm)"
@@ -1341,7 +1362,11 @@ const AdminProductList = () => {
                     rules={[
                       {
                         validator: (_, value) => {
-                          if (!value || Number(value) >= 0) {
+                          if (
+                            value === undefined ||
+                            value === null ||
+                            Number(value) >= 0
+                          ) {
                             return Promise.resolve();
                           }
                           return Promise.reject(
@@ -1351,15 +1376,24 @@ const AdminProductList = () => {
                       },
                     ]}
                   >
-                    <Input type="number" min={0} />
+                    <InputNumber
+                      min={0}
+                      step={0.01}
+                      style={{ width: "100%" }}
+                    />
                   </Form.Item>
+
                   <Form.Item
                     label="Chiều rộng (cm)"
                     name="width"
                     rules={[
                       {
                         validator: (_, value) => {
-                          if (!value || Number(value) >= 0) {
+                          if (
+                            value === undefined ||
+                            value === null ||
+                            Number(value) >= 0
+                          ) {
                             return Promise.resolve();
                           }
                           return Promise.reject(
@@ -1369,15 +1403,24 @@ const AdminProductList = () => {
                       },
                     ]}
                   >
-                    <Input type="number" min={0} />
+                    <InputNumber
+                      min={0}
+                      step={0.01}
+                      style={{ width: "100%" }}
+                    />
                   </Form.Item>
+
                   <Form.Item
                     label="Chiều cao (cm)"
                     name="height"
                     rules={[
                       {
                         validator: (_, value) => {
-                          if (!value || Number(value) >= 0) {
+                          if (
+                            value === undefined ||
+                            value === null ||
+                            Number(value) >= 0
+                          ) {
                             return Promise.resolve();
                           }
                           return Promise.reject(
@@ -1387,15 +1430,24 @@ const AdminProductList = () => {
                       },
                     ]}
                   >
-                    <Input type="number" min={0} />
+                    <InputNumber
+                      min={0}
+                      step={0.01}
+                      style={{ width: "100%" }}
+                    />
                   </Form.Item>
+
                   <Form.Item
                     label="Trọng lượng (g)"
                     name="weight"
                     rules={[
                       {
                         validator: (_, value) => {
-                          if (!value || Number(value) >= 0) {
+                          if (
+                            value === undefined ||
+                            value === null ||
+                            Number(value) >= 0
+                          ) {
                             return Promise.resolve();
                           }
                           return Promise.reject(
@@ -1405,7 +1457,11 @@ const AdminProductList = () => {
                       },
                     ]}
                   >
-                    <Input type="number" min={0} />
+                    <InputNumber
+                      min={0}
+                      step={0.01}
+                      style={{ width: "100%" }}
+                    />
                   </Form.Item>
                   <Form.Item
                     label="Hướng dẫn bảo quản"
@@ -1662,7 +1718,11 @@ const AdminProductList = () => {
                     rules={[
                       {
                         validator: (_, value) => {
-                          if (!value || Number(value) >= 0) {
+                          if (
+                            value === undefined ||
+                            value === null ||
+                            Number(value) >= 0
+                          ) {
                             return Promise.resolve();
                           }
                           return Promise.reject(
@@ -1672,15 +1732,24 @@ const AdminProductList = () => {
                       },
                     ]}
                   >
-                    <Input type="number" min={0} />
+                    <InputNumber
+                      min={0}
+                      step={0.01}
+                      style={{ width: "100%" }}
+                    />
                   </Form.Item>
+
                   <Form.Item
                     label="Chiều rộng (cm)"
                     name="width"
                     rules={[
                       {
                         validator: (_, value) => {
-                          if (!value || Number(value) >= 0) {
+                          if (
+                            value === undefined ||
+                            value === null ||
+                            Number(value) >= 0
+                          ) {
                             return Promise.resolve();
                           }
                           return Promise.reject(
@@ -1690,15 +1759,24 @@ const AdminProductList = () => {
                       },
                     ]}
                   >
-                    <Input type="number" min={0} />
+                    <InputNumber
+                      min={0}
+                      step={0.01}
+                      style={{ width: "100%" }}
+                    />
                   </Form.Item>
+
                   <Form.Item
                     label="Chiều cao (cm)"
                     name="height"
                     rules={[
                       {
                         validator: (_, value) => {
-                          if (!value || Number(value) >= 0) {
+                          if (
+                            value === undefined ||
+                            value === null ||
+                            Number(value) >= 0
+                          ) {
                             return Promise.resolve();
                           }
                           return Promise.reject(
@@ -1708,15 +1786,24 @@ const AdminProductList = () => {
                       },
                     ]}
                   >
-                    <Input type="number" min={0} />
+                    <InputNumber
+                      min={0}
+                      step={0.01}
+                      style={{ width: "100%" }}
+                    />
                   </Form.Item>
+
                   <Form.Item
                     label="Trọng lượng (g)"
                     name="weight"
                     rules={[
                       {
                         validator: (_, value) => {
-                          if (!value || Number(value) >= 0) {
+                          if (
+                            value === undefined ||
+                            value === null ||
+                            Number(value) >= 0
+                          ) {
                             return Promise.resolve();
                           }
                           return Promise.reject(
@@ -1726,7 +1813,11 @@ const AdminProductList = () => {
                       },
                     ]}
                   >
-                    <Input type="number" min={0} />
+                    <InputNumber
+                      min={0}
+                      step={0.01}
+                      style={{ width: "100%" }}
+                    />
                   </Form.Item>
                   <Form.Item
                     label="Hướng dẫn bảo quản"
