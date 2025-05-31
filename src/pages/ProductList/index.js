@@ -34,7 +34,7 @@ const ProductList = () => {
   const location = useLocation();
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
-  const [displayedProducts, setDisplayedProducts] = useState([]); // Sản phẩm hiển thị trên trang hiện tại
+  const [displayedProducts, setDisplayedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -45,7 +45,7 @@ const ProductList = () => {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [keyword, setKeyword] = useState("");
   const [sortOption, setSortOption] = useState("default");
-  const limit = 16;
+  const limit = 15;
 
   const [selectedFilters, setSelectedFilters] = useState({
     priceRanges: [],
@@ -86,40 +86,13 @@ const ProductList = () => {
         .filter((id) => id) || [];
     const urlKeyword = searchParams.get("keyword");
 
-    if (categoryIds.length > 0) {
-      setSelectedFilters((prev) => ({
-        ...prev,
-        categories: categoryIds,
-      }));
-    }
+    setSelectedFilters((prev) => ({
+      ...prev,
+      categories: categoryIds,
+      sales: saleIds,
+    }));
 
-    if (saleIds.length > 0) {
-      setSelectedFilters((prev) => ({
-        ...prev,
-        sales: saleIds,
-      }));
-    }
-
-    if (urlKeyword) {
-      setKeyword(decodeURIComponent(urlKeyword));
-    } else {
-      setKeyword("");
-    }
-
-    const { state } = location;
-    if (state?.isCategory && state?.categoryId) {
-      setSelectedFilters((prev) => ({
-        ...prev,
-        categories: [state.categoryId],
-        sales: [],
-      }));
-    } else if (state?.isSale && state?.saleId) {
-      setSelectedFilters((prev) => ({
-        ...prev,
-        sales: [state.saleId],
-        categories: [],
-      }));
-    }
+    setKeyword(urlKeyword ? decodeURIComponent(urlKeyword) : "");
   }, [location]);
 
   const fetchSalesData = useCallback(async () => {
@@ -135,32 +108,27 @@ const ProductList = () => {
   const fetchProductsData = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await getProductList(currentPage, limit);
+      const response = await getProductList(1, 1000); // Lấy tất cả sản phẩm
       const productsData = response.data || [];
-      const total = response.total || 0;
-      const totalPagesData = response.totalPages || 1;
-
       const uniqueCategories = [
         ...new Map(
           productsData.map((product) => [
-            product.category.id,
-            { id: product.category.id, name: product.category.name },
+            product.category?.id,
+            { id: product.category?.id, name: product.category?.name },
           ]),
         ).values(),
-      ];
+      ].filter((cat) => cat.id && cat.name);
 
       setProducts(productsData);
       setFilteredProducts(productsData);
-      setTotalItems(total);
-      setTotalPages(totalPagesData);
       setCategories(uniqueCategories);
     } catch (error) {
       console.error("Lỗi khi tải sản phẩm:", error);
-      setError("Không thể tải danh sách sản phẩm. Vui lòng thử lại.");
+      setError("Không thể tải danh sách sản phẩm. Vui lòng thử lại sau.");
     } finally {
       setLoading(false);
     }
-  }, [currentPage, limit]);
+  }, []);
 
   useEffect(() => {
     fetchProductsData();
@@ -175,7 +143,7 @@ const ProductList = () => {
         .split(/\s+/)
         .filter((term) => term);
       filtered = filtered.filter((product) => {
-        const productName = removeVietnameseTones(product.name);
+        const productName = removeVietnameseTones(product.name || "");
         return searchTerms.every((term) => productName.includes(term));
       });
     }
@@ -198,8 +166,8 @@ const ProductList = () => {
           if (sale.isGlobalSale) {
             products.forEach((product) => saleProductIds.add(product.id));
           } else {
-            sale.productStrategySales.forEach((item) =>
-              saleProductIds.add(item.product.id),
+            sale.productStrategySales?.forEach((item) =>
+              saleProductIds.add(item.product?.id),
             );
           }
         });
@@ -209,7 +177,7 @@ const ProductList = () => {
 
     if (selectedFilters.priceRanges.length > 0) {
       filtered = filtered.filter((product) => {
-        const price = parseFloat(product.finalPrice);
+        const price = parseFloat(product.finalPrice || 0);
         return selectedFilters.priceRanges.some((rangeLabel) => {
           const range = priceRanges.find((r) => r.label === rangeLabel);
           return price >= range.min && price <= range.max;
@@ -243,12 +211,19 @@ const ProductList = () => {
 
     setFilteredProducts(filtered);
     setTotalItems(filtered.length);
-    setTotalPages(Math.ceil(filtered.length / limit));
+    const calculatedTotalPages = Math.max(
+      1,
+      Math.ceil(filtered.length / limit),
+    );
+    setTotalPages(calculatedTotalPages);
 
-    // Tính toán sản phẩm hiển thị trên trang hiện tại
+    if (currentPage > calculatedTotalPages) {
+      setCurrentPage(1);
+      return;
+    }
+
     const startIndex = (currentPage - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedProducts = filtered.slice(startIndex, endIndex);
+    const paginatedProducts = filtered.slice(startIndex, startIndex + limit);
     setDisplayedProducts(paginatedProducts);
   }, [
     products,
@@ -261,15 +236,16 @@ const ProductList = () => {
   ]);
 
   useEffect(() => {
+    setCurrentPage(1); // Reset về trang 1 khi bộ lọc hoặc từ khóa thay đổi
+  }, [selectedFilters, keyword]);
+
+  useEffect(() => {
     applyFilters();
-  }, [selectedFilters, keyword, sortOption, currentPage, applyFilters]);
+  }, [applyFilters]);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
-  };
-
-  const handleProductClick = (productId) => {
-    navigate(`/detail-product/${productId}`);
+    window.scrollTo(0, 0); // Cuộn lên đầu trang khi đổi trang
   };
 
   const handleFilterChange = (type, value) => {
@@ -280,31 +256,23 @@ const ProductList = () => {
         : [...currentValues, value];
       const updatedFilters = { ...prev, [type]: newValues };
 
-      setTimeout(() => {
-        const queryParams = [];
-        if (updatedFilters.categories.length > 0) {
-          queryParams.push(`categories=${updatedFilters.categories.join(",")}`);
-        }
-        if (updatedFilters.sales.length > 0) {
-          queryParams.push(`sales=${updatedFilters.sales.join(",")}`);
-        }
-
-        const queryString =
-          queryParams.length > 0 ? `?${queryParams.join("&")}` : "";
-        navigate(`/list-product${queryString}`, { replace: true });
-      }, 0);
-
-      // Khi thay đổi bộ lọc, đặt lại về trang 1
-      setCurrentPage(1);
+      const queryParams = [];
+      if (updatedFilters.categories.length > 0) {
+        queryParams.push(`categories=${updatedFilters.categories.join(",")}`);
+      }
+      if (updatedFilters.sales.length > 0) {
+        queryParams.push(`sales=${updatedFilters.sales.join(",")}`);
+      }
+      const queryString =
+        queryParams.length > 0 ? `?${queryParams.join("&")}` : "";
+      navigate(`/list-product${queryString}`, { replace: true });
 
       return updatedFilters;
     });
   };
 
   const handleFilter = () => {
-    if (isMobileFilterOpen) {
-      setIsMobileFilterOpen(false);
-    }
+    setIsMobileFilterOpen(false);
   };
 
   const handleClearFilters = () => {
@@ -316,17 +284,17 @@ const ProductList = () => {
       sales: [],
     });
     setKeyword("");
-    setCurrentPage(1); // Đặt lại về trang 1 khi xóa bộ lọc
+    setCurrentPage(1);
     navigate("/list-product", { replace: true });
   };
 
   const handleSortChange = (value) => {
     setSortOption(value);
-    setCurrentPage(1); // Đặt lại về trang 1 khi thay đổi sắp xếp
+    setCurrentPage(1);
   };
 
   const parsePrice = (price) => {
-    return parseFloat(price).toLocaleString("vi-VN");
+    return parseFloat(price || 0).toLocaleString("vi-VN");
   };
 
   if (error) return <div className={styles.errorMessage}>{error}</div>;
@@ -372,11 +340,7 @@ const ProductList = () => {
           ) : (
             <Empty
               image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description={
-                <span className={styles.noSalesMessage}>
-                  Chưa có chương trình giảm giá nào.
-                </span>
-              }
+              description={<span>Chưa có chương trình giảm giá nào.</span>}
             />
           )}
         </Panel>
@@ -407,6 +371,10 @@ const ProductList = () => {
       </div>
     </div>
   );
+
+  const handleProductClick = (productId) => {
+    navigate(`/detail-product/${productId}`);
+  };
 
   return (
     <div className={styles.productListContainer}>
@@ -461,7 +429,10 @@ const ProductList = () => {
               ))}
             </div>
           ) : filteredProducts.length === 0 ? (
-            <p>Không có sản phẩm nào.</p>
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description="Không tìm thấy sản phẩm nào phù hợp với bộ lọc."
+            />
           ) : (
             <div className={styles.productGrid}>
               {displayedProducts.map((product) => (
@@ -472,14 +443,11 @@ const ProductList = () => {
                   cover={
                     <div className={styles.imageWrapper}>
                       <img
-                        src={product.images[0]}
+                        src={product.images?.[0] || "/images/fallback.jpg"}
                         alt={product.name}
                         className={styles.productImage}
                         onClick={() => handleProductClick(product.id)}
                         onError={(e) => {
-                          console.log(
-                            `Không thể tải hình ảnh cho sản phẩm ${product.name}`,
-                          );
                           e.target.src = "/images/fallback.jpg";
                         }}
                       />
@@ -494,11 +462,18 @@ const ProductList = () => {
                       {product.name}
                     </h3>
                     <div className={styles.priceContainer}>
-                      <span className={styles.productPrice}>
-                        {parsePrice(product.finalPrice)}đ
-                      </span>
-                      {product.finalPrice !== product.originalPrice && (
-                        <span className={styles.salePrice}>
+                      {parseFloat(product.finalPrice) <
+                      parseFloat(product.originalPrice) ? (
+                        <>
+                          <span className={styles.productPrice}>
+                            {parsePrice(product.finalPrice)}đ
+                          </span>
+                          <span className={styles.salePrice}>
+                            {parsePrice(product.originalPrice)}đ
+                          </span>
+                        </>
+                      ) : (
+                        <span className={styles.productPrice}>
                           {parsePrice(product.originalPrice)}đ
                         </span>
                       )}
@@ -509,14 +484,13 @@ const ProductList = () => {
             </div>
           )}
 
-          {totalItems > 15 && (
+          {totalItems > 0 && (
             <div className={styles.pagination}>
               <Pagination
                 current={currentPage}
                 pageSize={limit}
                 total={totalItems}
                 onChange={handlePageChange}
-                showSizeChanger={false}
               />
             </div>
           )}

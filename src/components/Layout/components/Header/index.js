@@ -447,7 +447,7 @@ function Header() {
   const handleCart = () => navigate("/cart/gio-hang-cua-ban");
 
   const handleCategoryClick = (categoryId) => {
-    navigate("/list-product", {
+    navigate(`/list-product?categories=${categoryId}`, {
       state: { isCategory: true, categoryId },
       replace: true,
     });
@@ -694,7 +694,7 @@ function Header() {
               onClick={handleSaleClick}
               style={{ cursor: "pointer", fontWeight: "600" }}
             >
-              SALE
+              SẢN PHẨM
               <FontAwesomeIcon className={styles.iconFire} icon={faFire} />
             </li>
             {menuItems.map((item) => {
