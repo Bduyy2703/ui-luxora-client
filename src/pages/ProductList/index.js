@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { getProductList } from "../../services/api/productService";
 import { getAllSales } from "../../services/api/promotionService";
 import {
-  Image,
   Pagination,
   Spin,
   Button,
@@ -15,6 +14,7 @@ import {
   Drawer,
   Space,
   Empty,
+  Tag,
 } from "antd";
 import { FilterOutlined } from "@ant-design/icons";
 import styles from "./index.module.scss";
@@ -44,8 +44,8 @@ const ProductList = () => {
   const [sales, setSales] = useState([]);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [keyword, setKeyword] = useState("");
-  const [sortOption, setSortOption] = useState("default");
-  const limit = 15;
+  const [sortOption, setSortOption] = useState("bestselling");
+  const limit = 12;
 
   const [selectedFilters, setSelectedFilters] = useState({
     priceRanges: [],
@@ -108,7 +108,7 @@ const ProductList = () => {
   const fetchProductsData = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await getProductList(1, 1000); // Lấy tất cả sản phẩm
+      const response = await getProductList(1, 1000);
       const productsData = response.data || [];
       const uniqueCategories = [
         ...new Map(
@@ -133,7 +133,34 @@ const ProductList = () => {
   useEffect(() => {
     fetchProductsData();
     fetchSalesData();
+    // Initialize AOS
+    if (typeof window !== "undefined" && window.AOS) {
+      window.AOS.init({ duration: 800, once: true });
+    }
   }, [fetchProductsData, fetchSalesData]);
+
+  const isBestselling = (product) => {
+    const topSoldProducts = [...filteredProducts]
+      .filter((p) => p.totalSold > 0)
+      .sort((a, b) => b.totalSold - a.totalSold)
+      .slice(0, 10)
+      .map((p) => p.id);
+
+    return topSoldProducts.includes(product.id);
+  };
+
+  const isOnSale = (product) => {
+    return parseFloat(product.finalPrice) < parseFloat(product.originalPrice);
+  };
+
+  const getDiscountPercentage = (product) => {
+    const finalPrice = parseFloat(product.finalPrice);
+    const originalPrice = parseFloat(product.originalPrice);
+    if (finalPrice < originalPrice) {
+      return Math.round(((originalPrice - finalPrice) / originalPrice) * 100);
+    }
+    return 0;
+  };
 
   const applyFilters = useCallback(() => {
     let filtered = [...products];
@@ -199,7 +226,9 @@ const ProductList = () => {
       });
     }
 
-    if (sortOption === "price-asc") {
+    if (sortOption === "bestselling") {
+      filtered.sort((a, b) => (b.totalSold || 0) - (a.totalSold || 0));
+    } else if (sortOption === "price-asc") {
       filtered.sort(
         (a, b) => parseFloat(a.finalPrice) - parseFloat(b.finalPrice),
       );
@@ -236,7 +265,7 @@ const ProductList = () => {
   ]);
 
   useEffect(() => {
-    setCurrentPage(1); // Reset về trang 1 khi bộ lọc hoặc từ khóa thay đổi
+    setCurrentPage(1);
   }, [selectedFilters, keyword]);
 
   useEffect(() => {
@@ -245,7 +274,7 @@ const ProductList = () => {
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
-    window.scrollTo(0, 0); // Cuộn lên đầu trang khi đổi trang
+    window.scrollTo(0, 0);
   };
 
   const handleFilterChange = (type, value) => {
@@ -297,8 +326,6 @@ const ProductList = () => {
     return parseFloat(price || 0).toLocaleString("vi-VN");
   };
 
-  if (error) return <div className={styles.errorMessage}>{error}</div>;
-
   const renderSidebar = () => (
     <div className={styles.filterContent}>
       <Collapse
@@ -311,6 +338,7 @@ const ProductList = () => {
         ]}
         bordered={false}
         expandIconPosition="right"
+        className={styles.customCollapse}
       >
         <Panel header="Danh mục sản phẩm" key="categories">
           {categories.map((category) => (
@@ -400,15 +428,18 @@ const ProductList = () => {
           {renderSidebar()}
         </Drawer>
 
-        <div className={styles.productSection}>
+        {/* <div className={styles.productSection}>
           <div className={styles.productHeader}>
-            <h2>Sản phẩm quà tặng</h2>
+            <h2>Sản phẩm</h2>
             <Select
               value={sortOption}
               onChange={handleSortChange}
-              style={{ width: 200 }}
+              style={{ width: 240 }}
+              className={styles.customSelect}
             >
-              <Select.Option value="default">Sắp xếp: Mặc định</Select.Option>
+              <Select.Option value="bestselling">
+                Sắp xếp: Bán chạy
+              </Select.Option>
               <Select.Option value="price-asc">Giá: Thấp đến Cao</Select.Option>
               <Select.Option value="price-desc">
                 Giá: Cao đến Thấp
@@ -435,16 +466,35 @@ const ProductList = () => {
             />
           ) : (
             <div className={styles.productGrid}>
-              {displayedProducts.map((product) => (
+              {displayedProducts.map((product, index) => (
                 <Card
                   key={product.id}
-                  className={styles.productCard}
+                  className={`${styles.productCard} ${
+                    isBestselling(product) ? styles.bestselling : ""
+                  } ${isOnSale(product) ? styles.onSale : ""}`}
                   hoverable
+                  data-aos="fade-up"
+                  data-aos-delay={index * 100}
                   cover={
                     <div className={styles.imageWrapper}>
+                      <div className={styles.badgeContainer}>
+                        {isBestselling(product) && (
+                          <Tag
+                            color="#9b2c2c"
+                            className={styles.bestsellingBadge}
+                          >
+                            Bán chạy
+                          </Tag>
+                        )}
+                        {isOnSale(product) && (
+                          <Tag color="#d4a017" className={styles.saleBadge}>
+                            Giảm {getDiscountPercentage(product)}%
+                          </Tag>
+                        )}
+                      </div>
                       <img
                         src={product.images?.[0] || "/images/fallback.jpg"}
-                        alt={product.name}
+                        alt={`${product.name} - Quà tặng cao cấp`}
                         className={styles.productImage}
                         onClick={() => handleProductClick(product.id)}
                         onError={(e) => {
@@ -462,8 +512,7 @@ const ProductList = () => {
                       {product.name}
                     </h3>
                     <div className={styles.priceContainer}>
-                      {parseFloat(product.finalPrice) <
-                      parseFloat(product.originalPrice) ? (
+                      {isOnSale(product) ? (
                         <>
                           <span className={styles.productPrice}>
                             {parsePrice(product.finalPrice)}đ
@@ -478,6 +527,136 @@ const ProductList = () => {
                         </span>
                       )}
                     </div>
+                    {isBestselling(product) && (
+                      <div className={styles.totalSold}>
+                        Đã bán: {product.totalSold}
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {totalItems > 0 && (
+            <div className={styles.pagination}>
+              <Pagination
+                current={currentPage}
+                pageSize={limit}
+                total={totalItems}
+                onChange={handlePageChange}
+              />
+            </div>
+          )}
+        </div> */}
+        <div className={styles.productSection}>
+          <div className={styles.productHeader}>
+            <div className={styles.headerContent}>
+              <h2 className={styles.mainHeading}>Sản phẩm</h2>
+              <p className={styles.subHeading}>Sản phẩm cao cấp cho mọi dịp</p>
+              <div className={styles.decorativeDivider}></div>
+            </div>
+            <Select
+              value={sortOption}
+              onChange={handleSortChange}
+              style={{}}
+              className={styles.customSelect}
+            >
+              <Select.Option value="bestselling">
+                Sắp xếp: Bán chạy
+              </Select.Option>
+              <Select.Option value="price-asc">Giá: Thấp đến Cao</Select.Option>
+              <Select.Option value="price-desc">
+                Giá bán: Cao đến Thấp
+              </Select.Option>
+            </Select>
+          </div>
+
+          {loading ? (
+            <div className={styles.productGrid}>
+              {Array.from({ length: 4 }).map((_, index) => (
+                <Skeleton
+                  key={index}
+                  active
+                  avatar={{ shape: "square", size: 200 }}
+                  paragraph={{ rows: 2 }}
+                  className={styles.skeletonCard}
+                />
+              ))}
+            </div>
+          ) : filteredProducts.length === 0 ? (
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description="Không tìm thấy sản phẩm nào phù hợp với bộ lọc."
+            />
+          ) : (
+            <div className={styles.productGrid}>
+              {displayedProducts.map((product, index) => (
+                <Card
+                  key={product.id}
+                  className={`${styles.productCard} ${
+                    isBestselling(product) ? styles.bestselling : ""
+                  } ${isOnSale(product) ? styles.onSale : ""}`}
+                  hoverable
+                  data-aos="fade-up"
+                  data-aos-delay={index * 100}
+                  cover={
+                    <div className={styles.imageWrapper}>
+                      <div className={styles.badgeContainer}>
+                        {isBestselling(product) && (
+                          <Tag
+                            color="#9b2c2c"
+                            className={styles.bestsellingBadge}
+                          >
+                            Bán chạy
+                          </Tag>
+                        )}
+                        {isOnSale(product) && (
+                          <Tag color="#d4a017" className={styles.saleBadge}>
+                            Giảm {getDiscountPercentage(product)}%
+                          </Tag>
+                        )}
+                      </div>
+                      <img
+                        src={product.images?.[0] || "/images/fallback.jpg"}
+                        alt={`${product.name} - Quà tặng cao cấp`}
+                        className={styles.productImage}
+                        onClick={() => handleProductClick(product.id)}
+                        onError={(e) => {
+                          e.target.src = "/images/fallback.jpg";
+                        }}
+                      />
+                    </div>
+                  }
+                >
+                  <div className={styles.productInfo}>
+                    <h3
+                      className={styles.productName}
+                      onClick={() => handleProductClick(product.id)}
+                    >
+                      {product.name}
+                    </h3>
+                    <div className={styles.priceContainer}>
+                      {isOnSale(product) ? (
+                        <>
+                          <span className={styles.productPrice}>
+                            {parsePrice(product.finalPrice)}đ
+                          </span>
+                          <span className={styles.salePrice}>
+                            {parsePrice(product.originalPrice)}đ
+                          </span>
+                        </>
+                      ) : (
+                        <span className={styles.productPrice}>
+                          {parsePrice(product.originalPrice)}đ
+                        </span>
+                      )}
+                    </div>
+                    {isBestselling(product) && (
+                      <div className={styles.totalSold}>
+                        Đã bán: {product.totalSold}
+                      </div>
+                    )}
                   </div>
                 </Card>
               ))}
