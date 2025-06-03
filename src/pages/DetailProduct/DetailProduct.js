@@ -559,7 +559,6 @@ export const DescProduct = ({
         <motion.div
           className={`${styles.tabItem} ${activeTab === "description" ? styles.activeTab : ""}`}
           onClick={() => setActiveTab("description")}
-          whileHover={{ color: "#71bec2" }}
           whileTap={{ scale: 0.95 }}
         >
           MÔ TẢ SẢN PHẨM
@@ -567,7 +566,6 @@ export const DescProduct = ({
         <motion.div
           className={`${styles.tabItem} ${activeTab === "reviews" ? styles.activeTab : ""}`}
           onClick={() => setActiveTab("reviews")}
-          whileHover={{ color: "#71bec2" }}
           whileTap={{ scale: 0.95 }}
         >
           ĐÁNH GIÁ
