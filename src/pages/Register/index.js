@@ -109,14 +109,6 @@ export default function Register() {
             ĐĂNG KÝ
           </button>
         </form>
-        <div className={styles.socialLogin}>
-          <p>Hoặc đăng ký qua</p>
-          <div className={styles.socialButtons}>
-            <button onClick={loginGg} className={styles.googleButton}>
-              <GoogleOutlined className={styles.socialIcon} /> Google
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );

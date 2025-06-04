@@ -184,14 +184,6 @@ export default function Login() {
           </form>
         )}
 
-        <div className={styles.socialLogin}>
-          <p>hoặc đăng nhập qua</p>
-          <div className={styles.socialButtons}>
-            <button onClick={handleLoginGoogle} className={styles.googleButton}>
-              <GoogleOutlined className={styles.socialIcon} /> Google
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );
