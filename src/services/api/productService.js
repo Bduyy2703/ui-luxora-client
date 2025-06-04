@@ -20,14 +20,35 @@ export const fetchProducts = async (limit, page) => {
   }
 };
 
-export const searchProducts = async (keyword, limit, page) => {
+export const searchProducts = async ({
+  keyword,
+  categoryIds = [],
+  priceMin = 0,
+  priceMax = Number.MAX_SAFE_INTEGER,
+  sortBy = "finalPrice.asc",
+  page = 1,
+  limit = 10,
+}) => {
   try {
-    const response = await fetch(
-      `${API_BASE_URL}/products/search?keyword=${encodeURIComponent(keyword)}&limit=${limit}&page=${page}`,
-    );
+    const response = await fetch(`${API_BASE_URL}v1/products/search`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        keyword,
+        categoryIds,
+        priceMin,
+        priceMax,
+        sortBy,
+        page,
+        limit,
+      }),
+    });
 
     if (!response.ok) {
-      throw new Error("Yêu cầu không hợp lệ");
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Yêu cầu không hợp lệ");
     }
 
     const data = await response.json();
@@ -135,7 +156,8 @@ export const addProduct = async (productData) => {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-      });
+      },
+    );
     return response.data || [];
   } catch (error) {
     console.error("Error adding product:", error);
@@ -167,7 +189,7 @@ export const getProductList = async (page = 1, limit = 10) => {
 
 export const updateProduct = async (id, productData) => {
   try {
-    const response = await privateAxios.put(`/v1/products/${id}`, productData,{
+    const response = await privateAxios.put(`/v1/products/${id}`, productData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
