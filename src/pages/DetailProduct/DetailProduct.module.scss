@@ -595,6 +595,7 @@
   color: #171717;
 }
 
+/* Keep all existing styles, only modify the relatedProducts section and add badge styles */
 .relatedProducts {
   margin-top: 60px;
 }
@@ -623,18 +624,35 @@
   }
 }
 
-.productGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 30px;
+.scrollContainer {
+  position: relative;
+}
 
-  @media (max-width: 768px) {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 20px;
+.productGrid {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 30px;
+  padding: 10px 0;
+  scrollbar-width: thin;
+  scrollbar-color: #d4a017 #f1f1f1;
+
+  &::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #d4a017;
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
   }
 }
 
 .productCard {
+  flex: 0 0 250px;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   border: none;
@@ -645,11 +663,41 @@
   transition:
     transform 0.5s ease,
     box-shadow 0.5s ease;
+  position: relative;
 
   &:hover {
     transform: translateY(-10px);
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
   }
+}
+
+.badgeContainer {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 1;
+}
+
+.badge {
+  display: inline-block;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.categoryBadge {
+  background: #d4a017;
+}
+
+.priceBadge {
+  background: #28a745;
+}
+
+.bestsellerBadge {
+  background: #dc3545;
 }
 
 .productImage {
