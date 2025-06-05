@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { Carousel, Skeleton } from "antd";
 import styles from "./BlogDetail.module.scss";
 import { getAllBlogs, getBlogById } from "../../services/api/blogService";
 import { getProductList } from "../../services/api/productService";
@@ -13,7 +14,6 @@ function BlogDetail() {
   const [images, setImages] = useState([]);
   const [relatedBlogs, setRelatedBlogs] = useState([]);
   const [featuredBlogs, setFeaturedBlogs] = useState([]);
-  const [tags, setTags] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -62,15 +62,6 @@ function BlogDetail() {
               }),
             }));
           setFeaturedBlogs(featured);
-
-          const uniqueTags = Array.from(
-            new Set(
-              allBlogs.flatMap((blog) =>
-                blog.title.split(" ").filter((word) => word.length > 3),
-              ),
-            ),
-          ).slice(0, 5);
-          setTags(uniqueTags);
         }
 
         const productResponse = await getProductList(1, 100);
@@ -117,18 +108,6 @@ function BlogDetail() {
               <p className={styles.paragraph}>{paragraph}</p>
             </div>
           )}
-          {images[index] && (
-            <div className={styles.imageWrapper}>
-              <motion.img
-                src={images[index].fileUrl}
-                alt={`Hình ảnh minh họa ${index + 1}`}
-                className={styles.contentImage}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              />
-            </div>
-          )}
         </div>
       );
     });
@@ -160,7 +139,18 @@ function BlogDetail() {
   };
 
   if (loading) {
-    return <div className={styles.loading}>Đang tải bài viết...</div>;
+    return (
+      <div className={styles.container}>
+        <div className={styles.wrapper}>
+          <div className={styles.sidebar}>
+            <Skeleton active paragraph={{ rows: 4 }} />
+          </div>
+          <div className={styles.mainContent}>
+            <Skeleton active title={{ width: "60%" }} paragraph={{ rows: 8 }} />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
@@ -176,67 +166,6 @@ function BlogDetail() {
       <div className={styles.wrapper}>
         {/* Sidebar */}
         <div className={styles.sidebar}>
-          {/* Danh mục sản phẩm */}
-          <motion.div
-            className={styles.sidebarSection}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <h4 className={styles.sidebarTitle}>DANH MỤC SẢN PHẨM</h4>
-            <ul className={styles.sidebarList}>
-              {categories.length > 0 ? (
-                categories.map((category, index) => (
-                  <motion.li
-                    key={category.id}
-                    whileHover={{ scale: 1.05, color: "#d4af37" }}
-                    transition={{ duration: 0.3 }}
-                    style={{ paddingLeft: "10px" }}
-                    onClick={() =>
-                      navigate(`/list-product?categories=${category.id}`)
-                    }
-                  >
-                    {category.name}
-                  </motion.li>
-                ))
-              ) : (
-                <li>Không có danh mục nào.</li>
-              )}
-            </ul>
-          </motion.div>
-
-          {/* Tags */}
-          {/* <motion.div
-            className={styles.sidebarSection}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <h4 className={styles.sidebarTitle}>TAGS</h4>
-            <div className={styles.tags}>
-              <AnimatePresence>
-                {tags.map((tag, index) => (
-                  <motion.span
-                    key={tag}
-                    className={styles.tag}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    transition={{ duration: 0.3, delay: index * 0.1 }}
-                    whileHover={{
-                      scale: 1.1,
-                      backgroundColor: "#d4af37",
-                      color: "#fff",
-                    }}
-                  >
-                    {tag}
-                  </motion.span>
-                ))}
-              </AnimatePresence>
-            </div>
-          </motion.div> */}
-
-          {/* Tin tức nổi bật */}
           <motion.div
             className={styles.sidebarSection}
             initial={{ opacity: 0, y: 20 }}
@@ -270,6 +199,32 @@ function BlogDetail() {
               ))}
             </AnimatePresence>
           </motion.div>
+          <motion.div
+            className={styles.sidebarSection}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <h4 className={styles.sidebarTitle}>DANH MỤC SẢN PHẨM</h4>
+            <ul className={styles.sidebarList}>
+              {categories.length > 0 ? (
+                categories.map((category, index) => (
+                  <motion.li
+                    key={category.id}
+                    whileHover={{ scale: 1.05, color: "#d4af37" }}
+                    transition={{ duration: 0.3 }}
+                    onClick={() =>
+                      navigate(`/list-product?categories=${category.id}`)
+                    }
+                  >
+                    {category.name}
+                  </motion.li>
+                ))
+              ) : (
+                <li>Không có danh mục nào.</li>
+              )}
+            </ul>
+          </motion.div>
         </div>
 
         {/* Main Content */}
@@ -280,14 +235,6 @@ function BlogDetail() {
           transition={{ duration: 0.7 }}
         >
           <div className={styles.header}>
-            {/* <motion.button
-              className={styles.backButton}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => navigate("/")}
-            >
-              <FaArrowLeft /> Quay lại
-            </motion.button> */}
             <div className={styles.headerContent}>
               <h1 className={styles.title}>{blog.title}</h1>
               <div className={styles.meta}>
@@ -296,48 +243,94 @@ function BlogDetail() {
             </div>
           </div>
 
-          {blog.thumbnail && (
+          {images.length > 0 && (
             <motion.div
-              className={styles.heroImageWrapper}
+              className={styles.imageCarousel}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <img
-                src={blog.thumbnail}
-                alt={blog.title}
-                className={styles.heroImage}
-              />
+              <Carousel
+                autoplay
+                dots
+                effect="fade"
+                autoplaySpeed={3000}
+                className={styles.carousel}
+              >
+                {images.map((image, index) => (
+                  <div key={image.fileId}>
+                    <img
+                      src={image.fileUrl}
+                      alt={`Hình ảnh minh họa ${index + 1}`}
+                      className={styles.carouselImage}
+                    />
+                  </div>
+                ))}
+              </Carousel>
             </motion.div>
           )}
 
-          {blog.excerpt && (
-            <motion.p
-              className={styles.excerpt}
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              {blog.excerpt}
-            </motion.p>
-          )}
+          <div className={styles.contentGrid}>
+            {blog.excerpt && (
+              <motion.div
+                className={styles.excerpt}
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
+                <h3 className={styles.excerptTitle}>Tóm tắt</h3>
+                <p>{blog.excerpt}</p>
+              </motion.div>
+            )}
 
-          <div className={styles.content}>{renderContent(blog.content)}</div>
+            <div className={styles.content}>
+              <h3 className={styles.contentTitle}>Nội dung chi tiết</h3>
+              {renderContent(blog.content)}
+            </div>
 
-          {/* Share Buttons */}
+            {images.length > 0 && (
+              <div className={styles.imageGrid}>
+                {images.map((image, index) => (
+                  <motion.div
+                    key={image.fileId}
+                    className={styles.imageWrapper}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                  >
+                    <img
+                      src={image.fileUrl}
+                      alt={`Hình ảnh minh họa ${index + 1}`}
+                      className={styles.contentImage}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className={styles.shareSection}>
             <h4>Chia sẻ bài viết:</h4>
             <div className={styles.shareButtons}>
-              <button className={styles.shareButton} onClick={shareToFacebook}>
+              <motion.button
+                className={styles.shareButton}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={shareToFacebook}
+              >
                 <FaFacebook /> Facebook
-              </button>
-              <button className={styles.shareButton} onClick={shareToTwitter}>
+              </motion.button>
+              <motion.button
+                className={styles.shareButton}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={shareToTwitter}
+              >
                 <FaTwitter /> Twitter
-              </button>
+              </motion.button>
             </div>
           </div>
 
-          {/* Related Posts */}
           {relatedBlogs.length > 0 && (
             <motion.div
               className={styles.relatedPosts}
@@ -347,13 +340,13 @@ function BlogDetail() {
             >
               <h3 className={styles.relatedPostsTitle}>Bài viết liên quan</h3>
               <div className={styles.relatedPostsGrid}>
-                {relatedBlogs.map((relatedBlog) => (
+                {relatedBlogs.map((relatedBlog, index) => (
                   <motion.div
                     key={relatedBlog.id}
                     className={styles.relatedPost}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5 }}
+                    transition={{ duration: 0.5, delay: index * 0.2 }}
                     whileHover={{ scale: 1.02 }}
                     onClick={() => navigate(`/blog/${relatedBlog.id}`)}
                   >

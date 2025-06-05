@@ -4,20 +4,21 @@
   background: linear-gradient(180deg, #ffffff 0%, #f9f9f9 100%);
   border-radius: 12px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-  padding: 20px;
-  width: 280px; // Increased from 218px to match screenshot proportions
+  padding: 25px;
+  width: 300px;
+  border: 1px solid rgba(212, 175, 55, 0.2);
 }
 
 .account {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
-  color: #0a1a3a;
-  margin-bottom: 25px;
+  color: #d4af37;
+  margin-bottom: 30px;
   display: block;
   padding: 0 10px;
   text-transform: uppercase;
   letter-spacing: 1.5px;
-  white-space: nowrap; // Prevent line break
+  white-space: nowrap;
 }
 
 .navList {
@@ -27,41 +28,63 @@
 }
 
 .navList li {
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .navList a {
   display: flex;
   align-items: center;
-  padding: 12px 15px;
+  padding: 14px 20px;
   color: #333;
   text-decoration: none;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 400;
-  transition: all 0.3s ease;
   border-radius: 8px;
+  transition: all 0.3s ease;
 }
 
 .navList a:hover {
-  background: rgba(212, 165, 91, 0.1);
-  color: #d4a55b;
-  transform: translateX(5px);
+  background: rgba(212, 175, 55, 0.15);
+  color: #d4af37;
+  transform: translateX(8px);
 }
 
 .navList a.active {
-  background: #fff;
-  color: #1890ff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(45deg, #d4af37, #b8972e);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
   font-weight: 500;
 }
 
 .icon {
-  margin-right: 12px;
-  font-size: 18px;
+  margin-right: 14px;
+  font-size: 20px;
   color: #333;
   transition: color 0.3s ease;
 }
 
 .activeIcon {
-  color: #1890ff;
+  color: #fff;
+}
+
+@media (max-width: 768px) {
+  .wrapper {
+    width: 100%;
+    padding: 15px;
+  }
+
+  .account {
+    font-size: 18px;
+    margin-bottom: 20px;
+  }
+
+  .navList a {
+    font-size: 14px;
+    padding: 12px 15px;
+  }
+
+  .icon {
+    font-size: 18px;
+    margin-right: 10px;
+  }
 }

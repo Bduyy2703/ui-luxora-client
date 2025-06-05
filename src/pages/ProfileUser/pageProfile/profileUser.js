@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { defineMessages } from "react-intl";
 import { getProfile } from "../../../services/api/userService";
-import { Modal, Form, Input, Button, message, Card, notification } from "antd";
+import { Modal, Form, Input, Button, Card, notification } from "antd";
 import { motion } from "framer-motion";
 import styles from "./ProfileUser.module.scss";
 import { updateProfile } from "../../../services/api/profileService";
@@ -20,12 +20,6 @@ const ProfileUser = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
 
-  const breadcrumbItems = [
-    { label: "Trang chủ", path: "/" },
-    { label: "Trang khách hàng" },
-  ];
-
-  // Lấy dữ liệu hồ sơ
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -43,7 +37,6 @@ const ProfileUser = () => {
     fetchProfile();
   }, []);
 
-  // Mở Modal và điền dữ liệu vào form
   const showModal = () => {
     form.setFieldsValue({
       firstName: profileData?.firstName || "",
@@ -54,7 +47,6 @@ const ProfileUser = () => {
     setIsModalVisible(true);
   };
 
-  // Xử lý khi nhấn Lưu trong Modal
   const handleOk = async () => {
     try {
       const values = await form.validateFields();
@@ -77,7 +69,6 @@ const ProfileUser = () => {
     }
   };
 
-  // Đóng Modal
   const handleCancel = () => {
     setIsModalVisible(false);
   };
@@ -97,31 +88,15 @@ const ProfileUser = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
       >
-        <span
-          style={{
-            fontSize: "24px",
-            fontWeight: "300",
-            color: "#4a4a4a",
-            marginBottom: "20px",
-            display: "block",
-          }}
-        >
-          THÔNG TIN TÀI KHOẢN
-        </span>
+        <span className={styles.title}>THÔNG TIN TÀI KHOẢN</span>
 
-        {loading && <p style={{ color: "#4A4A4A" }}>Đang tải...</p>}
+        {loading && <p className={styles.loading}>Đang tải...</p>}
         {error && (
-          <p style={{ color: "red" }}>Có lỗi xảy ra: {error.message}</p>
+          <p className={styles.error}>Có lỗi xảy ra: {error.message}</p>
         )}
 
         {profileData && (
-          <Card
-            style={{
-              background: "#FFF",
-              borderRadius: "8px",
-              boxShadow: "0 4px 10px rgba(0, 0, 0, 0.05)",
-            }}
-          >
+          <Card className={styles.card}>
             <div className={styles.infoRow}>
               <div className={styles.infoItem}>
                 <label>Họ</label>
@@ -157,15 +132,12 @@ const ProfileUser = () => {
               </div>
             </div>
 
-            <motion.div>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button
                 type="primary"
                 onClick={showModal}
-                style={{
-                  backgroundColor: "#01567f",
-                  borderRadius: "5px",
-                  marginTop: "20px",
-                }}
+                className={styles.editButton}
+                aria-label="Chỉnh sửa thông tin tài khoản"
               >
                 Chỉnh sửa
               </Button>
@@ -183,10 +155,10 @@ const ProfileUser = () => {
         width={690}
         cancelText="Hủy"
         okButtonProps={{
-          style: { backgroundColor: "#01567f", borderColor: "#01567f" },
+          className: styles.okButton,
         }}
         cancelButtonProps={{
-          style: { borderColor: "red", color: "red" },
+          className: styles.cancelButton,
         }}
       >
         <motion.div
@@ -195,14 +167,14 @@ const ProfileUser = () => {
           transition={{ duration: 0.3 }}
         >
           <Form form={form} layout="vertical">
-            <div style={{ display: "flex", gap: "20px" }}>
+            <div className={styles.formRow}>
               <Form.Item
                 label="Họ"
                 name="firstName"
                 rules={[{ required: true, message: "Vui lòng nhập họ!" }]}
                 style={{ flex: 1 }}
               >
-                <Input />
+                <Input className={styles.input} />
               </Form.Item>
               <Form.Item
                 label="Tên"
@@ -210,10 +182,10 @@ const ProfileUser = () => {
                 rules={[{ required: true, message: "Vui lòng nhập tên!" }]}
                 style={{ flex: 1 }}
               >
-                <Input />
+                <Input className={styles.input} />
               </Form.Item>
             </div>
-            <div style={{ display: "flex", gap: "20px" }}>
+            <div className={styles.formRow}>
               <Form.Item
                 label="Điện thoại"
                 name="phoneNumber"
@@ -226,14 +198,14 @@ const ProfileUser = () => {
                 ]}
                 style={{ flex: 1 }}
               >
-                <Input maxLength={10} />
+                <Input className={styles.input} maxLength={10} />
               </Form.Item>
               <Form.Item
                 label="Social Media"
                 name="socialMedia"
                 style={{ flex: 1 }}
               >
-                <Input />
+                <Input className={styles.input} />
               </Form.Item>
             </div>
           </Form>

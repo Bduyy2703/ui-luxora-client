@@ -558,7 +558,7 @@ const AdminReviewList = () => {
                         setValidData={setValidData}
                         standardSort={[
                           { name: "Bình luận", type: "comment" },
-                          { name: "Email người dùng", type: "user.email" },
+                          { name: "Tên người dùng", type: "user.username" },
                         ]}
                         searchFields={[
                           {
@@ -566,8 +566,8 @@ const AdminReviewList = () => {
                             placeholder: "Tìm kiếm theo bình luận",
                           },
                           {
-                            key: "user.email",
-                            placeholder: "Tìm kiếm theo email người dùng",
+                            key: "user.username",
+                            placeholder: "Tìm kiếm theo tên người dùng",
                           },
                         ]}
                       />

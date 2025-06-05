@@ -13,11 +13,15 @@ const PasswordUser = () => {
       notification.success({
         message: "Đặt lại mật khẩu thành công!",
         description: "Mật khẩu của bạn đã được cập nhật thành công.",
+        duration: 3,
       });
     } catch (error) {
       notification.error({
         message: "Đặt lại mật khẩu thất bại!",
-        description: "Mật khẩu của bạn không thể cập nhật.",
+        description:
+          error.response?.data?.message ||
+          "Mật khẩu của bạn không thể cập nhật.",
+        duration: 3,
       });
       console.error("Lỗi đặt lại mật khẩu:", error.response?.data);
     }
@@ -31,25 +35,10 @@ const PasswordUser = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
       >
-        <span className={styles.changePassword}>ĐỔI MẬT KHẨU</span>
+        <span className={styles.title}>ĐỔI MẬT KHẨU</span>
 
-        <Card
-          style={{
-            background: "#FFF",
-            borderRadius: "8px",
-            boxShadow: "0 4px 10px rgba(0, 0, 0, 0.05)",
-            padding: "20px",
-          }}
-        >
-          <span
-            style={{
-              fontSize: "14px",
-              fontWeight: "400",
-              color: "#4A4A4A",
-              display: "block",
-              marginBottom: "20px",
-            }}
-          >
+        <Card className={styles.card}>
+          <span className={styles.note}>
             <strong>Lưu ý:</strong> Để đảm bảo tính bảo mật, bạn vui lòng đặt
             lại mật khẩu với ít nhất 6 ký tự.
           </span>
@@ -62,7 +51,12 @@ const PasswordUser = () => {
                 { required: true, message: "Vui lòng nhập mật khẩu cũ!" },
               ]}
             >
-              <Input type="password" placeholder="Nhập mật khẩu cũ" />
+              <Input
+                type="password"
+                placeholder="Nhập mật khẩu cũ"
+                className={styles.input}
+                aria-label="Mật khẩu cũ"
+              />
             </Form.Item>
 
             <Form.Item
@@ -73,7 +67,12 @@ const PasswordUser = () => {
                 { min: 6, message: "Mật khẩu mới phải có ít nhất 6 ký tự!" },
               ]}
             >
-              <Input type="password" placeholder="Nhập mật khẩu mới" />
+              <Input
+                type="password"
+                placeholder="Nhập mật khẩu mới"
+                className={styles.input}
+                aria-label="Mật khẩu mới"
+              />
             </Form.Item>
 
             <Form.Item
@@ -94,16 +93,23 @@ const PasswordUser = () => {
                 }),
               ]}
             >
-              <Input type="password" placeholder="Xác nhận lại mật khẩu" />
+              <Input
+                type="password"
+                placeholder="Xác nhận lại mật khẩu"
+                className={styles.input}
+                aria-label="Xác nhận lại mật khẩu"
+              />
             </Form.Item>
 
-            <motion.div>
-              <div
-                onClick={() => form.submit()}
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button
+                type="primary"
+                htmlType="submit"
                 className={styles.resetPassword}
+                aria-label="Đặt lại mật khẩu"
               >
                 Đặt lại mật khẩu
-              </div>
+              </Button>
             </motion.div>
           </Form>
         </Card>

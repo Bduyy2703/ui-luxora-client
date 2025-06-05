@@ -13,6 +13,7 @@ import { Pagination, Tooltip, notification } from "antd";
 import { useEffect, useState } from "react";
 import { defineMessages } from "react-intl";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { retryPayment } from "../../../services/api/checkoutService";
 import { getProfile } from "../../../services/api/userService";
 import styles from "./CartUser.module.scss";
@@ -28,7 +29,6 @@ const messages = defineMessages({
   },
 });
 
-// Định nghĩa ánh xạ trạng thái sang tên hiển thị và biểu tượng
 const statusConfig = {
   PAID: {
     display: "Đã thanh toán",
@@ -95,7 +95,7 @@ const CartUser = () => {
         purchaseDate: invoice.createdAt,
         paymentMethod: invoice.paymentMethod,
         amountToPay: invoice.finalTotal,
-        status: invoice.status, // Giữ nguyên status từ API
+        status: invoice.status,
       }));
       setOrders(mappedOrders);
     } catch (error) {
@@ -154,56 +154,55 @@ const CartUser = () => {
 
   return (
     <div className={styles.profile}>
-      <div className={styles.profileUser}>
+      <motion.div
+        className={styles.profileUser}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+      >
         <div className={styles.title}>
-          <div>ĐƠN HÀNG CỦA BẠN</div>
-          <span
-            style={{
-              color: "rgb(175 161 161)",
-              fontStyle: "italic",
-              fontSize: "12px",
-              marginLeft: "10px",
-            }}
-          >
+          <span>ĐƠN HÀNG CỦA BẠN</span>
+          <span className={styles.note}>
             (Lưu ý: Bạn chỉ có thể hủy đơn trong vòng 30 phút sau khi đặt hàng)
           </span>
         </div>
-        <table className={styles.orderTable}>
-          <thead>
-            <tr>
-              <th>Đơn hàng</th>
-              <th>Ngày</th>
-              <th>Phương thức thanh toán</th>
-              <th>Giá trị đơn hàng</th>
-              <th>Trạng thái</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
+        <div className={styles.tableWrapper}>
+          <table className={styles.orderTable}>
+            <thead>
               <tr>
-                <td colSpan="5" className={styles.loadingText}>
-                  Đang tải đơn hàng...
-                </td>
+                <th>Đơn hàng</th>
+                <th>Ngày</th>
+                <th>Phương thức thanh toán</th>
+                <th>Giá trị đơn hàng</th>
+                <th>Trạng thái</th>
               </tr>
-            ) : currentOrders.length === 0 ? (
-              <tr>
-                <td colSpan="5" className={styles.emptyText}>
-                  Không có đơn hàng nào.
-                </td>
-              </tr>
-            ) : (
-              currentOrders.map((order, index) => {
-                console.log("order:", order);
-
-                return (
-                  <tr
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan="5" className={styles.loadingText}>
+                    Đang tải đơn hàng...
+                  </td>
+                </tr>
+              ) : currentOrders.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className={styles.emptyText}>
+                    Không có đơn hàng nào.
+                  </td>
+                </tr>
+              ) : (
+                currentOrders.map((order, index) => (
+                  <motion.tr
                     key={order._id}
                     className={styles.orderRow}
-                    style={{ animationDelay: `${index * 0.1}s` }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1, duration: 0.3 }}
                   >
                     <td
                       className={styles.orderCode}
                       onClick={() => handleInvoiceDetail(order._id)}
+                      aria-label={`Xem chi tiết đơn hàng ${order.orderCode}`}
                     >
                       {order.orderCode}
                     </td>
@@ -223,37 +222,46 @@ const CartUser = () => {
                         </span>
                         <div className={styles.iconGroup}>
                           {statusConfig[order.status]?.icon || null}
-                          {/* {order.status === "PENDING" ||
-                            (order?.paymentMethod === "VNPAY" && (
-                              <Tooltip title="Thanh toán lại">
-                                <PayCircleOutlined
-                                  className={styles.retryIcon}
-                                  onClick={() =>
-                                    handlePayment(
-                                      order._id,
-                                      order.paymentMethod,
-                                    )
-                                  }
-                                />
-                              </Tooltip>
-                            ))} */}
+                          {order.status === "PENDING" &&
+                            order.paymentMethod === "VNPAY" && (
+                              //   <Tooltip title="Thanh toán lại">
+                              //     <motion.div
+                              //       whileHover={{ scale: 1.1 }}
+                              //       whileTap={{ scale: 0.9 }}
+                              //     >
+                              //       <PayCircleOutlined
+                              //         className={styles.retryIcon}
+                              //         onClick={() =>
+                              //           handlePayment(
+                              //             order._id,
+                              //             order.paymentMethod,
+                              //           )
+                              //         }
+                              //         aria-label="Thanh toán lại đơn hàng"
+                              //       />
+                              //     </motion.div>
+                              //   </Tooltip>
+                              // )}
+                              <></>
+                            )}  
                         </div>
                       </div>
                     </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+                  </motion.tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
         <Pagination
           current={currentPage}
           pageSize={ordersPerPage}
           total={orders.length}
           onChange={handlePageChange}
           className={styles.pagination}
+          showSizeChanger={false}
         />
-      </div>
+      </motion.div>
     </div>
   );
 };

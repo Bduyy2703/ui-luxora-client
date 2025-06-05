@@ -12,6 +12,7 @@ import {
   RollbackOutlined,
   WarningOutlined,
 } from "@ant-design/icons";
+import { motion } from "framer-motion";
 import {
   retryPayment,
   cancelPayment,
@@ -40,6 +41,11 @@ const statusTimeline = [
     icon: <GiftOutlined />,
   },
   {
+    status: "PAID",
+    display: "Đã thanh toán",
+    icon: <CheckCircleOutlined />,
+  },
+  {
     status: "RETURNED",
     display: "Đã trả hàng",
     icon: <RollbackOutlined />,
@@ -53,11 +59,6 @@ const statusTimeline = [
     status: "FAILED",
     display: "Thất bại",
     icon: <WarningOutlined />,
-  },
-  {
-    status: "PAID",
-    display: "Đã thanh toán",
-    icon: <CheckCircleOutlined />,
   },
 ];
 
@@ -174,18 +175,28 @@ const InvoiceDetail = () => {
 
   return (
     <div className={styles.wrapper}>
-      <div className={styles.header}>
+      <motion.div
+        className={styles.header}
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+      >
         <div className={styles.logo}>Jewelry Co.</div>
         <h1 className={styles.title}>
           Chi tiết đơn hàng INV-{invoiceDetail.id}
         </h1>
-      </div>
-      <Breadcrumb items={breadcrumbItems} className={styles.breadcrumb} />
-      <div className={styles.orderDetail}>
+      </motion.div>
+      <motion.div
+        className={styles.orderDetail}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+      >
         <div className={styles.timeline}>
           {invoiceDetail.status === "CANCELLED" ||
-          invoiceDetail.status === "RETURNED"
-            ? // Chỉ hiển thị trạng thái CANCELLED hoặc RETURNED
+          invoiceDetail.status === "RETURNED" ||
+          invoiceDetail.status === "FAILED"
+            ? // Chỉ hiển thị trạng thái CANCELLED, RETURNED hoặc FAILED
               (() => {
                 const step = statusTimeline.find(
                   (s) => s.status === invoiceDetail.status,
@@ -246,14 +257,13 @@ const InvoiceDetail = () => {
                   ? styles.paid
                   : invoiceDetail.status === "PENDING"
                     ? styles.pending
-                    : styles.confirmed
+                    : invoiceDetail.status === "FAILED"
+                      ? styles.failed
+                      : styles.confirmed
               }
             >
-              {invoiceDetail.status === "PAID"
-                ? "Đã thanh toán"
-                : invoiceDetail.status === "PENDING"
-                  ? "Đang chờ"
-                  : "Đã xác nhận"}
+              {statusTimeline.find((s) => s.status === invoiceDetail.status)
+                ?.display || "Trạng thái không xác định"}
             </span>
             {(invoiceDetail.status === "PENDING" ||
               invoiceDetail.status === "CONFIRMED") && (
@@ -261,20 +271,26 @@ const InvoiceDetail = () => {
                 {invoiceDetail.status === "PENDING" &&
                   invoiceDetail.paymentMethod === "VNPAY" && (
                     <Tooltip title="Thử thanh toán lại bằng VNPAY">
-                      <div
-                        className={`${styles.retryIcon} ${
-                          paymentLoading ? styles.disabledIcon : ""
-                        }`}
-                        onClick={() =>
-                          !paymentLoading &&
-                          handlePayment(
-                            invoiceDetail.id,
-                            invoiceDetail.paymentMethod,
-                          )
-                        }
+                      <motion.div
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
                       >
-                        Thanh toán lại
-                      </div>
+                        <div
+                          className={`${styles.retryIcon} ${
+                            paymentLoading ? styles.disabledIcon : ""
+                          }`}
+                          onClick={() =>
+                            !paymentLoading &&
+                            handlePayment(
+                              invoiceDetail.id,
+                              invoiceDetail.paymentMethod,
+                            )
+                          }
+                          aria-label="Thanh toán lại hóa đơn"
+                        >
+                          Thanh toán lại
+                        </div>
+                      </motion.div>
                     </Tooltip>
                   )}
                 <Tooltip
@@ -284,20 +300,26 @@ const InvoiceDetail = () => {
                       : "Hủy hóa đơn"
                   }
                 >
-                  <div
-                    className={`${styles.cancelIcon} ${
-                      cancelLoading || isCancelDisabled
-                        ? styles.disabledIcon
-                        : ""
-                    }`}
-                    onClick={() =>
-                      !cancelLoading &&
-                      !isCancelDisabled &&
-                      handleCancel(invoiceDetail.id)
-                    }
+                  <motion.div
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
                   >
-                    Hủy hóa đơn
-                  </div>
+                    <div
+                      className={`${styles.cancelIcon} ${
+                        cancelLoading || isCancelDisabled
+                          ? styles.disabledIcon
+                          : ""
+                      }`}
+                      onClick={() =>
+                        !cancelLoading &&
+                        !isCancelDisabled &&
+                        handleCancel(invoiceDetail.id)
+                      }
+                      aria-label="Hủy hóa đơn"
+                    >
+                      Hủy hóa đơn
+                    </div>
+                  </motion.div>
                 </Tooltip>
               </div>
             )}
@@ -345,10 +367,12 @@ const InvoiceDetail = () => {
             </thead>
             <tbody>
               {invoiceDetail.items?.map((item, index) => (
-                <tr
+                <motion.tr
                   key={item.id}
                   className={styles.tableRow}
-                  style={{ animationDelay: `${index * 0.1}s` }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1, duration: 0.3 }}
                 >
                   <td>{item.productDetail.name}</td>
                   <td>
@@ -360,7 +384,7 @@ const InvoiceDetail = () => {
                     {new Intl.NumberFormat("vi-VN").format(item.subtotal)}
                     <span className={styles.dong}>đ</span>
                   </td>
-                </tr>
+                </motion.tr>
               ))}
             </tbody>
           </table>
@@ -370,7 +394,13 @@ const InvoiceDetail = () => {
             <h2>Chi tiết khuyến mại</h2>
             <div className={styles.discountList}>
               {invoiceDetail.discount.map((disc, index) => (
-                <div key={disc.id} className={styles.discountItem}>
+                <motion.div
+                  key={disc.id}
+                  className={styles.discountItem}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1, duration: 0.3 }}
+                >
                   <p>
                     <span>Mã giảm giá: </span>
                     <span className={styles.discountCode}>
@@ -407,7 +437,7 @@ const InvoiceDetail = () => {
                       "vi-VN",
                     )}
                   </p>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
@@ -437,7 +467,7 @@ const InvoiceDetail = () => {
             </span>
           </p>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };
