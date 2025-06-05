@@ -1753,7 +1753,6 @@ function Header() {
                   <option value="finalPrice.asc">Giá: Thấp đến Cao</option>
                   <option value="finalPrice.desc">Giá: Cao đến Thấp</option>
                   <option value="totalSold.desc">Bán chạy nhất</option>
-                  <option value="name.asc">Tên A-Z</option>
                 </select>
               </div>
               <div
@@ -1997,7 +1996,7 @@ function Header() {
                   </div>
                 ))
               ) : (
-                <div className={styles.emptyCart}>Giỏ hàng trống</div>
+                <div className={styles.emptyCart}></div>
               )}
               <div className={styles.dropDownMenuCart}>
                 <ShoppingCartOutlined

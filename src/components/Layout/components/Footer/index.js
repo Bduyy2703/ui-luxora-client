@@ -7,6 +7,9 @@ import {
   InstagramFilled,
   TwitterOutlined,
   YoutubeFilled,
+  ShopOutlined,
+  QuestionCircleOutlined,
+  SecurityScanOutlined,
 } from "@ant-design/icons";
 import { getAllBlogs } from "../../../../services/api/blogService";
 import { getInventoryList } from "../../../../services/api/inventoryService";
@@ -30,7 +33,7 @@ function Footer() {
         if (data.error) {
           setBlogError(data.error);
         } else {
-          const formattedBlogs = data.blogs.slice(0, 4).map((blog) => ({
+          const formattedBlogs = data.blogs.slice(0, 3).map((blog) => ({
             id: blog.id,
             title: blog.title,
             thumbnail: blog.thumbnail,
@@ -109,7 +112,7 @@ function Footer() {
   };
 
   return (
-    <div className={styles.wrapper}>
+    <footer className={styles.wrapper}>
       <div className={styles.introduce}>
         <span className={styles.intro}>GIỚI THIỆU</span>
         <img
@@ -117,13 +120,13 @@ function Footer() {
           src={logo}
           alt="Caraluna Logo"
           className="lazyload loaded"
+          loading="lazy"
         />
         <ul style={{ listStyle: "none" }}>
           <li>Địa chỉ:</li>
           {locations.slice(0, 3).map((loc, index) => (
             <li key={index}>Cơ sở: {loc.location}</li>
           ))}
-
           {locations.length === 0 && locationLoading && (
             <li>Đang tải danh sách cơ sở...</li>
           )}
@@ -139,34 +142,38 @@ function Footer() {
           <a
             className={styles.icon}
             href="https://www.facebook.com/caraluna.vn/"
+            aria-label="Visit our Facebook page"
           >
             <FacebookFilled />
           </a>
-          <a className={styles.icon} href="https://twitter.com/caraluna.vn/">
+          <a
+            className={styles.icon}
+            href="https://twitter.com/caraluna.vn/"
+            aria-label="Visit our Twitter page"
+          >
             <TwitterOutlined />
           </a>
           <a
             className={styles.icon}
             href="https://www.youtube.com/caraluna.vn/"
+            aria-label="Visit our YouTube channel"
           >
             <YoutubeFilled />
           </a>
           <a
             className={styles.icon}
             href="https://www.instagram.com/caraluna.vn/"
+            aria-label="Visit our Instagram page"
           >
             <InstagramFilled />
           </a>
         </div>
       </div>
-      {/* 
+
       <div className={styles.newPost}>
         <div className={styles.new}>BÀI VIẾT MỚI</div>
-
         {blogLoading && <div>Đang tải bài viết...</div>}
-
         {blogError && <div>{blogError}</div>}
-
         {!blogLoading &&
           !blogError &&
           blogs.map((blog) => (
@@ -180,45 +187,9 @@ function Footer() {
                     height: "60px",
                     marginRight: "10px",
                     objectFit: "cover",
-                    borderRadius: "4px",
+                    borderRadius: "8px",
                   }}
-                />
-              </div>
-              <div className={styles.footerNote}>
-                <span
-                  className={styles.blogLink}
-                  onClick={() => handleBlogClick(blog.id)}
-                  style={{ cursor: "pointer" }}
-                >
-                  {blog.title}
-                </span>
-                <span className={styles.time}>{blog.date}</span>
-              </div>
-            </div>
-          ))}
-      </div> */}
-      <div className={styles.newPost}>
-        <div className={styles.new}>BÀI VIẾT MỚI</div>
-
-        {blogLoading && <div>Đang tải bài viết...</div>}
-
-        {blogError && <div>{blogError}</div>}
-
-        {!blogLoading &&
-          !blogError &&
-          blogs.map((blog) => (
-            <div className={styles.footerFlower} key={blog.id}>
-              <div>
-                <img
-                  src={blog.thumbnail}
-                  alt={blog.title}
-                  style={{
-                    width: "90px",
-                    height: "60px",
-                    marginRight: "10px",
-                    objectFit: "cover",
-                    borderRadius: "4px",
-                  }}
+                  loading="lazy"
                 />
               </div>
               <div className={styles.footerNote}>
@@ -238,7 +209,6 @@ function Footer() {
               </div>
             </div>
           ))}
-
         {!blogLoading && !blogError && (
           <motion.button
             className={styles.viewMoreButton}
@@ -256,15 +226,13 @@ function Footer() {
       </div>
 
       <div className={styles.storeJewelry}>
-        <span
-          className={styles.store}
-          style={{ display: "flex", width: "189px", fontSize: "14px" }}
-        >
-          CỬA HÀNG TRANG SỨC
+        <span className={styles.store}>
+          <ShopOutlined style={{ marginRight: "8px" }} />
+          DANH MỤC SẢN PHẨM
         </span>
         <ul className={styles.list}>
           {categories.length > 0 ? (
-            categories.map((category) => (
+            categories.slice(0, 7).map((category) => (
               <motion.li
                 key={category.id}
                 whileHover={{ scale: 1.05, color: "#d4af37" }}
@@ -272,6 +240,12 @@ function Footer() {
                 onClick={() =>
                   navigate(`/list-product?categories=${category.id}`)
                 }
+                onKeyDown={(e) =>
+                  e.key === "Enter" &&
+                  navigate(`/list-product?categories=${category.id}`)
+                }
+                role="button"
+                tabIndex={0}
               >
                 {category.name}
               </motion.li>
@@ -283,24 +257,95 @@ function Footer() {
       </div>
 
       <div className={styles.support}>
-        <span className={styles.store}>HỖ TRỢ</span>
+        <span className={styles.store}>
+          <QuestionCircleOutlined style={{ marginRight: "8px" }} />
+          HỖ TRỢ
+        </span>
         <ul className={styles.list}>
-          <li>Điều khoản dịch vụ</li>
-          <li>Hướng dẫn mua hàng</li>
-          <li>Hướng dẫn thanh toán</li>
+          <motion.li
+            whileHover={{ scale: 1.05, color: "#d4af37" }}
+            transition={{ duration: 0.3 }}
+            onClick={() => navigate("/terms-of-service")}
+            onKeyDown={(e) =>
+              e.key === "Enter" && navigate("/terms-of-service")
+            }
+            role="button"
+            tabIndex={0}
+          >
+            Điều khoản dịch vụ
+          </motion.li>
+          <motion.li
+            whileHover={{ scale: 1.05, color: "#d4af37" }}
+            transition={{ duration: 0.3 }}
+            onClick={() => navigate("/shopping-guide")}
+            onKeyDown={(e) => e.key === "Enter" && navigate("/shopping-guide")}
+            role="button"
+            tabIndex={0}
+          >
+            Hướng dẫn mua hàng
+          </motion.li>
+          <motion.li
+            whileHover={{ scale: 1.05, color: "#d4af37" }}
+            transition={{ duration: 0.3 }}
+            onClick={() => navigate("/payment-guide")}
+            onKeyDown={(e) => e.key === "Enter" && navigate("/payment-guide")}
+            role="button"
+            tabIndex={0}
+          >
+            Hướng dẫn thanh toán
+          </motion.li>
         </ul>
       </div>
 
       <div className={styles.policy}>
-        <span className={styles.store}>CHÍNH SÁCH</span>
+        <span className={styles.store}>
+          <SecurityScanOutlined style={{ marginRight: "8px" }} />
+          CHÍNH SÁCH
+        </span>
         <ul className={styles.list}>
-          <li>Chính sách bảo mật</li>
-          <li>Chính sách bảo hành</li>
-          <li>Chính sách đổi trả</li>
-          <li>Chính sách vận chuyển</li>
+          <motion.li
+            whileHover={{ scale: 1.05, color: "#d4af37" }}
+            transition={{ duration: 0.3 }}
+            onClick={() => navigate("/privacy-policy")}
+            onKeyDown={(e) => e.key === "Enter" && navigate("/privacy-policy")}
+            role="button"
+            tabIndex={0}
+          >
+            Chính sách bảo mật
+          </motion.li>
+          <motion.li
+            whileHover={{ scale: 1.05, color: "#d4af37" }}
+            transition={{ duration: 0.3 }}
+            onClick={() => navigate("/warranty-policy")}
+            onKeyDown={(e) => e.key === "Enter" && navigate("/warranty-policy")}
+            role="button"
+            tabIndex={0}
+          >
+            Chính sách bảo hành
+          </motion.li>
+          <motion.li
+            whileHover={{ scale: 1.05, color: "#d4af37" }}
+            transition={{ duration: 0.3 }}
+            onClick={() => navigate("/return-policy")}
+            onKeyDown={(e) => e.key === "Enter" && navigate("/return-policy")}
+            role="button"
+            tabIndex={0}
+          >
+            Chính sách đổi trả
+          </motion.li>
+          <motion.li
+            whileHover={{ scale: 1.05, color: "#d4af37" }}
+            transition={{ duration: 0.3 }}
+            onClick={() => navigate("/shipping-policy")}
+            onKeyDown={(e) => e.key === "Enter" && navigate("/shipping-policy")}
+            role="button"
+            tabIndex={0}
+          >
+            Chính sách vận chuyển
+          </motion.li>
         </ul>
       </div>
-    </div>
+    </footer>
   );
 }
 

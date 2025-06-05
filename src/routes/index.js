@@ -23,6 +23,13 @@ import BlogsListPage from "../pages/blogs";
 import PaymentSuccess from "../pages/PaymentSuccess";
 import WishListPage from "../pages/ProfileUser/pageWishList/wishList";
 import BlogList from "../pages/blogs/BlogList";
+import TermsOfService from "../components/Layout/components/Footer/termOfService";
+import ShoppingGuide from "../components/Layout/components/Footer/ShoppingGuide";
+import PaymentGuide from "../components/Layout/components/Footer/PaymentGuide";
+import PrivacyPolicy from "../components/Layout/components/Footer/PrivacyPolicy";
+import WarrantyPolicy from "../components/Layout/components/Footer/WarrantyPolicy";
+import ReturnPolicy from "../components/Layout/components/Footer/ReturnPolicy";
+import ShippingPolicy from "../components/Layout/components/Footer/ShippingPolicy";
 
 function requireAuth(to, from, next) {
   const token = localStorage.getItem("decodedToken");
@@ -63,6 +70,13 @@ const publicRoutes = [
   { path: "/list-blog", component: BlogList },
   { path: "/blog/:id", component: BlogsListPage },
   { path: "/reset-password", component: ResetPassword },
+  { path: "/terms-of-service", component: TermsOfService },
+  { path: "/shopping-guide", component: ShoppingGuide },
+  { path: "/payment-guide", component: PaymentGuide },
+  { path: "/privacy-policy", component: PrivacyPolicy },
+  { path: "/warranty-policy", component: WarrantyPolicy },
+  { path: "/return-policy", component: ReturnPolicy },
+  { path: "/shipping-policy", component: ShippingPolicy },
   { path: "/checkout", component: Checkout, layout: null },
   { path: "/confirm-success", component: ThankYou, layout: null },
   { path: "/payment-success", component: PaymentSuccess, layout: null },
