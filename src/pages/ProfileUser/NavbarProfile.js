@@ -9,6 +9,7 @@ import {
   EnvironmentOutlined,
   HeartFilled,
 } from "@ant-design/icons";
+import { motion } from "framer-motion";
 
 function NavbarProfile({ className }) {
   const navigate = useNavigate();
@@ -30,7 +31,6 @@ function NavbarProfile({ className }) {
     navigate("/login");
   }
 
-  // Xác định tab đang chọn dựa trên pathname
   const getActiveTab = () => {
     const path = location.pathname;
     if (path === "/account") return "account";
@@ -44,7 +44,12 @@ function NavbarProfile({ className }) {
   const activeTab = getActiveTab();
 
   return (
-    <div className={classNames(styles.wrapper, className)}>
+    <motion.div
+      className={classNames(styles.wrapper, className)}
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+    >
       <div className={styles.profileButton}>
         {accessToken ? (
           <>
@@ -56,6 +61,7 @@ function NavbarProfile({ className }) {
                   className={classNames({
                     [styles.active]: activeTab === "account",
                   })}
+                  aria-label="Thông tin tài khoản"
                 >
                   <UserOutlined
                     className={classNames(styles.icon, {
@@ -71,6 +77,7 @@ function NavbarProfile({ className }) {
                   className={classNames({
                     [styles.active]: activeTab === "changepassword",
                   })}
+                  aria-label="Đổi mật khẩu"
                 >
                   <LockOutlined
                     className={classNames(styles.icon, {
@@ -86,6 +93,7 @@ function NavbarProfile({ className }) {
                   className={classNames({
                     [styles.active]: activeTab === "addresses",
                   })}
+                  aria-label="Sổ địa chỉ"
                 >
                   <EnvironmentOutlined
                     className={classNames(styles.icon, {
@@ -95,13 +103,13 @@ function NavbarProfile({ className }) {
                   Sổ địa chỉ
                 </Link>
               </li>
-
               <li>
                 <Link
                   to="/account/wishlist"
                   className={classNames({
                     [styles.active]: activeTab === "wishlist",
                   })}
+                  aria-label="Sản phẩm yêu thích"
                 >
                   <HeartFilled
                     className={classNames(styles.icon, {
@@ -117,6 +125,7 @@ function NavbarProfile({ className }) {
                   className={classNames({
                     [styles.active]: activeTab === "orders",
                   })}
+                  aria-label="Đơn hàng của bạn"
                 >
                   <ShoppingCartOutlined
                     className={classNames(styles.icon, {
@@ -132,7 +141,7 @@ function NavbarProfile({ className }) {
           <div className={styles.loginPrompt}></div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
 

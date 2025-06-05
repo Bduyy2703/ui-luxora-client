@@ -10,6 +10,7 @@ import {
   Pagination,
 } from "antd";
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import {
   addAddresses,
   deleteAddresses,
@@ -30,6 +31,8 @@ const AddressesUser = () => {
   const [isDefault, setIsDefault] = useState(false);
   const [addresses, setAddresses] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const addressesPerPage = 6;
 
   const addressesArray = Object.values(addresses);
 
@@ -42,6 +45,7 @@ const AddressesUser = () => {
       notification.error({
         message: "Lấy địa chỉ thất bại",
         description: "Có lỗi xảy ra khi lấy danh sách địa chỉ.",
+        duration: 3,
       });
     }
   };
@@ -50,11 +54,13 @@ const AddressesUser = () => {
     try {
       const response = await searchAddresses(searchQuery);
       setAddresses(response);
+      setCurrentPage(1); // Reset về trang 1 khi tìm kiếm
     } catch (error) {
       console.error("Error searching addresses:", error);
       notification.error({
         message: "Tìm kiếm địa chỉ thất bại",
         description: "Có lỗi xảy ra khi tìm kiếm địa chỉ.",
+        duration: 3,
       });
     }
   };
@@ -79,6 +85,7 @@ const AddressesUser = () => {
       notification.error({
         message: "Thêm địa chỉ thất bại",
         description: "Tất cả các trường đều phải được điền.",
+        duration: 3,
       });
       return;
     }
@@ -95,23 +102,25 @@ const AddressesUser = () => {
       notification.success({
         message: "Thêm địa chỉ thành công",
         description: "Địa chỉ của bạn đã được thêm.",
+        duration: 3,
       });
     } catch (error) {
       console.error("Error adding address:", error);
       notification.error({
         message: "Thêm địa chỉ thất bại",
         description: "Có lỗi xảy ra khi thêm địa chỉ. Vui lòng thử lại.",
+        duration: 3,
       });
     }
   };
 
   const handleEdit = async (id) => {
-    localStorage.setItem("addressId", id);
     const address = addresses.find((addr) => addr.id === id);
     setStreet(address.street);
     setCity(address.city);
     setCountry(address.country);
     setIsDefault(address.isDefault || false);
+    localStorage.setItem("addressId", id);
     showModal("edit");
   };
 
@@ -120,8 +129,9 @@ const AddressesUser = () => {
       notification.error({
         message: "Sửa địa chỉ thất bại",
         description: "Tất cả các trường đều phải được điền.",
+        duration: 3,
       });
-      throw new Error("All fields are required");
+      return;
     }
     const addressId = localStorage.getItem("addressId");
     try {
@@ -133,23 +143,23 @@ const AddressesUser = () => {
       });
       fetchAddresses();
       setIsModalVisible(false);
+      notification.success({
+        message: "Sửa địa chỉ thành công",
+        description: "Địa chỉ của bạn đã được cập nhật.",
+        duration: 3,
+      });
     } catch (error) {
       console.error("Error editing address:", error);
-      throw error;
+      notification.error({
+        message: "Sửa địa chỉ thất bại",
+        description: "Có lỗi xảy ra khi sửa địa chỉ.",
+        duration: 3,
+      });
     }
   };
 
   const handleCancel = () => {
     setIsModalVisible(false);
-  };
-
-  const handleDelete = async (id) => {
-    try {
-      await deleteAddresses(id);
-      fetchAddresses();
-    } catch (error) {
-      console.error("Error deleting address:", error);
-    }
   };
 
   const showDeleteConfirm = (id) => {
@@ -160,17 +170,21 @@ const AddressesUser = () => {
       okType: "danger",
       cancelText: "Hủy",
       onOk() {
-        return handleDelete(id)
+        return deleteAddresses(id)
           .then(() => {
             notification.success({
               message: "Xóa địa chỉ thành công",
               description: "Địa chỉ của bạn đã được xóa.",
+              duration: 3,
             });
+            fetchAddresses();
           })
-          .catch(() => {
+          .catch((error) => {
+            console.error("Error deleting address:", error);
             notification.error({
               message: "Xóa địa chỉ thất bại",
               description: "Có lỗi xảy ra khi xóa địa chỉ. Vui lòng thử lại.",
+              duration: 3,
             });
           });
       },
@@ -179,9 +193,6 @@ const AddressesUser = () => {
       },
     });
   };
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const addressesPerPage = 6;
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -196,7 +207,12 @@ const AddressesUser = () => {
 
   return (
     <div className={styles.profile}>
-      <div className={styles.profileUser}>
+      <motion.div
+        className={styles.profileUser}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+      >
         <span className={styles.title}>ĐỊA CHỈ CỦA BẠN</span>
         <div className={styles.searchAndAdd}>
           <div className={styles.searchWrapper}>
@@ -205,24 +221,27 @@ const AddressesUser = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={styles.searchInput}
+              aria-label="Tìm kiếm địa chỉ"
             />
             <Button
               className={styles.searchButton}
               type="primary"
               onClick={handleSearch}
+              aria-label="Tìm kiếm"
             >
               Tìm kiếm
             </Button>
           </div>
-          <div>
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button
               type="primary"
               onClick={() => showModal("add")}
               className={styles.addButton}
+              aria-label="Thêm địa chỉ mới"
             >
               Thêm địa chỉ
             </Button>
-          </div>
+          </motion.div>
         </div>
         <div className={styles.addressList}>
           <table className={`${styles.addressContent} ${styles.table}`}>
@@ -244,32 +263,40 @@ const AddressesUser = () => {
                 </tr>
               ) : (
                 currentAddresses.map((address, index) => (
-                  <tr
-                    key={index}
+                  <motion.tr
+                    key={address.id}
                     className={styles.tableRow}
-                    style={{ animationDelay: `${index * 0.1}s` }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1, duration: 0.3 }}
                   >
                     <td>{address.street}</td>
                     <td>{address.city}</td>
                     <td>{address.country}</td>
                     <td>{address.isDefault ? "Có" : "Không"}</td>
                     <td className={styles.actionColumn}>
-                      <button
+                      <motion.button
                         className={styles.editButton}
                         onClick={() => handleEdit(address.id)}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        aria-label={`Sửa địa chỉ ${address.street}`}
                       >
                         <EditOutlined className={styles.icon} />
                         Sửa
-                      </button>
-                      <button
+                      </motion.button>
+                      <motion.button
                         className={styles.deleteButton}
                         onClick={() => showDeleteConfirm(address.id)}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        aria-label={`Xóa địa chỉ ${address.street}`}
                       >
                         <DeleteOutlined className={styles.icon} />
                         Xóa
-                      </button>
+                      </motion.button>
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))
               )}
             </tbody>
@@ -280,133 +307,90 @@ const AddressesUser = () => {
             total={addressesArray.length}
             onChange={handlePageChange}
             className={styles.pagination}
+            showSizeChanger={false}
           />
         </div>
-      </div>
+      </motion.div>
 
-      {modalType === "add" && (
-        <Modal
-          title="THÊM ĐỊA CHỈ MỚI"
-          visible={isModalVisible}
-          onOk={handleOk}
-          onCancel={handleCancel}
-          className={styles.modal}
-          footer={[
-            <Button
-              key="back"
-              onClick={handleCancel}
-              className={styles.modalButton}
-            >
-              Hủy
-            </Button>,
-            <Button
-              key="submit"
-              type="primary"
-              onClick={handleOk}
-              className={styles.modalButton}
-            >
-              Thêm địa chỉ
-            </Button>,
-          ]}
+      <Modal
+        title={modalType === "add" ? "THÊM ĐỊA CHỈ MỚI" : "SỬA ĐỊA CHỈ"}
+        open={isModalVisible}
+        onCancel={handleCancel}
+        className={styles.modal}
+        footer={[
+          <Button
+            key="back"
+            onClick={handleCancel}
+            className={styles.modalButton}
+            aria-label="Hủy"
+          >
+            Hủy
+          </Button>,
+          <Button
+            key="submit"
+            type="primary"
+            onClick={modalType === "add" ? handleOk : handleEditAddress}
+            className={styles.modalButton}
+            aria-label={modalType === "add" ? "Thêm địa chỉ" : "Sửa địa chỉ"}
+          >
+            {modalType === "add" ? "Thêm địa chỉ" : "Sửa địa chỉ"}
+          </Button>,
+        ]}
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
         >
           <Form layout="vertical">
-            <Form.Item label="Địa chỉ" required>
+            <Form.Item
+              label="Địa chỉ"
+              required
+              rules={[{ required: true, message: "Vui lòng nhập địa chỉ!" }]}
+            >
               <Input
-                required
                 value={street}
                 onChange={(e) => setStreet(e.target.value)}
+                className={styles.input}
+                aria-label="Địa chỉ"
               />
             </Form.Item>
-            <Form.Item label="Thành phố" required>
+            <Form.Item
+              label="Thành phố"
+              required
+              rules={[{ required: true, message: "Vui lòng nhập thành phố!" }]}
+            >
               <Input
-                required
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
+                className={styles.input}
+                aria-label="Thành phố"
               />
             </Form.Item>
-            <Form.Item label="Quốc gia" required>
+            <Form.Item
+              label="Quốc gia"
+              required
+              rules={[{ required: true, message: "Vui lòng nhập quốc gia!" }]}
+            >
               <Input
-                required
                 value={country}
                 onChange={(e) => setCountry(e.target.value)}
+                className={styles.input}
+                aria-label="Quốc gia"
               />
             </Form.Item>
             <Form.Item>
               <Checkbox
                 checked={isDefault}
                 onChange={(e) => setIsDefault(e.target.checked)}
+                aria-label="Đặt làm địa chỉ mặc định"
               >
                 Đặt làm địa chỉ mặc định
               </Checkbox>
             </Form.Item>
           </Form>
-        </Modal>
-      )}
-
-      {modalType === "edit" && (
-        <Modal
-          title="SỬA ĐỊA CHỈ"
-          visible={isModalVisible}
-          onCancel={handleCancel}
-          className={styles.modal}
-          footer={[
-            <Button
-              key="back"
-              onClick={handleCancel}
-              className={styles.modalButton}
-            >
-              Hủy
-            </Button>,
-            <Button
-              key="submit"
-              type="primary"
-              onClick={async () => {
-                try {
-                  await handleEditAddress();
-                  notification.success({
-                    message: "Sửa địa chỉ thành công",
-                    description: "Địa chỉ của bạn đã được cập nhật.",
-                  });
-                } catch (error) {
-                  notification.error({
-                    message: "Sửa địa chỉ thất bại",
-                    description: "Có lỗi xảy ra khi sửa địa chỉ.",
-                  });
-                }
-              }}
-              className={styles.modalButton}
-            >
-              Sửa địa chỉ
-            </Button>,
-          ]}
-        >
-          <Form layout="vertical">
-            <Form.Item label="Địa chỉ" required>
-              <Input
-                value={street}
-                onChange={(e) => setStreet(e.target.value)}
-              />
-            </Form.Item>
-            <Form.Item label="Thành phố" required>
-              <Input value={city} onChange={(e) => setCity(e.target.value)} />
-            </Form.Item>
-            <Form.Item label="Quốc gia" required>
-              <Input
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-              />
-            </Form.Item>
-            <Form.Item>
-              <Checkbox
-                checked={isDefault}
-                onChange={(e) => setIsDefault(e.target.checked)}
-              >
-                Đặt làm địa chỉ mặc định
-              </Checkbox>
-            </Form.Item>
-          </Form>
-        </Modal>
-      )}
+        </motion.div>
+      </Modal>
     </div>
   );
 };
