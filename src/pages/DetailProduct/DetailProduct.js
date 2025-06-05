@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import styles from "./DetailProduct.module.scss";
 import {
   ArrowLeftOutlined,
@@ -470,7 +470,10 @@ export const DetailProduct = () => {
               selectedColor={selectedColor}
               selectedSize={selectedSize}
             />
-            <RelatedProducts products={relatedProducts} />
+            <RelatedProducts
+              products={relatedProducts}
+              currentProduct={product}
+            />
           </motion.div>
         </div>
       )}
@@ -723,28 +726,253 @@ export const Image = ({ product }) => {
           <ArrowRightOutlined />
         </motion.button>
       </div>
-      <div className={styles.sizeGuideImage}>
-        <img
-          src="https://www.google.com/url?sa=i&url=https%3A%2F%2Flongbeachpearl.com%2Fcach-do-size-nhan%2F&psig=AOvVaw2yaSQQCzYGBUGJiuHMN6pI&ust=1749186955261000&source=images&cd=vfe&opi=89978449&ved=0CBUQjRxqFwoTCNj356vD2Y0DFQAAAAAdAAAAABAM"
-          alt="Size Guide"
-          className={styles.guideImg}
-          onError={(e) => {
-            e.target.src = "https://via.placeholder.com/400x300";
-          }}
-        />
-      </div>
     </div>
   );
 };
 
-export const RelatedProducts = ({ products }) => {
+// export const RelatedProducts = ({ currentProduct }) => {
+//   const navigate = useNavigate();
+//   const [relatedProducts, setRelatedProducts] = useState([]);
+//   const [scrollPosition, setScrollPosition] = useState(0);
+
+//   // Memoize product properties to avoid unnecessary useEffect triggers
+//   const productProps = useMemo(
+//     () => ({
+//       id: currentProduct.id,
+//       categoryId: currentProduct.category?.id,
+//       finalPrice: currentProduct.finalPrice,
+//     }),
+//     [currentProduct.id, currentProduct.category?.id, currentProduct.finalPrice],
+//   );
+
+//   useEffect(() => {
+//     const fetchRelatedProducts = async () => {
+//       if (!productProps.id || !productProps.categoryId) return;
+
+//       try {
+//         const response = await getProductList(1, 100); // Fetch a larger set to filter
+//         const allProducts = response.data || [];
+
+//         // Filter out the current product
+//         const filteredProducts = allProducts.filter(
+//           (item) => item.id !== productProps.id,
+//         );
+
+//         // 1. Get 5 products from the same category
+//         const sameCategory = filteredProducts
+//           .filter((item) => item.category?.id === productProps.categoryId)
+//           .slice(0, 5);
+
+//         // 2. Get 3 products with closest price
+//         const sortedByPrice = filteredProducts
+//           .sort(
+//             (a, b) =>
+//               Math.abs(a.finalPrice - productProps.finalPrice) -
+//               Math.abs(b.finalPrice - productProps.finalPrice),
+//           )
+//           .slice(0, 3);
+
+//         // 3. Get 2 top-selling products based on totalSold
+//         const topSold = filteredProducts
+//           .sort((a, b) => (b.totalSold || 0) - (a.totalSold || 0))
+//           .slice(0, 2);
+
+//         // Combine and remove duplicates
+//         const combinedProducts = [
+//           ...sameCategory,
+//           ...sortedByPrice,
+//           ...topSold,
+//         ].reduce((unique, item) => {
+//           return unique.some((p) => p.id === item.id)
+//             ? unique
+//             : [...unique, item];
+//         }, []);
+
+//         setRelatedProducts(combinedProducts.slice(0, 10)); // Limit to 10 products max
+//       } catch (error) {
+//         console.error("Error fetching related products:", error);
+//         notification.error({
+//           message: "Thông báo",
+//           description: "Không thể tải danh sách sản phẩm liên quan",
+//           duration: 3,
+//         });
+//       }
+//     };
+
+//     fetchRelatedProducts();
+//   }, []);
+
+//   const handleProductClick = (id) => {
+//     navigate(`/detail-product/${id}`);
+//   };
+
+//   const handleScroll = (direction) => {
+//     const container = document.querySelector(`.${styles.productGrid}`);
+//     if (!container) return;
+//     const scrollAmount = 300; // Adjust scroll distance as needed
+//     if (direction === "left") {
+//       container.scrollTo({
+//         left: container.scrollLeft - scrollAmount,
+//         behavior: "smooth",
+//       });
+//     } else {
+//       container.scrollTo({
+//         left: container.scrollLeft + scrollAmount,
+//         behavior: "smooth",
+//       });
+//     }
+//     setScrollPosition(container.scrollLeft);
+//   };
+
+//   if (!relatedProducts || relatedProducts.length === 0) {
+//     return null;
+//   }
+
+//   return (
+//     <motion.div
+//       className={styles.relatedProducts}
+//       initial={{ opacity: 0, y: 50 }}
+//       animate={{ opacity: 1, y: 0 }}
+//       transition={{ duration: 0.5, delay: 0.6 }}
+//     >
+//       <h3 className={styles.relatedTitle}>CÓ THỂ BẠN SẼ THÍCH</h3>
+//       <div className={styles.scrollContainer}>
+//         <motion.button
+//           onClick={() => handleScroll("left")}
+//           className={styles.arrowButton}
+//           whileHover={{ scale: 1.05 }}
+//           whileTap={{ scale: 0.95 }}
+//           disabled={scrollPosition === 0}
+//         >
+//           <ArrowLeftOutlined />
+//         </motion.button>
+//         <div className={styles.productGrid}>
+//           {relatedProducts.map((product, index) => {
+//             console.log("product", product);
+
+//             return (
+//               <motion.div
+//                 key={product.id}
+//                 className={styles.productCard}
+//                 onClick={() => handleProductClick(product.id)}
+//                 initial={{ opacity: 0, x: 20 }}
+//                 animate={{ opacity: 1, x: 0 }}
+//                 transition={{ duration: 0.5, delay: index * 0.1 }}
+//                 whileHover={{ scale: 1.05 }}
+//                 whileTap={{ scale: 0.95 }}
+//               >
+//                 <img
+//                   className={styles.productImage}
+//                   src={product.images[0]}
+//                   alt={product.name}
+//                 />
+//                 <div className={styles.productInfo}>
+//                   <h4 className={styles.productName}>{product.name}</h4>
+//                   <p className={styles.productPrice}>
+//                     {new Intl.NumberFormat("vi-VN").format(product.finalPrice)}đ
+//                   </p>
+//                 </div>
+//               </motion.div>
+//             );
+//           })}
+//         </div>
+//         <motion.button
+//           onClick={() => handleScroll("right")}
+//           className={styles.arrowButton}
+//           whileHover={{ scale: 1.05 }}
+//           whileTap={{ scale: 0.95 }}
+//           disabled={
+//             scrollPosition >=
+//             document.querySelector(`.${styles.productGrid}`)?.scrollWidth -
+//               document.querySelector(`.${styles.productGrid}`)?.clientWidth
+//           }
+//         >
+//           <ArrowRightOutlined />
+//         </motion.button>
+//       </div>
+//     </motion.div>
+//   );
+// };
+
+export const RelatedProducts = ({ currentProduct }) => {
   const navigate = useNavigate();
+  const [relatedProducts, setRelatedProducts] = useState([]);
+
+  // Memoize product properties to avoid unnecessary useEffect triggers
+  const productProps = useMemo(
+    () => ({
+      id: currentProduct.id,
+      categoryId: currentProduct.category?.id,
+      finalPrice: currentProduct.finalPrice,
+    }),
+    [currentProduct.id, currentProduct.category?.id, currentProduct.finalPrice],
+  );
+
+  useEffect(() => {
+    const fetchRelatedProducts = async () => {
+      if (!productProps.id || !productProps.categoryId) return;
+
+      try {
+        const response = await getProductList(1, 100); // Fetch a larger set to filter
+        const allProducts = response.data || [];
+
+        // Filter out the current product
+        const filteredProducts = allProducts.filter(
+          (item) => item.id !== productProps.id,
+        );
+
+        // 1. Get 5 products from the same category
+        const sameCategory = filteredProducts
+          .filter((item) => item.category?.id === productProps.categoryId)
+          .slice(0, 5)
+          .map((item) => ({ ...item, badge: "category" }));
+
+        // 2. Get 3 products with closest price
+        const sortedByPrice = filteredProducts
+          .sort(
+            (a, b) =>
+              Math.abs(a.finalPrice - productProps.finalPrice) -
+              Math.abs(b.finalPrice - productProps.finalPrice),
+          )
+          .slice(0, 3)
+          .map((item) => ({ ...item, badge: "price" }));
+
+        // 3. Get 2 top-selling products based on totalSold
+        const topSold = filteredProducts
+          .sort((a, b) => (b.totalSold || 0) - (a.totalSold || 0))
+          .slice(1, 5)
+          .map((item) => ({ ...item, badge: "bestseller" }));
+
+        // Combine and remove duplicates while preserving badge
+        const combinedProducts = [
+          ...sameCategory,
+          ...sortedByPrice,
+          ...topSold,
+        ].reduce((unique, item) => {
+          return unique.some((p) => p.id === item.id)
+            ? unique
+            : [...unique, item];
+        }, []);
+
+        setRelatedProducts(combinedProducts.slice(0, 10)); // Limit to 10 products max
+      } catch (error) {
+        console.error("Error fetching related products:", error);
+        notification.error({
+          message: "Thông báo",
+          description: "Không thể tải danh sách sản phẩm liên quan",
+          duration: 3,
+        });
+      }
+    };
+
+    fetchRelatedProducts();
+  }, [productProps.id, productProps.categoryId, productProps.finalPrice]);
 
   const handleProductClick = (id) => {
     navigate(`/detail-product/${id}`);
   };
 
-  if (!products || products.length === 0) {
+  if (!relatedProducts || relatedProducts.length === 0) {
     return null;
   }
 
@@ -755,35 +983,51 @@ export const RelatedProducts = ({ products }) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.6 }}
     >
-      <h3 className={styles.relatedTitle}>SẢN PHẨM LIÊN QUAN</h3>
-      <div className={styles.productGrid}>
-        {products.map((product, index) => (
-          <motion.div
-            key={product.id}
-            className={styles.productCard}
-            onClick={() => handleProductClick(product.id)}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <img
-              className={styles.productImage}
-              src={product.images[0] || "https://via.placeholder.com/150"}
-              alt={product.name}
-              onError={(e) => {
-                e.target.src = "https://via.placeholder.com/150";
-              }}
-            />
-            <div className={styles.productInfo}>
-              <h4 className={styles.productName}>{product.name}</h4>
-              <p className={styles.productPrice}>
-                {new Intl.NumberFormat("vi-VN").format(product.finalPrice)}đ
-              </p>
-            </div>
-          </motion.div>
-        ))}
+      <h3 className={styles.relatedTitle}>CÓ THỂ BẠN SẼ THÍCH</h3>
+      <div className={styles.scrollContainer}>
+        <div className={styles.productGrid}>
+          {relatedProducts.map((product, index) => (
+            <motion.div
+              key={product.id}
+              className={styles.productCard}
+              onClick={() => handleProductClick(product.id)}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <div className={styles.badgeContainer}>
+                {product.badge === "category" && (
+                  <span className={`${styles.badge} ${styles.categoryBadge}`}>
+                    Cùng loại
+                  </span>
+                )}
+                {product.badge === "price" && (
+                  <span className={`${styles.badge} ${styles.priceBadge}`}>
+                    Giá tương đương
+                  </span>
+                )}
+                {product.badge === "bestseller" && (
+                  <span className={`${styles.badge} ${styles.bestsellerBadge}`}>
+                    Bán chạy
+                  </span>
+                )}
+              </div>
+              <img
+                className={styles.productImage}
+                src={product.images[0]}
+                alt={product.name}
+              />
+              <div className={styles.productInfo}>
+                <h4 className={styles.productName}>{product.name}</h4>
+                <p className={styles.productPrice}>
+                  {new Intl.NumberFormat("vi-VN").format(product.finalPrice)}đ
+                </p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </motion.div>
   );
