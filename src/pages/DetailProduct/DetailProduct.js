@@ -491,6 +491,8 @@ export const DescProduct = ({
   const [totalReviews, setTotalReviews] = useState(0);
   const [loading, setLoading] = useState(false);
 
+  console.log("averageRating", averageRating);
+
   // Tìm biến thể được chọn dựa trên selectedColor và selectedSize
   const selectedVariant =
     product.productDetails?.find(
@@ -653,6 +655,10 @@ export const Image = ({ product }) => {
     );
   };
 
+  const handleImageClick = () => {
+    handleNextImage();
+  };
+
   return (
     <div className={styles.picture}>
       <motion.div
@@ -665,10 +671,12 @@ export const Image = ({ product }) => {
             className={styles.img}
             src={images[mainImageIndex] || "https://via.placeholder.com/300"}
             alt="main-product"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            onClick={handleImageClick}
+            style={{ cursor: "pointer" }}
             onError={(e) => {
               e.target.src = "https://via.placeholder.com/300";
             }}
@@ -676,22 +684,23 @@ export const Image = ({ product }) => {
         </AnimatePresence>
       </motion.div>
       <div className={styles.moreImg}>
+        <motion.button
+          onClick={handlePrevImage}
+          className={styles.arrowButton}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          disabled={images.length <= 1}
+        >
+          <ArrowLeftOutlined />
+        </motion.button>
         <ul>
-          <motion.button
-            onClick={handlePrevImage}
-            className={styles.arrowButton}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <ArrowLeftOutlined />
-          </motion.button>
           {images.map((imgSrc, index) => (
             <motion.li
               key={index}
               onClick={() => setMainImageIndex(index)}
               className={index === mainImageIndex ? styles.activeThumb : ""}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               <img
                 className={styles.more}
@@ -703,15 +712,26 @@ export const Image = ({ product }) => {
               />
             </motion.li>
           ))}
-          <motion.button
-            onClick={handleNextImage}
-            className={styles.arrowButton}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <ArrowRightOutlined />
-          </motion.button>
         </ul>
+        <motion.button
+          onClick={handleNextImage}
+          className={styles.arrowButton}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          disabled={images.length <= 1}
+        >
+          <ArrowRightOutlined />
+        </motion.button>
+      </div>
+      <div className={styles.sizeGuideImage}>
+        <img
+          src="https://www.google.com/url?sa=i&url=https%3A%2F%2Flongbeachpearl.com%2Fcach-do-size-nhan%2F&psig=AOvVaw2yaSQQCzYGBUGJiuHMN6pI&ust=1749186955261000&source=images&cd=vfe&opi=89978449&ved=0CBUQjRxqFwoTCNj356vD2Y0DFQAAAAAdAAAAABAM"
+          alt="Size Guide"
+          className={styles.guideImg}
+          onError={(e) => {
+            e.target.src = "https://via.placeholder.com/400x300";
+          }}
+        />
       </div>
     </div>
   );
